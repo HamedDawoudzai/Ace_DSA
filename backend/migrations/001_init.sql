@@ -1,0 +1,2 @@
+-- Ace DSA backend — initial schema placeholder
+-- Add tables for users, drills, attempts, stats as needed.
