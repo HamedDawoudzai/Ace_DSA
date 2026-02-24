@@ -1,0 +1,88 @@
+# Ace DSA — monorepo .gitignore
+
+# --- Environment & secrets ---
+.env
+.env.local
+.env.*.local
+*.env
+!.env.example
+
+# --- Go ---
+backend/vendor/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+go.work
+go.work.sum
+
+# --- Swift / Xcode / iOS ---
+ios/*.xcodeproj/xcuserdata/
+ios/*.xcworkspace/xcuserdata/
+ios/DerivedData/
+ios/build/
+*.pbxuser
+!default.pbxuser
+*.mode1v3
+!default.mode1v3
+*.mode2v3
+!default.mode2v3
+*.perspectivev3
+!default.perspectivev3
+xcuserdata/
+*.moved-aside
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+*.xcuserstate
+*.xcscmblueprint
+Pods/
+*.xcworkspace
+!default.xcworkspace
+Carthage/
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/
+fastlane/test_output/
+.playground/
+
+# --- Terraform / infra ---
+infra/.terraform/
+infra/*.tfstate
+infra/*.tfstate.*
+infra/*.tfvars
+!infra/*.tfvars.example
+infra/.terraform.lock.hcl
+*.tfplan
+
+# --- macOS ---
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+
+# --- IDE / editors ---
+.idea/
+*.swp
+*.swo
+*~
+.vscode/
+!.vscode/extensions.json
+!.vscode/settings.json
+
+# --- Docker ---
+docker-compose.override.yml
+
+# --- Misc ---
+*.log
+tmp/
+temp/
+.cache/

@@ -1,0 +1,27 @@
+# Ace DSA monorepo — editor defaults
+# https://editorconfig.org
+
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+[*.{go,mod,sum}]
+indent_size = tab
+
+[*.{yaml,yml}]
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false
+
+[*.swift]
+indent_size = 4
+
+[*.tf]
+indent_size = 2
