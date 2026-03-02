@@ -44,7 +44,7 @@ func JWT(next http.Handler) http.Handler {
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 }
-
+//structure to store the user's claims
 type claims struct {
 	UserID string `json:"user_id"`
 	jwt.RegisteredClaims
