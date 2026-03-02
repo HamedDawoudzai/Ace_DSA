@@ -1,5 +1,5 @@
 package middleware
-
+//JWT middleware to authenticate the user
 import (
 	"context"
 	"net/http"
