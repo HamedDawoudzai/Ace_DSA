@@ -1,5 +1,5 @@
 package attempts
-
+//handler to handle the user's drill attempts and store them in the database
 import (
 	"database/sql"
 	"encoding/json"
