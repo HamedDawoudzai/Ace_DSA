@@ -7,7 +7,12 @@ import (
 	"os"
 	"time"
 
+	"github.com/HamedDawoudzai/ace-dsa/backend/internal/auth"
+	"github.com/HamedDawoudzai/ace-dsa/backend/internal/attempts"
 	"github.com/HamedDawoudzai/ace-dsa/backend/internal/db"
+	"github.com/HamedDawoudzai/ace-dsa/backend/internal/drills"
+	"github.com/HamedDawoudzai/ace-dsa/backend/internal/middleware"
+	"github.com/HamedDawoudzai/ace-dsa/backend/internal/stats"
 )
 
 func main() {
@@ -22,6 +27,11 @@ func main() {
 		}
 	}
 
+	authHandler := &auth.Handler{DB: database}
+	drillsHandler := &drills.Handler{DB: database}
+	attemptsHandler := &attempts.Handler{DB: database}
+	statsHandler := &stats.Handler{DB: database}
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
@@ -31,6 +41,11 @@ func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/health", healthHandler)
 	mux.HandleFunc("/", rootHandler)
+	mux.HandleFunc("/auth/signup", authHandler.Signup)
+	mux.HandleFunc("/auth/login", authHandler.Login)
+	mux.HandleFunc("/drills", drillsHandler.List)
+	mux.Handle("/attempts", middleware.JWT(http.HandlerFunc(attemptsHandler.Create)))
+	mux.Handle("/me/stats", middleware.JWT(http.HandlerFunc(statsHandler.Get)))
 
 	server := &http.Server{
 		Addr:         addr,
