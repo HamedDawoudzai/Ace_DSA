@@ -57,6 +57,13 @@ export default function LearnDetailScreen() {
       ));
   };
 
+  const SectionHeader = ({ icon, title }: { icon: keyof typeof Ionicons.glyphMap; title: string }) => (
+    <View style={styles.sectionHeader}>
+      <Ionicons name={icon} size={18} color={colors.accent} />
+      <Text style={[styles.sectionTitle, { color: colors.text }]}>{title}</Text>
+    </View>
+  );
+
   return (
     <ScrollView
       style={[styles.container, { backgroundColor: colors.background }]}
@@ -166,12 +173,8 @@ export default function LearnDetailScreen() {
             { backgroundColor: colors.surface, borderColor: colors.border },
           ]}
         >
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>
-            General Understanding
-          </Text>
-          <Text style={[styles.sectionBody, { color: colors.textSecondary }]}>
-            {topic.generalUnderstanding}
-          </Text>
+          <SectionHeader icon="school-outline" title="General Understanding" />
+          <View>{renderParagraphs(topic.generalUnderstanding)}</View>
         </View>
       ) : null}
 
@@ -184,9 +187,7 @@ export default function LearnDetailScreen() {
             { backgroundColor: colors.surface, borderColor: colors.border },
           ]}
         >
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>
-            Teaching Notes (Interview Lens)
-          </Text>
+          <SectionHeader icon="bulb-outline" title="Teaching Notes (Interview Lens)" />
           {topic.teachingNotes.map((note, idx) => (
             <View key={`${topic.id}-teaching-note-${idx}`} style={styles.bulletRow}>
               <Text style={[styles.bulletDot, { color: colors.accent }]}>•</Text>
@@ -207,9 +208,7 @@ export default function LearnDetailScreen() {
             { backgroundColor: colors.surface, borderColor: colors.border },
           ]}
         >
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>
-            LeetCode Tactics
-          </Text>
+          <SectionHeader icon="rocket-outline" title="LeetCode Tactics" />
           {topic.leetcodeTactics.map((tactic, idx) => (
             <View key={`${topic.id}-tactic-${idx}`} style={styles.bulletRow}>
               <Text style={[styles.bulletDot, { color: colors.accent }]}>•</Text>
