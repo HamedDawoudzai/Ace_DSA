@@ -36,6 +36,14 @@ export default function LearnScreen() {
     return [...src].sort((a, b) => a.level - b.level);
   }, [track]);
   const imageBackdrop = isDark ? "#060B16" : "#F7F2E8";
+  const dsImageStyleById: Record<string, ImageStyle> = useMemo(
+    () => ({
+      "ds-stacks": styles.stackImageFit,
+      "ds-trees": styles.treeImageFit,
+      "ds-bsts": styles.bstImageFit,
+    }),
+    []
+  );
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -164,14 +172,8 @@ export default function LearnScreen() {
                     source={cardImage}
                     style={[
                       styles.image,
-                      item.id === "ds-stacks"
-                        ? styles.stackImageFit
-                        : item.id === "ds-trees"
-                        ? styles.treeImageFit
-                        : item.id === "ds-bsts"
-                        ? styles.bstImageFit
-                        : item.track === "data-structures"
-                        ? styles.dataStructureImage
+                      item.track === "data-structures"
+                        ? dsImageStyleById[item.id] ?? styles.dataStructureImage
                         : styles.algorithmImage,
                     ]}
                     resizeMode="contain"
