@@ -170,3 +170,24 @@ func (h *Handler) issueTokens(userID string) (*tokenResp, error) {
 
 	return &tokenResp{AccessToken: access, RefreshToken: refresh, ExpiresIn: 900}, nil
 }
+
+func parseRefreshToken(tokenStr string) (string, error) {
+	secret := os.Getenv("JWT_SECRET")
+	if secret == "" {
+		secret = "dev-secret-change-in-production"
+	}
+	token, err := jwt.ParseWithClaims(tokenStr, &claims{}, func(t *jwt.Token) (interface{}, error) {
+		return []byte(secret), nil
+	})
+	if err != nil {
+		return "", err
+	}
+	c, ok := token.Claims.(*claims)
+	if !ok || !token.Valid {
+		return "", jwt.ErrTokenInvalidClaims
+	}
+	if c.UserID == "" {
+		return "", jwt.ErrTokenInvalidClaims
+	}
+	return c.UserID, nil
+}
