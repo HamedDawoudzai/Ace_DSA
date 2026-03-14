@@ -24,7 +24,7 @@ See [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md) for full setup.
 | **iOS** | Swift, SwiftUI, Xcode |
 | **Backend** | Go 1.26, standard library HTTP |
 | **Database** | PostgreSQL (pgx driver) |
-| **Auth** | JWT (access + refresh tokens), planned |
+| **Auth** | JWT (access + refresh tokens) |
 | **Dev / ops** | Docker, Docker Compose, GitHub Actions |
 | **Infra (later)** | AWS, Terraform |
 | **In-app tutor (later)** | LLM API, prompt-engineered DSA tutor |
@@ -57,11 +57,11 @@ ace-dsa/
 
 | Done | Next |
 |------|------|
-| Backend server, /health, / | Auth (signup, login, JWT) |
-| Postgres + migrations (users, drills, attempts) | Drills API (GET /drills) |
-| Docker (backend + Postgres) | Attempts API (POST /attempts) |
-| CI (test, gofmt) | Stats API (GET /me/stats) |
-| | iOS app (Xcode project in ios/) |
+| Backend server, /health, / | Drills API (GET /drills) |
+| Postgres + migrations (users, drills, attempts) | Attempts API (POST /attempts) |
+| Docker (backend + Postgres) | Stats API (GET /me/stats) |
+| CI (test, gofmt) | iOS app (Xcode project in ios/) |
+| Auth (signup, login, refresh, JWT) | |
 
 ---
 
