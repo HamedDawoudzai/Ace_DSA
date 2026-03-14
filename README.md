@@ -35,7 +35,24 @@ See [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md) for full setup.
 
 ```
 ace-dsa/
-├── ios/                    # SwiftUI app (create Xcode project here)
+├── ios/
+│   └── AceDSA/             # SwiftUI source files (add to Xcode project)
+│       ├── AceDSAApp.swift  # @main entry point
+│       ├── ContentView.swift# Auth gate → tab bar
+│       ├── Networking/
+│       │   ├── APIClient.swift   # URLSession wrapper (JWT, snake_case coding)
+│       │   └── Endpoints.swift   # Typed API endpoints
+│       ├── Models/
+│       │   ├── AuthModels.swift  # SignupRequest, LoginRequest, TokenResponse
+│       │   ├── Drill.swift       # Drill model (matches backend JSON)
+│       │   └── Attempt.swift     # AttemptRequest / AttemptResponse
+│       ├── Store/
+│       │   └── AuthStore.swift   # ObservableObject auth state
+│       └── Views/
+│           ├── Auth/AuthView.swift          # Login / Sign Up screen
+│           ├── Drills/DrillsView.swift      # Drill list feed
+│           ├── Drills/DrillDetailView.swift # Drill choices + submit
+│           └── Stats/StatsView.swift        # Placeholder stats screen
 ├── backend/
 │   ├── cmd/api/            # API entrypoint
 │   ├── internal/
@@ -62,6 +79,11 @@ ace-dsa/
 | Docker (backend + Postgres) | Stats API (GET /me/stats) |
 | CI (test, gofmt) | iOS app (Xcode project in ios/) |
 | Auth (signup, login, refresh, JWT) | |
+| Backend server, /health, / | Auth (signup, login, JWT) |
+| Postgres + migrations (users, drills, attempts) | Drills API (GET /drills) |
+| Docker (backend + Postgres) | Attempts API (POST /attempts) |
+| CI (test, gofmt) | Stats API (GET /me/stats) |
+| iOS SwiftUI source files in `ios/AceDSA/` | Xcode project (create & add source files) |
 
 ---
 
@@ -69,7 +91,7 @@ ace-dsa/
 
 - **Docker** (easiest): Docker Desktop or Docker Engine + Compose.
 - **Or** Go 1.26+ if you want to run the backend without Docker.
-- **iOS:** Xcode and Swift 5; create the app in `ios/`.
+- **iOS:** Xcode 15+ and Swift 5.9+; iOS deployment target 17+.
 
 ## Local run
 
@@ -119,9 +141,40 @@ make fmt            # gofmt backend
 
 ## iOS
 
-1. In Xcode: **File → New → Project → App** (SwiftUI).
-2. Product name: **AceDSA**. Save inside `ios/`.
-3. Build and run from Xcode.
+The SwiftUI source files live in `ios/AceDSA/`. You need to create an Xcode project once and point it at them.
+
+### One-time Xcode project setup
+
+1. Open Xcode → **File → New → Project → App**.
+2. Product name: **AceDSA**, Interface: **SwiftUI**, Language: **Swift**.
+3. Save into `ios/` (Xcode creates `ios/AceDSA.xcodeproj`).
+4. In the Xcode project navigator, right-click the `AceDSA` group → **Add Files to "AceDSA"…**
+5. Select the `ios/AceDSA/` folder (check *Create groups*, uncheck *Copy items if needed*).
+6. Delete the boilerplate `ContentView.swift` and `AceDSAApp.swift` Xcode generated — the repo versions replace them.
+
+### Run
+
+- Select a simulator (iPhone 16, iOS 17+) and press **⌘R**.
+- The app starts at the auth screen. Make sure the backend is running (`docker compose up -d`) so API calls resolve.
+
+### Physical device
+
+Update `Endpoint.baseURL` in `ios/AceDSA/Networking/Endpoints.swift` from `localhost` to your Mac's local IP address (e.g. `http://192.168.1.x:8080`).
+
+### Source layout
+
+| File | Purpose |
+|------|---------|
+| `AceDSAApp.swift` | `@main` entry point; injects `AuthStore` |
+| `ContentView.swift` | Auth gate: shows `AuthView` or the main tab bar |
+| `Networking/APIClient.swift` | `URLSession` wrapper; handles JWT headers, snake_case decoding, error surfacing |
+| `Networking/Endpoints.swift` | All API endpoint URLs in one place |
+| `Models/` | `Drill`, `AttemptRequest/Response`, `TokenResponse` mirroring backend JSON |
+| `Store/AuthStore.swift` | `ObservableObject` holding the access token; drives the auth gate |
+| `Views/Auth/AuthView.swift` | Login / Sign Up (segmented picker, calls `/auth/login` or `/auth/signup`) |
+| `Views/Drills/DrillsView.swift` | Drill list feed (`GET /drills`) with pull-to-refresh |
+| `Views/Drills/DrillDetailView.swift` | Drill prompt, multiple-choice, submit (`POST /attempts`) |
+| `Views/Stats/StatsView.swift` | Placeholder until Stats API is live |
 
 ## CI
 
