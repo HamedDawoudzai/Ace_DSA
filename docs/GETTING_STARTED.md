@@ -79,6 +79,27 @@ curl http://localhost:8080/
 
 If you see that, the backend and DB are up.
 
+### Auth endpoints
+
+Signup and login return access and refresh tokens. Use the access token in the `Authorization: Bearer <token>` header for protected routes.
+
+```bash
+# Signup
+curl -X POST http://localhost:8080/auth/signup \
+  -H "Content-Type: application/json" \
+  -d '{"email":"you@example.com","password":"yourpassword8"}'
+
+# Login
+curl -X POST http://localhost:8080/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"you@example.com","password":"yourpassword8"}'
+
+# Refresh tokens (use refresh_token from login/signup response)
+curl -X POST http://localhost:8080/auth/refresh \
+  -H "Content-Type: application/json" \
+  -d '{"refresh_token":"<your_refresh_token>"}'
+```
+
 ## 4. (Optional) Run the iOS app
 
 1. Open Xcode and create a new App project (SwiftUI), product name **AceDSA**.
