@@ -1,4 +1,3 @@
-```1:91:backend/cmd/api/main.go
 package main
 
 import (
@@ -49,7 +48,44 @@ func main() {
 	mux.Handle("/attempts", middleware.JWT(http.HandlerFunc(attemptsHandler.Create)))
 	mux.Handle("/me/attempts", middleware.JWT(http.HandlerFunc(attemptsHandler.List)))
 	mux.Handle("/me/stats", middleware.JWT(http.HandlerFunc(statsHandler.Get)))
-// ... rest of file ...
-```
 
-The `GET /me/attempts` route has been registered in the ServeMux, protected behind `middleware.JWT`, and wired to `attemptsHandler.List`.
+	server := &http.Server{
+		Addr:         addr,
+		Handler:      mux,
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 10 * time.Second,
+		IdleTimeout:  60 * time.Second,
+	}
+
+	log.Printf("ace-dsa-api listening on %s", addr)
+	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		log.Fatalf("server: %v", err)
+	}
+}
+
+func healthHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("ok"))
+}
+
+func rootHandler(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path != "/" {
+		http.NotFound(w, r)
+		return
+	}
+	if r.Method != http.MethodGet {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{
+		"service": "ace-dsa-api",
+		"status":  "running",
+	})
+}
