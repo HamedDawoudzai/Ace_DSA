@@ -1,10 +1,11 @@
 package attempts
-//handler to handle the user's drill attempts and store them in the database
+
 import (
 	"database/sql"
 	"encoding/json"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/HamedDawoudzai/ace-dsa/backend/internal/middleware"
 )
@@ -13,10 +14,19 @@ type Handler struct {
 	DB *sql.DB
 }
 
+type Attempt struct {
+	ID           string    `json:"id"`
+	UserID       string    `json:"user_id"`
+	DrillID      string    `json:"drill_id"`
+	ChosenOption int       `json:"chosen_option"`
+	Explanation  *string   `json:"explanation,omitempty"`
+	CreatedAt    time.Time `json:"created_at"`
+}
+
 type createReq struct {
-	DrillID       string  `json:"drill_id"`
-	ChosenOption  int     `json:"chosen_option"`
-	Explanation   *string `json:"explanation,omitempty"`
+	DrillID      string  `json:"drill_id"`
+	ChosenOption int     `json:"chosen_option"`
+	Explanation  *string `json:"explanation,omitempty"`
 }
 //Create a new drill attempt
 func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
@@ -67,6 +77,55 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(map[string]string{"status": "created"})
+}
+
+func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	userID, ok := r.Context().Value(middleware.UserIDKey).(string)
+	if !ok || userID == "" {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	if h.DB == nil {
+		http.Error(w, "database unavailable", http.StatusServiceUnavailable)
+		return
+	}
+
+	rows, err := h.DB.Query(
+		`SELECT id, user_id, drill_id, chosen_option, explanation, created_at
+		 FROM attempts WHERE user_id = $1 ORDER BY created_at DESC`, userID,
+	)
+	if err != nil {
+		http.Error(w, "internal error", http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	var attempts []Attempt
+	for rows.Next() {
+		var a Attempt
+		var expl sql.NullString
+		if err := rows.Scan(&a.ID, &a.UserID, &a.DrillID, &a.ChosenOption, &expl, &a.CreatedAt); err != nil {
+			http.Error(w, "internal error", http.StatusInternalServerError)
+			return
+		}
+		if expl.Valid {
+			a.Explanation = &expl.String
+		}
+		attempts = append(attempts, a)
+	}
+	if err := rows.Err(); err != nil {
+		http.Error(w, "internal error", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(attempts)
 }
 
 func isForeignKeyViolation(err error) bool {
