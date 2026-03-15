@@ -28,13 +28,12 @@ type createReq struct {
 	ChosenOption int     `json:"chosen_option"`
 	Explanation  *string `json:"explanation,omitempty"`
 }
-//Create a new drill attempt
+
 func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	//get the user ID from the context
 	userID, ok := r.Context().Value(middleware.UserIDKey).(string)
 	if !ok || userID == "" {
 		http.Error(w, "unauthorized", http.StatusUnauthorized)
