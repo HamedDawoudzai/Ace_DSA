@@ -1,10 +1,13 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/HamedDawoudzai/ace-dsa/backend/internal/auth"
@@ -57,10 +60,25 @@ func main() {
 		IdleTimeout:  60 * time.Second,
 	}
 
-	log.Printf("ace-dsa-api listening on %s", addr)
-	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-		log.Fatalf("server: %v", err)
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+
+	go func() {
+		log.Printf("ace-dsa-api listening on %s", addr)
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("server: %v", err)
+		}
+	}()
+
+	<-quit
+	log.Print("shutting down server...")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	if err := server.Shutdown(ctx); err != nil {
+		log.Fatalf("shutdown: %v", err)
 	}
+	log.Print("server stopped")
 }
 
 func healthHandler(w http.ResponseWriter, r *http.Request) {
