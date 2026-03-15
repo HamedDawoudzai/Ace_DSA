@@ -10,8 +10,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/HamedDawoudzai/ace-dsa/backend/internal/auth"
 	"github.com/HamedDawoudzai/ace-dsa/backend/internal/attempts"
+	"github.com/HamedDawoudzai/ace-dsa/backend/internal/auth"
 	"github.com/HamedDawoudzai/ace-dsa/backend/internal/db"
 	"github.com/HamedDawoudzai/ace-dsa/backend/internal/drills"
 	"github.com/HamedDawoudzai/ace-dsa/backend/internal/middleware"
