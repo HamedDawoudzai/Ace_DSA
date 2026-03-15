@@ -55,12 +55,23 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var correctOption int
+	err := h.DB.QueryRow(`SELECT correct_option FROM drills WHERE id = $1`, req.DrillID).Scan(&correctOption)
+	if err == sql.ErrNoRows {
+		http.Error(w, "invalid drill_id", http.StatusBadRequest)
+		return
+	}
+	if err != nil {
+		http.Error(w, "internal error", http.StatusInternalServerError)
+		return
+	}
+
 	var expl sql.NullString
 	if req.Explanation != nil {
 		expl = sql.NullString{String: *req.Explanation, Valid: true}
 	}
 
-	_, err := h.DB.Exec(
+	_, err = h.DB.Exec(
 		`INSERT INTO attempts (user_id, drill_id, chosen_option, explanation) VALUES ($1, $2, $3, $4)`,
 		userID, req.DrillID, req.ChosenOption, expl,
 	)
@@ -73,9 +84,14 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	isCorrect := req.ChosenOption == correctOption
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(map[string]string{"status": "created"})
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"status":     "created",
+		"is_correct": isCorrect,
+	})
 }
 
 func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
