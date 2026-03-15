@@ -1,5 +1,5 @@
 package middleware
-//JWT middleware to authenticate the user
+
 import (
 	"context"
 	"net/http"
@@ -27,24 +27,24 @@ func JWT(next http.Handler) http.Handler {
 			secret = "dev-secret-change-in-production"
 		}
 
-			token, err := jwt.ParseWithClaims(tokenStr, &claims{}, func(t *jwt.Token) (interface{}, error) {
-				return []byte(secret), nil
-			})
-			if err != nil {
-				http.Error(w, "invalid token", http.StatusUnauthorized)
-				return
-			}
-			claims, ok := token.Claims.(*claims)
-			if !ok || !token.Valid {
-				http.Error(w, "invalid token", http.StatusUnauthorized)
-				return
-			}
-
-			ctx := context.WithValue(r.Context(), UserIDKey, claims.UserID)
-			next.ServeHTTP(w, r.WithContext(ctx))
+		token, err := jwt.ParseWithClaims(tokenStr, &claims{}, func(t *jwt.Token) (interface{}, error) {
+			return []byte(secret), nil
 		})
+		if err != nil {
+			http.Error(w, "invalid token", http.StatusUnauthorized)
+			return
+		}
+		c, ok := token.Claims.(*claims)
+		if !ok || !token.Valid {
+			http.Error(w, "invalid token", http.StatusUnauthorized)
+			return
+		}
+
+		ctx := context.WithValue(r.Context(), UserIDKey, c.UserID)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
 }
-//structure to store the user's claims
+
 type claims struct {
 	UserID string `json:"user_id"`
 	jwt.RegisteredClaims
