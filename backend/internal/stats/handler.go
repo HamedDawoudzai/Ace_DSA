@@ -18,8 +18,9 @@ type PatternStats struct {
 }
 
 type StatsResp struct {
-	Patterns []PatternStats `json:"patterns"`
-	Streak   int            `json:"streak"`
+	Patterns      []PatternStats `json:"patterns"`
+	TotalAttempts int            `json:"total_attempts"`
+	Streak        int            `json:"streak"`
 }
 
 func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
@@ -71,6 +72,14 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 		patterns = []PatternStats{}
 	}
 
+	var totalAttempts int
+	err = h.DB.QueryRow(
+		`SELECT COUNT(*) FROM attempts WHERE user_id = $1`, userID,
+	).Scan(&totalAttempts)
+	if err != nil && err != sql.ErrNoRows {
+		totalAttempts = 0
+	}
+
 	var streak int
 	err = h.DB.QueryRow(
 		`SELECT COUNT(DISTINCT created_at::date) FROM attempts WHERE user_id = $1`,
@@ -82,5 +91,5 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(StatsResp{Patterns: patterns, Streak: streak})
+	json.NewEncoder(w).Encode(StatsResp{Patterns: patterns, TotalAttempts: totalAttempts, Streak: streak})
 }
