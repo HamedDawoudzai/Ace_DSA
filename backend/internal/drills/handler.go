@@ -15,6 +15,7 @@ type Drill struct {
 	PatternCategory string   `json:"pattern_category"`
 	Prompt          string   `json:"prompt"`
 	Choices         []string `json:"choices"`
+	CorrectOption   int      `json:"correct_option"`
 }
 
 func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
@@ -28,7 +29,7 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rows, err := h.DB.Query(`SELECT id, pattern_category, prompt, choices FROM drills ORDER BY created_at DESC`)
+	rows, err := h.DB.Query(`SELECT id, pattern_category, prompt, choices, correct_option FROM drills ORDER BY created_at DESC`)
 	if err != nil {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
@@ -39,7 +40,7 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		var d Drill
 		var choicesJSON []byte
-		if err := rows.Scan(&d.ID, &d.PatternCategory, &d.Prompt, &choicesJSON); err != nil {
+		if err := rows.Scan(&d.ID, &d.PatternCategory, &d.Prompt, &choicesJSON, &d.CorrectOption); err != nil {
 			http.Error(w, "internal error", http.StatusInternalServerError)
 			return
 		}
