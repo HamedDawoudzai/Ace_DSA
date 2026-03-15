@@ -86,6 +86,7 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{
 		"service": "ace-dsa-api",
+		"version": "0.1.0",
 		"status":  "running",
 	})
 }
