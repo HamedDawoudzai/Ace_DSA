@@ -48,6 +48,7 @@ func main() {
 	mux.HandleFunc("/auth/login", authHandler.Login)
 	mux.HandleFunc("/auth/refresh", authHandler.Refresh)
 	mux.HandleFunc("/drills", drillsHandler.List)
+	mux.HandleFunc("/drills/", drillsHandler.GetByID)
 	mux.Handle("/attempts", middleware.JWT(http.HandlerFunc(attemptsHandler.Create)))
 	mux.Handle("/me/attempts", middleware.JWT(http.HandlerFunc(attemptsHandler.List)))
 	mux.Handle("/me/stats", middleware.JWT(http.HandlerFunc(statsHandler.Get)))
