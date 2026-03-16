@@ -14,7 +14,7 @@ struct AuthView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-            Color(red: 245/255, green: 240/255, blue: 230/255)
+            Color(red: 225/255, green: 218/255, blue: 205/255)
                 .ignoresSafeArea()
             VStack(spacing: 0) {
                 Spacer()
