@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useReducer } from "react";
-import * as SecureStore from "expo-secure-store";
+import * as storage from "../services/storage";
 import api from "../services/api";
 import {
   TokenResponse,
@@ -52,8 +52,8 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
 }
 
 async function storeTokens(data: TokenResponse) {
-  await SecureStore.setItemAsync("access_token", data.access_token);
-  await SecureStore.setItemAsync("refresh_token", data.refresh_token);
+  await storage.setItem("access_token", data.access_token);
+  await storage.setItem("refresh_token", data.refresh_token);
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -65,7 +65,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     (async () => {
-      const token = await SecureStore.getItemAsync("access_token");
+      const token = await storage.getItem("access_token");
       dispatch({ type: "RESTORE_TOKEN", token });
     })();
   }, []);
@@ -85,8 +85,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       dispatch({ type: "SIGN_IN", token: data.access_token });
     },
     signOut: async () => {
-      await SecureStore.deleteItemAsync("access_token");
-      await SecureStore.deleteItemAsync("refresh_token");
+      await storage.deleteItem("access_token");
+      await storage.deleteItem("refresh_token");
       dispatch({ type: "SIGN_OUT" });
     },
   };
