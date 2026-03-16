@@ -1,6 +1,6 @@
 # Ace DSA
 
-**The idea.** Ace DSA helps you practice Data Structures & Algorithms the way they show up in interviews: by recognizing patterns and choosing the right approach. You work through common LeetCode-style problems with multiple-choice answers (or the in-app tutor)—no typing code required.
+**The idea.** Ace DSA helps you practice Data Structures & Algorithms the way they show up in interviews: by recognizing patterns and choosing the right approach. You work through common LeetCode-style problems with multiple-choice answers, no typing code required.
 
 **Why we built it.** We wanted to study DSA when we're not at a desk: on the bus, commuting, or out somewhere without a laptop. The hard part isn't writing code; it's knowing which pattern or algorithm fits. Ace DSA lets you drill that anywhere.
 
@@ -9,8 +9,14 @@
 ## Quick start
 
 ```bash
+# Backend
 docker compose up -d
 curl http://localhost:8080/health   # ok
+
+# Mobile
+cd mobile
+npm install
+npx expo start
 ```
 
 See [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md) for full setup.
@@ -21,7 +27,7 @@ See [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md) for full setup.
 
 | Area | Technologies |
 |------|--------------|
-| **iOS** | Swift, SwiftUI, Xcode |
+| **Mobile** | React Native, Expo (SDK 54), TypeScript |
 | **Backend** | Go 1.26, standard library HTTP |
 | **Database** | PostgreSQL (pgx driver) |
 | **Auth** | JWT (access + refresh tokens) |
@@ -35,37 +41,29 @@ See [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md) for full setup.
 
 ```
 ace-dsa/
-├── ios/
-│   └── AceDSA/             # SwiftUI source files (add to Xcode project)
-│       ├── AceDSAApp.swift  # @main entry point
-│       ├── ContentView.swift# Auth gate → tab bar
-│       ├── Networking/
-│       │   ├── APIClient.swift   # URLSession wrapper (JWT, snake_case coding)
-│       │   └── Endpoints.swift   # Typed API endpoints
-│       ├── Models/
-│       │   ├── AuthModels.swift  # SignupRequest, LoginRequest, TokenResponse
-│       │   ├── Drill.swift       # Drill model (matches backend JSON)
-│       │   └── Attempt.swift     # AttemptRequest / AttemptResponse
-│       ├── Store/
-│       │   └── AuthStore.swift   # ObservableObject auth state
-│       └── Views/
-│           ├── Auth/AuthView.swift          # Login / Sign Up screen
-│           ├── Drills/DrillsView.swift      # Drill list feed
-│           ├── Drills/DrillDetailView.swift # Drill choices + submit
-│           └── Stats/StatsView.swift        # Placeholder stats screen
+├── mobile/                   # React Native (Expo) app
+│   ├── App.tsx               # Entry point
+│   ├── src/
+│   │   ├── types/            # TypeScript interfaces matching backend JSON
+│   │   ├── services/         # Axios API client, JWT interceptor, storage
+│   │   ├── context/          # AuthContext (login, signup, signout, token restore)
+│   │   ├── navigation/       # RootNavigator, AuthStack, MainTabs
+│   │   ├── screens/          # AuthScreen, HomeScreen, DrillsScreen, etc.
+│   │   └── components/       # Reusable UI (HomeCard)
+│   └── package.json
 ├── backend/
-│   ├── cmd/api/            # API entrypoint
+│   ├── cmd/api/              # API entrypoint
 │   ├── internal/
-│   │   ├── auth/           # Email + password, JWT
-│   │   ├── middleware/     # Logging, CORS, JWT auth
-│   │   ├── db/             # Postgres connection + migrations
-│   │   ├── drills/         # Drill feed, pattern + choices
-│   │   ├── attempts/       # User drill submissions
-│   │   └── stats/          # Per-pattern performance, streak
-│   └── migrations/         # SQL (see internal/db/migrations for embedded)
-├── infra/                  # AWS / Terraform (later)
-├── docs/                   # GETTING_STARTED, design notes
-└── .github/workflows/      # CI (Go test, gofmt)
+│   │   ├── auth/             # Email + password, JWT
+│   │   ├── middleware/       # Logging, CORS, JWT auth
+│   │   ├── db/               # Postgres connection + migrations
+│   │   ├── drills/           # Drill feed, pattern + choices
+│   │   ├── attempts/         # User drill submissions
+│   │   └── stats/            # Per-pattern performance, streak
+│   └── migrations/           # SQL (see internal/db/migrations for embedded)
+├── infra/                    # AWS / Terraform (later)
+├── docs/                     # GETTING_STARTED, design notes
+└── .github/workflows/        # CI (Go test, gofmt, go vet)
 ```
 
 ---
@@ -74,28 +72,29 @@ ace-dsa/
 
 | Done | Next |
 |------|------|
-| Backend server, /health, / | Drills API (GET /drills) |
-| Postgres + migrations (users, drills, attempts) | Attempts API (POST /attempts) |
-| Docker (backend + Postgres) | Stats API (GET /me/stats) |
-| CI (test, gofmt) | iOS app (Xcode project in ios/) |
+| Backend API (health, auth, drills, attempts, stats) | Seed drills data |
+| Postgres + migrations (users, drills, attempts) | LLM tutor integration |
+| Docker (backend + Postgres) | AWS / Terraform deployment |
+| CI (test, gofmt, go vet) | |
 | Auth (signup, login, refresh, JWT) | |
-| Backend server, /health, / | Auth (signup, login, JWT) |
-| Postgres + migrations (users, drills, attempts) | Drills API (GET /drills) |
-| Docker (backend + Postgres) | Attempts API (POST /attempts) |
-| CI (test, gofmt) | Stats API (GET /me/stats) |
-| iOS SwiftUI source files in `ios/AceDSA/` | Xcode project (create & add source files) |
+| React Native app (Expo SDK 54) | |
+| Auth flow, drill list, drill detail, stats | |
+| CORS, request logging, graceful shutdown | |
 
 ---
 
 ## Prerequisites
 
-- **Docker** (easiest): Docker Desktop or Docker Engine + Compose.
-- **Or** Go 1.26+ if you want to run the backend without Docker.
-- **iOS:** Xcode 15+ and Swift 5.9+; iOS deployment target 17+.
+- **Node.js** 20.19.4 or newer (required by Expo SDK 54)
+- **Docker** (easiest for backend): Docker Desktop or Docker Engine + Compose
+- **Or** Go 1.26+ if you want to run the backend without Docker
+- **Expo Go** app on your phone (iOS App Store or Android Play Store) for mobile testing
+
+---
 
 ## Local run
 
-### Option A: Docker (backend + Postgres)
+### Backend (Docker)
 
 From repo root:
 
@@ -112,80 +111,71 @@ Stop:
 docker compose down
 ```
 
-### Option B: Backend only (no Docker)
-
-From repo root:
+### Backend (no Docker)
 
 ```bash
-# Copy env template and set values (no secrets in repo)
 cp backend/.env.example backend/.env
+# Edit backend/.env with your DB_URL, JWT_SECRET, PORT
 
-# Run API (default :8080)
 make backend-run
 # or: cd backend && go run ./cmd/api
 ```
 
-Verify:
+### Mobile app
 
 ```bash
-curl http://localhost:8080/health
-curl http://localhost:8080/
+cd mobile
+npm install
+npx expo start
 ```
 
-### Tests & format
+Then:
+
+- Press **w** to open in your web browser
+- Scan the QR code with **Expo Go** on your phone (phone and PC must be on the same Wi-Fi)
+- Press **a** for Android emulator or **i** for iOS simulator
+
+**Important:** If testing on a phone or emulator, update `BASE_URL` in `mobile/src/services/api.ts` from `http://localhost:8080` to your machine's LAN IP (e.g. `http://192.168.1.x:8080`).
+
+### Tests and format
 
 ```bash
-make backend-test   # go test ./...
-make fmt            # gofmt backend
+make backend-test    # go test ./...
+make backend-build   # compile binary
+make fmt             # gofmt backend
 ```
 
-## iOS
+---
 
-The SwiftUI source files live in `ios/AceDSA/`. You need to create an Xcode project once and point it at them.
+## API endpoints
 
-### One-time Xcode project setup
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `GET` | `/health` | No | Health check |
+| `GET` | `/` | No | Service info + version |
+| `POST` | `/auth/signup` | No | Create user, return tokens |
+| `POST` | `/auth/login` | No | Login, return tokens |
+| `POST` | `/auth/refresh` | No | Refresh access token |
+| `GET` | `/drills` | No | List all drills |
+| `GET` | `/drills/{id}` | No | Get single drill |
+| `POST` | `/attempts` | JWT | Submit drill attempt |
+| `GET` | `/me/attempts` | JWT | List user attempts |
+| `GET` | `/me/stats` | JWT | User stats by pattern + streak |
 
-1. Open Xcode → **File → New → Project → App**.
-2. Product name: **AceDSA**, Interface: **SwiftUI**, Language: **Swift**.
-3. Save into `ios/` (Xcode creates `ios/AceDSA.xcodeproj`).
-4. In the Xcode project navigator, right-click the `AceDSA` group → **Add Files to "AceDSA"…**
-5. Select the `ios/AceDSA/` folder (check *Create groups*, uncheck *Copy items if needed*).
-6. Delete the boilerplate `ContentView.swift` and `AceDSAApp.swift` Xcode generated — the repo versions replace them.
-
-### Run
-
-- Select a simulator (iPhone 16, iOS 17+) and press **⌘R**.
-- The app starts at the auth screen. Make sure the backend is running (`docker compose up -d`) so API calls resolve.
-
-### Physical device
-
-Update `Endpoint.baseURL` in `ios/AceDSA/Networking/Endpoints.swift` from `localhost` to your Mac's local IP address (e.g. `http://192.168.1.x:8080`).
-
-### Source layout
-
-| File | Purpose |
-|------|---------|
-| `AceDSAApp.swift` | `@main` entry point; injects `AuthStore` |
-| `ContentView.swift` | Auth gate: shows `AuthView` or the main tab bar |
-| `Networking/APIClient.swift` | `URLSession` wrapper; handles JWT headers, snake_case decoding, error surfacing |
-| `Networking/Endpoints.swift` | All API endpoint URLs in one place |
-| `Models/` | `Drill`, `AttemptRequest/Response`, `TokenResponse` mirroring backend JSON |
-| `Store/AuthStore.swift` | `ObservableObject` holding the access token; drives the auth gate |
-| `Views/Auth/AuthView.swift` | Login / Sign Up (segmented picker, calls `/auth/login` or `/auth/signup`) |
-| `Views/Drills/DrillsView.swift` | Drill list feed (`GET /drills`) with pull-to-refresh |
-| `Views/Drills/DrillDetailView.swift` | Drill prompt, multiple-choice, submit (`POST /attempts`) |
-| `Views/Stats/StatsView.swift` | Placeholder until Stats API is live |
+---
 
 ## CI
 
-On push and PRs to `main`, GitHub Actions runs Go tests and gofmt in `backend/` (`.github/workflows/backend-ci.yml`).
+On push and PRs to `main`, GitHub Actions runs Go tests, go vet, and gofmt in `backend/` (`.github/workflows/backend-ci.yml`).
 
 ## Setup outside the repo
 
-- **Go:** [go.dev/dl](https://go.dev/dl/) — add to PATH; restart your terminal or IDE after installing.
-- **Docker:** [Docker Desktop](https://www.docker.com/products/docker-desktop/) — start the engine before `docker compose up`.
-- **Secrets:** Don’t commit `.env`. Use `backend/.env.example` as a template.
+- **Node.js:** [nodejs.org/en/download](https://nodejs.org/en/download/) - version 20.19.4 or newer required
+- **Go:** [go.dev/dl](https://go.dev/dl/) - add to PATH; restart your terminal or IDE after installing
+- **Docker:** [Docker Desktop](https://www.docker.com/products/docker-desktop/) - start the engine before `docker compose up`
+- **Expo Go:** Install from the App Store (iOS) or Play Store (Android) for on-device testing
+- **Secrets:** Don't commit `.env`. Use `backend/.env.example` as a template
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT - see [LICENSE](LICENSE).
