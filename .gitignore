@@ -50,6 +50,13 @@ fastlane/screenshots/
 fastlane/test_output/
 .playground/
 
+# --- React Native / Expo ---
+mobile/node_modules/
+mobile/.expo/
+mobile/dist/
+mobile/android/
+mobile/ios/
+
 # --- Terraform / infra ---
 infra/.terraform/
 infra/*.tfstate
