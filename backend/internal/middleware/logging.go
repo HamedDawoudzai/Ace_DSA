@@ -21,6 +21,7 @@ func Logging(next http.Handler) http.Handler {
 		start := time.Now()
 		rec := &statusRecorder{ResponseWriter: w, status: http.StatusOK}
 		next.ServeHTTP(rec, r)
-		log.Printf("%s %s %d %s", r.Method, r.URL.Path, rec.status, time.Since(start))
+		reqID := GetRequestID(r.Context())
+		log.Printf("%s %s %d %s request_id=%s", r.Method, r.URL.Path, rec.status, time.Since(start), reqID)
 	})
 }

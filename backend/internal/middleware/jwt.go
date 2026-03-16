@@ -24,7 +24,8 @@ func JWT(next http.Handler) http.Handler {
 
 		secret := os.Getenv("JWT_SECRET")
 		if secret == "" {
-			secret = "dev-secret-change-in-production"
+			http.Error(w, "server misconfigured", http.StatusInternalServerError)
+			return
 		}
 
 		token, err := jwt.ParseWithClaims(tokenStr, &claims{}, func(t *jwt.Token) (interface{}, error) {

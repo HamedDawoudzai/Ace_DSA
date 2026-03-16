@@ -1,4 +1,4 @@
-# Ace DSA — local dev stack (backend + Postgres)
+# Ace DSA - local dev stack (backend + Postgres)
 # From repo root: docker compose up -d
 
 services:
@@ -28,6 +28,7 @@ services:
       PORT: "8080"
       DB_URL: "postgres://acedsa:acedsa@postgres:5432/acedsa?sslmode=disable"
       JWT_SECRET: "dev-secret-min-32-chars-for-jwt-signing"
+      DEV_BACKDOOR_PASSWORD: "dev123"
     depends_on:
       postgres:
         condition: service_healthy
