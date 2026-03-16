@@ -1,4 +1,4 @@
-# Ace DSA — monorepo .gitignore
+# Ace DSA - monorepo .gitignore
 
 # --- Environment & secrets ---
 .env

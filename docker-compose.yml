@@ -1,4 +1,4 @@
-# Ace DSA — local dev stack (backend + Postgres)
+# Ace DSA - local dev stack (backend + Postgres)
 # From repo root: docker compose up -d
 
 services:
