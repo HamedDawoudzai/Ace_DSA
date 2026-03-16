@@ -1,6 +1,19 @@
 # How to start Ace DSA (for developers)
 
-This guide gets the backend and database running so you can work on the API or the iOS app.
+This guide gets the backend, database, and mobile app running locally.
+
+## Prerequisites
+
+- **Node.js** 20.19.4 or newer ([download](https://nodejs.org/en/download/))
+- **Docker Desktop** ([download](https://www.docker.com/products/docker-desktop/)) or Go 1.26+ with a local Postgres
+- **Expo Go** app on your phone (optional, for on-device testing)
+
+Check your Node version:
+
+```bash
+node --version
+# Must be >= 20.19.4
+```
 
 ## 1. Clone and open the repo
 
@@ -9,11 +22,9 @@ git clone https://github.com/HamedDawoudzai/Ace_DSA.git
 cd Ace_DSA
 ```
 
-(Use your actual clone URL if different.)
-
 ## 2. Start the backend and database
 
-You need the API and Postgres running. Two ways:
+You need the API and Postgres running. Two options:
 
 ### A. Using Docker (simplest)
 
@@ -24,7 +35,7 @@ You need the API and Postgres running. Two ways:
    docker compose up -d
    ```
 
-3. Wait until both containers are up (about 10–15 seconds). The backend will connect to Postgres and run migrations automatically.
+3. Wait until both containers are up (about 10-15 seconds). The backend connects to Postgres and runs migrations automatically.
 
 **Result:** API at http://localhost:8080, Postgres at localhost:5432 (user `acedsa`, password `acedsa`, database `acedsa`).
 
@@ -38,13 +49,13 @@ You need the API and Postgres running. Two ways:
    CREATE DATABASE acedsa OWNER acedsa;
    ```
 
-3. In the repo, copy the env template and set the database URL:
+3. Copy the env template and set your values:
 
    ```bash
    cp backend/.env.example backend/.env
    ```
 
-   Edit `backend/.env` and set:
+   Edit `backend/.env`:
 
    ```env
    DB_URL=postgres://acedsa:acedsa@localhost:5432/acedsa?sslmode=disable
@@ -52,17 +63,11 @@ You need the API and Postgres running. Two ways:
    PORT=8080
    ```
 
-4. Start the API from the repo root:
+4. Start the API:
 
    ```bash
    make backend-run
-   ```
-
-   Or:
-
-   ```bash
-   cd backend
-   go run ./cmd/api
+   # or: cd backend && go run ./cmd/api
    ```
 
 **Result:** API at http://localhost:8080. Migrations run on startup.
@@ -74,10 +79,8 @@ curl http://localhost:8080/health
 # should print: ok
 
 curl http://localhost:8080/
-# should print: {"service":"ace-dsa-api","status":"running"}
+# should print: {"service":"ace-dsa-api","status":"running","version":"0.1.0"}
 ```
-
-If you see that, the backend and DB are up.
 
 ### Auth endpoints
 
@@ -100,30 +103,52 @@ curl -X POST http://localhost:8080/auth/refresh \
   -d '{"refresh_token":"<your_refresh_token>"}'
 ```
 
-## 4. (Optional) Run the iOS app
-
-1. Open Xcode and create a new App project (SwiftUI), product name **AceDSA**.
-2. Save it inside the repo’s `ios/` folder (e.g. `Ace_DSA/ios/`).
-3. Build and run in the simulator or on a device. Point the app at `http://localhost:8080` when using the simulator; use your machine’s LAN IP if testing on a real device.
-
-## 5. Stop everything (Docker only)
-
-From the repo root:
+## 4. Start the mobile app
 
 ```bash
+cd mobile
+npm install
+npx expo start
+```
+
+Then choose how to view it:
+
+- **Web browser:** Press **w** (opens http://localhost:8081)
+- **Phone (Expo Go):** Scan the QR code in the terminal with the Expo Go app. Your phone and PC must be on the same Wi-Fi network.
+- **Android emulator:** Press **a** (requires Android Studio with an AVD configured)
+- **iOS simulator:** Press **i** (requires macOS with Xcode)
+
+**Important for phone/emulator testing:** Update `BASE_URL` in `mobile/src/services/api.ts` from `http://localhost:8080` to your machine's LAN IP (e.g. `http://192.168.1.x:8080`). `localhost` only works in a web browser on the same machine.
+
+## 5. Stop everything
+
+```bash
+# Stop Docker containers
 docker compose down
+
+# Stop Expo dev server
+# Press Ctrl+C in the terminal running npx expo start
 ```
 
 ## Troubleshooting
 
-- **“go: command not found”**  
-  Install Go and add it to your PATH, then close and reopen your terminal (or IDE).
+- **"Node.js is outdated and unsupported"**
+  Update Node.js to 20.19.4 or newer from [nodejs.org](https://nodejs.org/en/download/).
 
-- **“cannot connect to Docker”**  
-  Start Docker Desktop and wait until it’s fully running.
+- **"go: command not found"**
+  Install Go and add it to your PATH, then close and reopen your terminal.
 
-- **Backend exits with “database: ...”**  
+- **"cannot connect to Docker"**
+  Start Docker Desktop and wait until it is fully running.
+
+- **Backend exits with "database: ..."**
   If using Docker, ensure `docker compose up -d` finished and Postgres is healthy. If running locally, check that Postgres is running and `DB_URL` in `backend/.env` is correct.
 
-- **Port 8080 or 5432 already in use**  
-  Stop whatever is using that port, or change `PORT` in `.env` (and in `docker-compose.yml` for 8080) and the Postgres port mapping for 5432.
+- **Port 8080 or 8081 already in use**
+  Find and kill the process: `netstat -ano | findstr :8080` then `taskkill /PID <pid> /F`. Or change the port in your config.
+
+- **Expo Go says "requires a newer version"**
+  Make sure the project uses SDK 54 (`expo` version in `mobile/package.json`). Update Expo Go from the app store if needed.
+
+- **QR code says "no usable data found"**
+  Use the Expo Go app to scan, not the regular camera app. On iOS, the Camera app works only if Expo Go is installed.

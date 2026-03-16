@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -43,6 +44,7 @@ func main() {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/health", healthHandler)
+	mux.HandleFunc("/readyz", readyHandler(database))
 	mux.HandleFunc("/", rootHandler)
 	mux.HandleFunc("/auth/signup", authHandler.Signup)
 	mux.HandleFunc("/auth/login", authHandler.Login)
@@ -55,10 +57,20 @@ func main() {
 
 	server := &http.Server{
 		Addr:         addr,
-		Handler:      middleware.CORS(middleware.Logging(mux)),
+		Handler: middleware.CORS(
+			middleware.RequestID(
+				middleware.Recover(
+					middleware.RateLimit(middleware.RateLimitOptions{Requests: 240, Window: time.Minute})(
+						middleware.Logging(mux),
+					),
+				),
+			),
+		),
 		ReadTimeout:  10 * time.Second,
+		ReadHeaderTimeout: 5 * time.Second,
 		WriteTimeout: 10 * time.Second,
 		IdleTimeout:  60 * time.Second,
+		MaxHeaderBytes: 1 << 20,
 	}
 
 	quit := make(chan os.Signal, 1)
@@ -90,6 +102,28 @@ func healthHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("ok"))
+}
+
+func readyHandler(database *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		if database == nil {
+			http.Error(w, "database unavailable", http.StatusServiceUnavailable)
+			return
+		}
+		ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
+		defer cancel()
+		if err := database.PingContext(ctx); err != nil {
+			http.Error(w, "database unavailable", http.StatusServiceUnavailable)
+			return
+		}
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("ready"))
+	}
 }
 
 func rootHandler(w http.ResponseWriter, r *http.Request) {

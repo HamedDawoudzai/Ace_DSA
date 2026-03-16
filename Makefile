@@ -1,4 +1,4 @@
-# Ace DSA monorepo — dev targets
+# Ace DSA monorepo - dev targets
 # Run from repo root.
 
 .PHONY: backend-run backend-build backend-test fmt docker-up docker-down

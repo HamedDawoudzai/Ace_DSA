@@ -1,4 +1,4 @@
-# Ace DSA — monorepo .gitignore
+# Ace DSA - monorepo .gitignore
 
 # --- Environment & secrets ---
 .env
@@ -50,6 +50,13 @@ fastlane/screenshots/
 fastlane/test_output/
 .playground/
 
+# --- React Native / Expo ---
+mobile/node_modules/
+mobile/.expo/
+mobile/dist/
+mobile/android/
+mobile/ios/
+
 # --- Terraform / infra ---
 infra/.terraform/
 infra/*.tfstate
@@ -86,3 +93,9 @@ docker-compose.override.yml
 tmp/
 temp/
 .cache/
+
+# build artifacts
+backend/ace-dsa-api
+
+# lockfiles (kept local)
+mobile/package-lock.json
