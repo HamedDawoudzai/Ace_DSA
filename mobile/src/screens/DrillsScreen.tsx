@@ -13,10 +13,12 @@ import { useNavigation } from "@react-navigation/native";
 import api from "../services/api";
 import { Drill } from "../types";
 import { MainStackParamList } from "../navigation/MainTabs";
+import { useTheme } from "../context/ThemeContext";
 
 export default function DrillsScreen() {
   const navigation =
     useNavigation<NativeStackNavigationProp<MainStackParamList>>();
+  const { colors } = useTheme();
   const [drills, setDrills] = useState<Drill[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -46,25 +48,30 @@ export default function DrillsScreen() {
 
   if (loading) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color="#F5C842" />
+      <View style={[styles.center, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.accent} />
       </View>
     );
   }
 
   if (error) {
     return (
-      <View style={styles.center}>
-        <Text style={styles.errorText}>{error}</Text>
-        <TouchableOpacity style={styles.retryBtn} onPress={fetchDrills}>
-          <Text style={styles.retryText}>Retry</Text>
+      <View style={[styles.center, { backgroundColor: colors.background }]}>
+        <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>
+        <TouchableOpacity
+          style={[styles.retryBtn, { backgroundColor: colors.accent }]}
+          onPress={fetchDrills}
+        >
+          <Text style={[styles.retryText, { color: colors.accentText }]}>
+            Retry
+          </Text>
         </TouchableOpacity>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <FlatList
         data={drills}
         keyExtractor={(item) => item.id}
@@ -74,22 +81,26 @@ export default function DrillsScreen() {
         }
         renderItem={({ item }) => (
           <TouchableOpacity
-            style={styles.card}
+            style={[styles.card, { backgroundColor: colors.surface }]}
             onPress={() => navigation.navigate("DrillDetail", { drill: item })}
             activeOpacity={0.8}
           >
-            <Text style={styles.category}>{item.pattern_category}</Text>
-            <Text style={styles.prompt} numberOfLines={2}>
+            <Text style={[styles.category, { color: colors.accent }]}>
+              {item.pattern_category}
+            </Text>
+            <Text style={[styles.prompt, { color: colors.text }]}>
               {item.prompt}
             </Text>
-            <Text style={styles.count}>
+            <Text style={[styles.count, { color: colors.textMuted }]}>
               {item.choices.length} choices
             </Text>
           </TouchableOpacity>
         )}
         ListEmptyComponent={
           <View style={styles.center}>
-            <Text style={styles.emptyText}>No drills available yet.</Text>
+            <Text style={[styles.emptyText, { color: colors.textMuted }]}>
+              No drills available yet.
+            </Text>
           </View>
         }
       />
@@ -100,20 +111,17 @@ export default function DrillsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#E1DAC9",
   },
   center: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#E1DAC9",
     padding: 24,
   },
   list: {
     padding: 16,
   },
   card: {
-    backgroundColor: "#fff",
     borderRadius: 14,
     padding: 18,
     marginBottom: 14,
@@ -121,7 +129,6 @@ const styles = StyleSheet.create({
   category: {
     fontSize: 12,
     fontWeight: "700",
-    color: "#F5C842",
     textTransform: "uppercase",
     letterSpacing: 1,
     marginBottom: 6,
@@ -129,30 +136,24 @@ const styles = StyleSheet.create({
   prompt: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#222",
     marginBottom: 8,
   },
   count: {
     fontSize: 13,
-    color: "#888",
   },
   errorText: {
     fontSize: 16,
-    color: "#c00",
     marginBottom: 12,
   },
   retryBtn: {
-    backgroundColor: "#F5C842",
     borderRadius: 10,
     paddingHorizontal: 24,
     paddingVertical: 10,
   },
   retryText: {
     fontWeight: "700",
-    color: "#000",
   },
   emptyText: {
     fontSize: 16,
-    color: "#888",
   },
 });

@@ -1,11 +1,7 @@
 import React, { createContext, useContext, useEffect, useReducer } from "react";
 import * as storage from "../services/storage";
 import api from "../services/api";
-import {
-  TokenResponse,
-  SignupRequest,
-  LoginRequest,
-} from "../types";
+import { TokenResponse, SignupRequest, LoginRequest } from "../types";
 
 interface AuthState {
   isLoading: boolean;
@@ -18,9 +14,17 @@ type AuthAction =
   | { type: "SIGN_IN"; token: string }
   | { type: "SIGN_OUT" };
 
+interface SignUpParams {
+  firstName: string;
+  lastName: string;
+  username: string;
+  email: string;
+  password: string;
+}
+
 interface AuthContextValue extends AuthState {
-  signUp: (email: string, password: string) => Promise<void>;
-  signIn: (email: string, password: string) => Promise<void>;
+  signUp: (params: SignUpParams) => Promise<void>;
+  signIn: (identifier: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -72,14 +76,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const authContext: AuthContextValue = {
     ...state,
-    signUp: async (email: string, password: string) => {
-      const body: SignupRequest = { email, password };
+    signUp: async (params: SignUpParams) => {
+      const body: SignupRequest = {
+        first_name: params.firstName,
+        last_name: params.lastName,
+        username: params.username,
+        email: params.email,
+        password: params.password,
+      };
       const { data } = await api.post<TokenResponse>("/auth/signup", body);
       await storeTokens(data);
       dispatch({ type: "SIGN_IN", token: data.access_token });
     },
-    signIn: async (email: string, password: string) => {
-      const body: LoginRequest = { email, password };
+    signIn: async (identifier: string, password: string) => {
+      const body: LoginRequest = { identifier, password };
       const { data } = await api.post<TokenResponse>("/auth/login", body);
       await storeTokens(data);
       dispatch({ type: "SIGN_IN", token: data.access_token });

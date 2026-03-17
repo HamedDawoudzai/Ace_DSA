@@ -10,12 +10,14 @@ import {
 } from "react-native";
 import { RouteProp, useRoute } from "@react-navigation/native";
 import api from "../services/api";
-import { AttemptRequest, AttemptResponse, Drill } from "../types";
+import { AttemptRequest, AttemptResponse } from "../types";
 import { MainStackParamList } from "../navigation/MainTabs";
+import { useTheme } from "../context/ThemeContext";
 
 export default function DrillDetailScreen() {
   const route = useRoute<RouteProp<MainStackParamList, "DrillDetail">>();
   const { drill } = route.params;
+  const { colors, isDark } = useTheme();
 
   const [selected, setSelected] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -49,37 +51,61 @@ export default function DrillDetailScreen() {
     setResult(null);
   };
 
+  const getChoiceStyle = (index: number) => {
+    const isSelected = selected === index;
+    const showResult = result !== null;
+    const isCorrectChoice = index === drill.correct_option;
+
+    if (showResult && isCorrectChoice) {
+      return {
+        borderColor: colors.success,
+        backgroundColor: isDark ? "#0D2818" : "#E8F5E9",
+      };
+    }
+    if (showResult && isSelected && !result.is_correct) {
+      return {
+        borderColor: colors.error,
+        backgroundColor: isDark ? "#2D0A0A" : "#FFEBEE",
+      };
+    }
+    if (isSelected) {
+      return {
+        borderColor: colors.accent,
+        backgroundColor: isDark ? "#1A2A2A" : "#FFF9E0",
+      };
+    }
+    return {
+      borderColor: "transparent",
+      backgroundColor: colors.surface,
+    };
+  };
+
   return (
     <ScrollView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: colors.background }]}
       contentContainerStyle={styles.content}
     >
-      <Text style={styles.category}>{drill.pattern_category}</Text>
-      <Text style={styles.prompt}>{drill.prompt}</Text>
+      <Text style={[styles.category, { color: colors.accent }]}>
+        {drill.pattern_category}
+      </Text>
+      <Text style={[styles.prompt, { color: colors.text }]}>
+        {drill.prompt}
+      </Text>
 
       {drill.choices.map((choice, index) => {
-        const isSelected = selected === index;
-        const showResult = result !== null;
-        const isCorrectChoice = index === drill.correct_option;
-
-        let choiceStyle = styles.choice;
-        if (showResult && isCorrectChoice) {
-          choiceStyle = { ...styles.choice, ...styles.choiceCorrect };
-        } else if (showResult && isSelected && !result.is_correct) {
-          choiceStyle = { ...styles.choice, ...styles.choiceWrong };
-        } else if (isSelected) {
-          choiceStyle = { ...styles.choice, ...styles.choiceSelected };
-        }
+        const dynamicStyle = getChoiceStyle(index);
 
         return (
           <TouchableOpacity
             key={index}
-            style={choiceStyle}
+            style={[styles.choice, dynamicStyle]}
             onPress={() => !result && setSelected(index)}
             activeOpacity={result ? 1 : 0.7}
             disabled={result !== null}
           >
-            <Text style={styles.choiceText}>{choice}</Text>
+            <Text style={[styles.choiceText, { color: colors.text }]}>
+              {choice}
+            </Text>
           </TouchableOpacity>
         );
       })}
@@ -89,25 +115,36 @@ export default function DrillDetailScreen() {
           <Text
             style={[
               styles.resultText,
-              result.is_correct ? styles.correctText : styles.wrongText,
+              { color: result.is_correct ? colors.success : colors.error },
             ]}
           >
             {result.is_correct ? "Correct!" : "Incorrect"}
           </Text>
-          <TouchableOpacity style={styles.resetBtn} onPress={handleReset}>
-            <Text style={styles.resetText}>Try Another</Text>
+          <TouchableOpacity
+            style={[styles.resetBtn, { backgroundColor: colors.accent }]}
+            onPress={handleReset}
+          >
+            <Text style={[styles.resetText, { color: colors.accentText }]}>
+              Try Another
+            </Text>
           </TouchableOpacity>
         </View>
       ) : (
         <TouchableOpacity
-          style={[styles.submitBtn, selected === null && styles.submitDisabled]}
+          style={[
+            styles.submitBtn,
+            { backgroundColor: colors.accent },
+            selected === null && styles.submitDisabled,
+          ]}
           onPress={handleSubmit}
           disabled={submitting || selected === null}
         >
           {submitting ? (
-            <ActivityIndicator color="#000" />
+            <ActivityIndicator color={colors.accentText} />
           ) : (
-            <Text style={styles.submitText}>Submit</Text>
+            <Text style={[styles.submitText, { color: colors.accentText }]}>
+              Submit
+            </Text>
           )}
         </TouchableOpacity>
       )}
@@ -118,7 +155,6 @@ export default function DrillDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#E1DAC9",
   },
   content: {
     padding: 20,
@@ -126,7 +162,6 @@ const styles = StyleSheet.create({
   category: {
     fontSize: 12,
     fontWeight: "700",
-    color: "#F5C842",
     textTransform: "uppercase",
     letterSpacing: 1,
     marginBottom: 10,
@@ -134,37 +169,20 @@ const styles = StyleSheet.create({
   prompt: {
     fontSize: 20,
     fontWeight: "700",
-    color: "#222",
     marginBottom: 24,
     lineHeight: 28,
   },
   choice: {
-    backgroundColor: "#fff",
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
     borderWidth: 2,
-    borderColor: "transparent",
-  },
-  choiceSelected: {
-    borderColor: "#F5C842",
-    backgroundColor: "#FFF9E0",
-  },
-  choiceCorrect: {
-    borderColor: "#4CAF50",
-    backgroundColor: "#E8F5E9",
-  },
-  choiceWrong: {
-    borderColor: "#F44336",
-    backgroundColor: "#FFEBEE",
   },
   choiceText: {
     fontSize: 16,
-    color: "#333",
     lineHeight: 22,
   },
   submitBtn: {
-    backgroundColor: "#F5C842",
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: "center",
@@ -176,7 +194,6 @@ const styles = StyleSheet.create({
   submitText: {
     fontSize: 17,
     fontWeight: "700",
-    color: "#000",
   },
   resultContainer: {
     alignItems: "center",
@@ -187,14 +204,7 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     marginBottom: 16,
   },
-  correctText: {
-    color: "#4CAF50",
-  },
-  wrongText: {
-    color: "#F44336",
-  },
   resetBtn: {
-    backgroundColor: "#F5C842",
     borderRadius: 12,
     paddingVertical: 12,
     paddingHorizontal: 32,
@@ -202,6 +212,5 @@ const styles = StyleSheet.create({
   resetText: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#000",
   },
 });

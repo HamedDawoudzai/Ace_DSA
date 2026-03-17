@@ -1,18 +1,36 @@
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, SafeAreaView } from "react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useNavigation } from "@react-navigation/native";
 import HomeCard from "../components/HomeCard";
+import SpinningLogo from "../components/SpinningLogo";
+import ThemeToggle from "../components/ThemeToggle";
 import { MainStackParamList } from "../navigation/MainTabs";
+import { useTheme } from "../context/ThemeContext";
 
 export default function HomeScreen() {
   const navigation =
     useNavigation<NativeStackNavigationProp<MainStackParamList>>();
+  const { colors } = useTheme();
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.background }]}
+    >
+      <View style={styles.topBar}>
+        <View style={styles.topBarSpacer} />
+        <ThemeToggle />
+      </View>
+
       <View style={styles.content}>
-        <Text style={styles.title}>Ace DSA</Text>
+        <View style={styles.logoContainer}>
+          <SpinningLogo size={200} />
+        </View>
+
+        <Text style={[styles.title, { color: colors.accent }]}>Ace DSA</Text>
+        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+          What do you want to do today?
+        </Text>
 
         <View style={styles.cards}>
           <HomeCard
@@ -30,29 +48,49 @@ export default function HomeScreen() {
           />
         </View>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#E1DAC9",
+  },
+  topBar: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingBottom: 4,
+  },
+  topBarSpacer: {
+    flex: 1,
   },
   content: {
     flex: 1,
     justifyContent: "center",
     paddingHorizontal: 24,
+    paddingBottom: 40,
+  },
+  logoContainer: {
+    alignItems: "center",
+    marginBottom: 4,
   },
   title: {
-    fontSize: 36,
-    fontWeight: "bold",
-    color: "#F5C842",
+    fontSize: 38,
+    fontWeight: "900",
     textAlign: "center",
-    marginBottom: 40,
+    marginBottom: 6,
+    letterSpacing: 0.5,
+  },
+  subtitle: {
+    fontSize: 16,
+    textAlign: "center",
+    marginBottom: 36,
+    fontWeight: "500",
   },
   cards: {},
   spacer: {
-    height: 20,
+    height: 16,
   },
 });

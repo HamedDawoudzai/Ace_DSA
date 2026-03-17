@@ -10,8 +10,10 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import api from "../services/api";
 import { StatsResponse } from "../types";
+import { useTheme } from "../context/ThemeContext";
 
 export default function StatsScreen() {
+  const { colors } = useTheme();
   const [stats, setStats] = useState<StatsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -34,18 +36,20 @@ export default function StatsScreen() {
 
   if (loading) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color="#F5C842" />
+      <View style={[styles.center, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.accent} />
       </View>
     );
   }
 
   if (!stats || stats.patterns.length === 0) {
     return (
-      <View style={styles.center}>
-        <Ionicons name="stats-chart-outline" size={64} color="#ccc" />
-        <Text style={styles.emptyTitle}>No Stats Yet</Text>
-        <Text style={styles.emptySubtitle}>
+      <View style={[styles.center, { backgroundColor: colors.background }]}>
+        <Ionicons name="stats-chart-outline" size={64} color={colors.textMuted} />
+        <Text style={[styles.emptyTitle, { color: colors.text }]}>
+          No Stats Yet
+        </Text>
+        <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
           Complete some drills to see your stats here.
         </Text>
       </View>
@@ -53,19 +57,29 @@ export default function StatsScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.summaryRow}>
-        <View style={styles.summaryCard}>
-          <Text style={styles.summaryValue}>{stats.total_attempts}</Text>
-          <Text style={styles.summaryLabel}>Attempts</Text>
+        <View style={[styles.summaryCard, { backgroundColor: colors.surface }]}>
+          <Text style={[styles.summaryValue, { color: colors.accent }]}>
+            {stats.total_attempts}
+          </Text>
+          <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>
+            Attempts
+          </Text>
         </View>
-        <View style={styles.summaryCard}>
-          <Text style={styles.summaryValue}>{stats.streak}</Text>
-          <Text style={styles.summaryLabel}>Day Streak</Text>
+        <View style={[styles.summaryCard, { backgroundColor: colors.surface }]}>
+          <Text style={[styles.summaryValue, { color: colors.accent }]}>
+            {stats.streak}
+          </Text>
+          <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>
+            Day Streak
+          </Text>
         </View>
       </View>
 
-      <Text style={styles.sectionTitle}>By Pattern</Text>
+      <Text style={[styles.sectionTitle, { color: colors.text }]}>
+        By Pattern
+      </Text>
 
       <FlatList
         data={stats.patterns}
@@ -81,9 +95,15 @@ export default function StatsScreen() {
           />
         }
         renderItem={({ item }) => (
-          <View style={styles.patternRow}>
-            <Text style={styles.patternName}>{item.pattern}</Text>
-            <Text style={styles.patternCount}>{item.total}</Text>
+          <View
+            style={[styles.patternRow, { backgroundColor: colors.surface }]}
+          >
+            <Text style={[styles.patternName, { color: colors.text }]}>
+              {item.pattern}
+            </Text>
+            <Text style={[styles.patternCount, { color: colors.accent }]}>
+              {item.total}
+            </Text>
           </View>
         )}
       />
@@ -94,24 +114,20 @@ export default function StatsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#E1DAC9",
   },
   center: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#E1DAC9",
     padding: 32,
   },
   emptyTitle: {
     fontSize: 22,
     fontWeight: "700",
-    color: "#333",
     marginTop: 16,
   },
   emptySubtitle: {
     fontSize: 15,
-    color: "#777",
     textAlign: "center",
     marginTop: 8,
     lineHeight: 22,
@@ -123,7 +139,6 @@ const styles = StyleSheet.create({
   },
   summaryCard: {
     flex: 1,
-    backgroundColor: "#fff",
     borderRadius: 14,
     padding: 20,
     alignItems: "center",
@@ -131,17 +146,14 @@ const styles = StyleSheet.create({
   summaryValue: {
     fontSize: 32,
     fontWeight: "800",
-    color: "#F5C842",
   },
   summaryLabel: {
     fontSize: 14,
-    color: "#666",
     marginTop: 4,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#333",
     paddingHorizontal: 16,
     paddingTop: 8,
     paddingBottom: 8,
@@ -154,7 +166,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "#fff",
     borderRadius: 12,
     padding: 16,
     marginBottom: 10,
@@ -162,11 +173,9 @@ const styles = StyleSheet.create({
   patternName: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#333",
   },
   patternCount: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#F5C842",
   },
 });
