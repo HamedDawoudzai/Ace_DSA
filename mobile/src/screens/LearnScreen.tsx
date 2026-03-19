@@ -6,6 +6,7 @@ import {
   Pressable,
   FlatList,
   TouchableOpacity,
+  Image,
 } from "react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useNavigation } from "@react-navigation/native";
@@ -108,6 +109,15 @@ export default function LearnScreen() {
               })
             }
           >
+            {item.image ? (
+              <View style={styles.imageWrap}>
+                <Image
+                  source={item.image}
+                  style={styles.image}
+                  resizeMode="cover"
+                />
+              </View>
+            ) : null}
             <View style={styles.cardHeader}>
               <Text style={[styles.step, { color: colors.textMuted }]}>
                 Step {item.level}
@@ -174,6 +184,17 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
+  },
+  imageWrap: {
+    borderRadius: 12,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "rgba(0,0,0,0.05)",
+    marginBottom: 12,
+  },
+  image: {
+    width: "100%",
+    height: 140,
   },
   cardHeader: {
     flexDirection: "row",

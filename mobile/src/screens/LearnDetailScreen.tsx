@@ -1,6 +1,6 @@
 import React from "react";
 import { RouteProp, useRoute } from "@react-navigation/native";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
 import { MainStackParamList } from "../navigation/MainTabs";
 import { getLearnTopic, LearnTrack } from "../data/learnTopics";
 import { useTheme } from "../context/ThemeContext";
@@ -49,15 +49,28 @@ export default function LearnDetailScreen() {
         {topic.subtitle}
       </Text>
 
+      {topic.image ? (
+        <View
+          style={[
+            styles.imageWrap,
+            {
+              borderColor: colors.border,
+              backgroundColor: colors.surfaceAlt,
+            },
+          ]}
+        >
+          <Image
+            source={topic.image}
+            style={styles.image}
+            resizeMode="cover"
+          />
+        </View>
+      ) : null}
+
       {/* Placeholder for future diagram / image */}
-      <View
-        style={[
-          styles.diagramPlaceholder,
-          { borderColor: colors.border, backgroundColor: colors.surfaceAlt },
-        ]}
-      >
+      <View style={styles.diagramPlaceholder}>
         <Text style={[styles.diagramText, { color: colors.textMuted }]}>
-          Diagram coming soon
+          Description & usage notes below
         </Text>
       </View>
 
@@ -120,6 +133,16 @@ const styles = StyleSheet.create({
   },
   diagramText: {
     fontSize: 12,
+  },
+  imageWrap: {
+    borderRadius: 16,
+    borderWidth: 1,
+    overflow: "hidden",
+    marginBottom: 18,
+  },
+  image: {
+    width: "100%",
+    height: 220,
   },
   summary: {
     fontSize: 15,
