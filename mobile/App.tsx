@@ -1,13 +1,16 @@
 import React from "react";
+import { Platform } from "react-native";
 import { NavigationContainer, DefaultTheme, DarkTheme } from "@react-navigation/native";
 import { StatusBar } from "expo-status-bar";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import { enableScreens } from "react-native-screens";
 import { AuthProvider } from "./src/context/AuthContext";
 import { NotificationProvider } from "./src/context/NotificationContext";
 import { ThemeProvider, useTheme } from "./src/context/ThemeContext";
 import RootNavigator from "./src/navigation/RootNavigator";
 
-enableScreens(true);
+// react-native-screens can cause blank screens on web; disable for web
+enableScreens(Platform.OS !== "web");
 
 function AppInner() {
   const { colors, isDark } = useTheme();
@@ -46,12 +49,14 @@ function AppInner() {
 
 export default function App() {
   return (
-    <ThemeProvider>
-      <NotificationProvider>
-        <AuthProvider>
-          <AppInner />
-        </AuthProvider>
-      </NotificationProvider>
-    </ThemeProvider>
+    <SafeAreaProvider>
+      <ThemeProvider>
+        <NotificationProvider>
+          <AuthProvider>
+            <AppInner />
+          </AuthProvider>
+        </NotificationProvider>
+      </ThemeProvider>
+    </SafeAreaProvider>
   );
 }

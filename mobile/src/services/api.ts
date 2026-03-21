@@ -1,15 +1,8 @@
-import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 import * as storage from "./storage";
 import { TokenResponse, RefreshRequest } from "../types";
 import { getApiBaseUrl } from "../config";
 
 const BASE_URL = getApiBaseUrl();
-
-const api = axios.create({
-  baseURL: BASE_URL,
-  timeout: 10000,
-  headers: { "Content-Type": "application/json" },
-});
 
 let isRefreshing = false;
 let failedQueue: {
@@ -28,72 +21,97 @@ function processQueue(error: unknown, token: string | null) {
   failedQueue = [];
 }
 
-api.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
+async function requestWithAuth(
+  url: string,
+  options: RequestInit,
+  retry = true
+): Promise<Response> {
   const token = await storage.getItem("access_token");
-  if (token && config.headers) {
-    config.headers.Authorization = `Bearer ${token}`;
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    ...(options.headers as Record<string, string>),
+  };
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
   }
-  return config;
-});
 
-api.interceptors.response.use(
-  (response) => response,
-  async (error: AxiosError) => {
-    const originalRequest = error.config as InternalAxiosRequestConfig & {
-      _retry?: boolean;
-    };
+  const res = await fetch(`${BASE_URL}${url}`, {
+    ...options,
+    headers,
+  });
 
-    if (error.response?.status !== 401 || originalRequest._retry) {
-      return Promise.reject(error);
-    }
-
+  if (res.status === 401 && retry) {
     if (isRefreshing) {
-      return new Promise((resolve, reject) => {
+      return new Promise<Response>((resolve, reject) => {
         failedQueue.push({
-          resolve: (token: string) => {
-            if (originalRequest.headers) {
-              originalRequest.headers.Authorization = `Bearer ${token}`;
-            }
-            resolve(api(originalRequest));
+          resolve: async (newToken: string) => {
+            const h = { ...headers, Authorization: `Bearer ${newToken}` };
+            const r = await fetch(`${BASE_URL}${url}`, { ...options, headers: h });
+            resolve(r);
           },
           reject,
         });
       });
     }
 
-    originalRequest._retry = true;
     isRefreshing = true;
+    const refreshToken = await storage.getItem("refresh_token");
+    if (!refreshToken) {
+      isRefreshing = false;
+      return res;
+    }
 
     try {
-      const refreshToken = await storage.getItem("refresh_token");
-      if (!refreshToken) {
-        throw new Error("Username or password is incorrect.");
-      }
-
       const body: RefreshRequest = { refresh_token: refreshToken };
-      const { data } = await axios.post<TokenResponse>(
-        `${BASE_URL}/auth/refresh`,
-        body
-      );
-
+      const refreshRes = await fetch(`${BASE_URL}/auth/refresh`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const data: TokenResponse = await refreshRes.json();
       await storage.setItem("access_token", data.access_token);
       await storage.setItem("refresh_token", data.refresh_token);
-
       processQueue(null, data.access_token);
-
-      if (originalRequest.headers) {
-        originalRequest.headers.Authorization = `Bearer ${data.access_token}`;
-      }
-      return api(originalRequest);
-    } catch (refreshError) {
-      processQueue(refreshError, null);
+      return requestWithAuth(url, options, false);
+    } catch (err) {
+      processQueue(err, null);
       await storage.deleteItem("access_token");
       await storage.deleteItem("refresh_token");
-      return Promise.reject(refreshError);
+      throw err;
     } finally {
       isRefreshing = false;
     }
   }
-);
+
+  return res;
+}
+
+const api = {
+  async get<T>(path: string): Promise<{ data: T }> {
+    const res = await requestWithAuth(path, { method: "GET" });
+    const text = await res.text();
+    const data = text ? JSON.parse(text) : {};
+    if (!res.ok) {
+      const err = new Error((data as { message?: string }).message || "Request failed");
+      (err as Error & { response?: unknown }).response = { status: res.status, data };
+      throw err;
+    }
+    return { data: data as T };
+  },
+  async post<T>(path: string, body: unknown): Promise<{ data: T }> {
+    const res = await requestWithAuth(path, {
+      method: "POST",
+      body: JSON.stringify(body),
+    });
+    const text = await res.text();
+    const data = text ? JSON.parse(text) : {};
+    if (!res.ok) {
+      const err = new Error((data as { message?: string }).message || "Request failed");
+      (err as Error & { response?: unknown }).response = { status: res.status, data };
+      throw err;
+    }
+    return { data: data as T };
+  },
+};
 
 export default api;

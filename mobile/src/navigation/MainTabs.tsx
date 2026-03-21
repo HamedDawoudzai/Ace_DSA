@@ -43,6 +43,7 @@ function HomeStack() {
         headerTintColor: colors.headerText,
         headerShadowVisible: false,
         animation: "slide_from_right",
+        contentStyle: { backgroundColor: colors.background },
       }}
     >
       <Stack.Screen
@@ -257,6 +258,8 @@ export default function MainTabs() {
           backgroundColor: colors.tabBar,
           borderTopColor: colors.tabBarBorder,
         },
+        sceneContainerStyle: { backgroundColor: colors.background },
+        lazy: false,
       }}
     >
       <Tab.Screen
