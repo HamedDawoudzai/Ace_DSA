@@ -27,7 +27,7 @@ See [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md) for full setup.
 
 | Area | Technologies |
 |------|--------------|
-| **Mobile** | React Native, Expo (SDK 54), TypeScript |
+| **Mobile** | React Native, Expo, TypeScript |
 | **Backend** | Go 1.26, standard library HTTP |
 | **Database** | PostgreSQL (pgx driver) |
 | **Auth** | JWT (access + refresh tokens) |
@@ -45,11 +45,12 @@ ace-dsa/
 │   ├── App.tsx               # Entry point
 │   ├── src/
 │   │   ├── types/            # TypeScript interfaces matching backend JSON
-│   │   ├── services/         # Axios API client, JWT interceptor, storage
-│   │   ├── context/          # AuthContext (login, signup, signout, token restore)
+│   │   ├── services/         # API client (fetch), storage
+│   │   ├── context/          # AuthContext, ThemeContext, NotificationContext
 │   │   ├── navigation/       # RootNavigator, AuthStack, MainTabs
-│   │   ├── screens/          # AuthScreen, HomeScreen, DrillsScreen, etc.
-│   │   └── components/       # Reusable UI (HomeCard)
+│   │   ├── screens/          # AuthScreen, HomeScreen, DrillsScreen, LearnScreen, etc.
+│   │   ├── components/       # HomeCard, SpinningLogo, ThemeToggle
+│   │   └── data/             # learnTopics.ts (DSA topic definitions)
 │   └── package.json
 ├── backend/
 │   ├── cmd/api/              # API entrypoint
@@ -60,7 +61,8 @@ ace-dsa/
 │   │   ├── drills/           # Drill feed, pattern + choices
 │   │   ├── attempts/         # User drill submissions
 │   │   └── stats/            # Per-pattern performance, streak
-│   └── migrations/           # SQL (see internal/db/migrations for embedded)
+│   └── migrations/           # SQL migrations
+├── images/                   # DSA topic diagrams (Arrays, Stack, Queue, BST, etc.)
 ├── infra/                    # AWS / Terraform (later)
 ├── docs/                     # GETTING_STARTED, design notes
 └── .github/workflows/        # CI (Go test, gofmt, go vet)
@@ -77,20 +79,18 @@ ace-dsa/
 | Docker (backend + Postgres) | AWS / Terraform deployment |
 | CI (test, gofmt, go vet) | |
 | Auth (signup, login, refresh, JWT) | |
-| React Native app (Expo SDK 54) | |
-| Auth flow, drill list, drill detail, stats | |
-| CORS, request logging, graceful shutdown | |
+| React Native app (Expo) | |
+| Auth flow, Home (Learn DSA / Practice), Drills, Learn track, Stats | |
+| DSA topic images (Arrays, Stack, Queue, Linked Lists, Trees, Heaps, Graphs) | |
 
 ---
 
 ## Prerequisites
 
-- **Node.js** 20.19.4 or newer (required by Expo SDK 54)
 - **Docker** (easiest for backend): Docker Desktop or Docker Engine + Compose
 - **Or** Go 1.26+ if you want to run the backend without Docker
-- **Expo Go** app on your phone (iOS App Store or Android Play Store) for mobile testing
-
----
+- **Mobile:** Node.js 18+, npm or yarn. Expo CLI (npx expo) for running the app
+- **Expo Go** app on your phone for on-device testing
 
 ## Local run
 
@@ -135,7 +135,7 @@ Then:
 - Scan the QR code with **Expo Go** on your phone (phone and PC must be on the same Wi-Fi)
 - Press **a** for Android emulator or **i** for iOS simulator
 
-**Important:** If testing on a phone or emulator, update `BASE_URL` in `mobile/src/services/api.ts` from `http://localhost:8080` to your machine's LAN IP (e.g. `http://192.168.1.x:8080`).
+**Important:** If testing on a phone or emulator, set `EXPO_PUBLIC_API_BASE_URL` or update `apiBaseUrl` in `mobile/app.json` from `http://localhost:8080` to your machine's LAN IP (e.g. `http://192.168.1.x:8080`).
 
 ### Tests and format
 
@@ -170,7 +170,7 @@ On push and PRs to `main`, GitHub Actions runs Go tests, go vet, and gofmt in `b
 
 ## Setup outside the repo
 
-- **Node.js:** [nodejs.org/en/download](https://nodejs.org/en/download/) - version 20.19.4 or newer required
+- **Node.js:** [nodejs.org/en/download](https://nodejs.org/en/download/) - version 18 or newer
 - **Go:** [go.dev/dl](https://go.dev/dl/) - add to PATH; restart your terminal or IDE after installing
 - **Docker:** [Docker Desktop](https://www.docker.com/products/docker-desktop/) - start the engine before `docker compose up`
 - **Expo Go:** Install from the App Store (iOS) or Play Store (Android) for on-device testing
