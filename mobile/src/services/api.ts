@@ -86,14 +86,24 @@ async function requestWithAuth(
   return res;
 }
 
+function parseResponse<T>(text: string): T {
+  if (!text.trim()) return {} as T;
+  try {
+    return JSON.parse(text) as T;
+  } catch {
+    return { message: text } as T;
+  }
+}
+
 const api = {
   async get<T>(path: string): Promise<{ data: T }> {
     const res = await requestWithAuth(path, { method: "GET" });
     const text = await res.text();
-    const data = text ? JSON.parse(text) : {};
+    const data = parseResponse<{ message?: string }>(text);
     if (!res.ok) {
-      const err = new Error((data as { message?: string }).message || "Request failed");
-      (err as Error & { response?: unknown }).response = { status: res.status, data };
+      const msg = data.message || "Request failed";
+      const err = new Error(msg);
+      (err as Error & { response?: unknown }).response = { status: res.status, data: msg };
       throw err;
     }
     return { data: data as T };
@@ -104,10 +114,11 @@ const api = {
       body: JSON.stringify(body),
     });
     const text = await res.text();
-    const data = text ? JSON.parse(text) : {};
+    const data = parseResponse<{ message?: string }>(text);
     if (!res.ok) {
-      const err = new Error((data as { message?: string }).message || "Request failed");
-      (err as Error & { response?: unknown }).response = { status: res.status, data };
+      const msg = data.message || "Request failed";
+      const err = new Error(msg);
+      (err as Error & { response?: unknown }).response = { status: res.status, data: msg };
       throw err;
     }
     return { data: data as T };

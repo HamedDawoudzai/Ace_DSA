@@ -21,7 +21,7 @@ export const DATA_STRUCTURE_TOPICS: LearnTopic[] = [
     subtitle: "Indexed contiguous storage",
     level: 1,
     summary: "The foundation for most DSA problems and higher-level structures.",
-    image: require("../../../images/Arrays.png"),
+    image: require("../../assets/images/Arrays.png"),
     details:
       "An array is a contiguous block of memory where elements are stored back-to-back and accessed by index. " +
       "Random access is O(1), but inserting or deleting in the middle can be O(n) because elements may need to shift. " +
@@ -35,7 +35,7 @@ export const DATA_STRUCTURE_TOPICS: LearnTopic[] = [
     subtitle: "Arrays of characters",
     level: 2,
     summary: "Specialized arrays; core to many LeetCode-style questions.",
-    image: require("../../../images/Strings.png"),
+    image: require("../../assets/images/Strings.png"),
     details:
       "A string is usually an immutable array of characters. Under the hood it behaves like an array with length, indexing, and slicing. " +
       "Because strings are often immutable, operations that appear to modify a string create a new one. " +
@@ -48,7 +48,7 @@ export const DATA_STRUCTURE_TOPICS: LearnTopic[] = [
     subtitle: "Nodes connected by pointers",
     level: 3,
     summary: "Lets you insert/delete in the middle by rewiring pointers instead of shifting elements.",
-    image: require("../../../images/Singly Linked List.png"),
+    image: require("../../assets/images/singly_linked_list.png"),
     details:
       "A linked list is a sequence of nodes where each node holds data and a reference to the next node (and sometimes the previous node). " +
       "Accessing the k-th element is O(k), but inserting or deleting at a known position is O(1). " +
@@ -61,7 +61,7 @@ export const DATA_STRUCTURE_TOPICS: LearnTopic[] = [
     subtitle: "Last-in, first-out (LIFO)",
     level: 4,
     summary: "Used for undo, parsing, recursion, and many monotonic-stack problems.",
-    image: require("../../../images/Stack.png"),
+    image: require("../../assets/images/Stack.png"),
     details:
       "A stack supports push and pop from one end in O(1). It is typically implemented using an array or a linked list. " +
       "Stacks naturally represent nested structure: parentheses validation, expression evaluation, monotonic stacks for next-greater-element, " +
@@ -74,7 +74,7 @@ export const DATA_STRUCTURE_TOPICS: LearnTopic[] = [
     subtitle: "First-in, first-out and double-ended",
     level: 5,
     summary: "Natural for processing items in arrival order; core for BFS and sliding window.",
-    image: require("../../../images/Queue.png"),
+    image: require("../../assets/images/Queue.png"),
     details:
       "A queue supports enqueue at the back and dequeue from the front in O(1). It is used any time you need to process things in arrival order. " +
       "Breadth-first search (BFS) on trees and graphs is implemented with a queue. Deques (double-ended queues) generalize queues so you can push/pop from both ends, " +
@@ -87,7 +87,7 @@ export const DATA_STRUCTURE_TOPICS: LearnTopic[] = [
     subtitle: "Key → value lookup in O(1) average time",
     level: 6,
     summary: "The workhorse for counting, membership tests, and grouping.",
-    image: require("../../../images/Hash Map.png"),
+    image: require("../../assets/images/hash_map.png"),
     details:
       "A hash table uses a hash function to map keys to buckets. With good hashing and low load factor, inserts, deletes, and lookups are O(1) on average. " +
       "Hash maps and hash sets are your default tools for counting frequencies, detecting duplicates, grouping by key, and implementing caches.",
@@ -99,7 +99,7 @@ export const DATA_STRUCTURE_TOPICS: LearnTopic[] = [
     subtitle: "Hierarchical, recursively defined structures",
     level: 7,
     summary: "Powerful for representing hierarchies; prepares you for BSTs and heaps.",
-    image: require("../../../images/Binary Tree.png"),
+    image: require("../../assets/images/binary_tree.png"),
     details:
       "A tree is a connected acyclic graph with a root. Binary trees restrict each node to at most two children. " +
       "Recursive definitions make traversal algorithms like pre-order, in-order, and post-order natural. " +
@@ -112,7 +112,7 @@ export const DATA_STRUCTURE_TOPICS: LearnTopic[] = [
     subtitle: "Ordered binary trees",
     level: 8,
     summary: "Maintain sorted data with efficient inserts, deletes, and lookups.",
-    image: require("../../../images/Binary Search Tree.png"),
+    image: require("../../assets/images/bst.png"),
     details:
       "A binary search tree (BST) maintains the invariant: left subtree < node < right subtree. " +
       "This allows search, insert, and delete in O(h) where h is the tree height. " +
@@ -125,7 +125,7 @@ export const DATA_STRUCTURE_TOPICS: LearnTopic[] = [
     subtitle: "Efficient access to min/max elements",
     level: 9,
     summary: "Great for top-k, scheduling, and graph algorithms like Dijkstra.",
-    image: require("../../../images/Priority Queue.png"),
+    image: require("../../assets/images/priority_queue.png"),
     details:
       "A binary heap is an array-based tree that preserves a partial order: each parent is ≤ (min-heap) or ≥ (max-heap) its children. " +
       "Priority queues built on heaps support inserting and extracting the smallest or largest element in O(log n). " +
@@ -138,7 +138,7 @@ export const DATA_STRUCTURE_TOPICS: LearnTopic[] = [
     subtitle: "Nodes and edges",
     level: 10,
     summary: "Model relationships and networks; backbone for many advanced algorithms.",
-    image: require("../../../images/Weighted Graph:Graph.png"),
+    image: require("../../assets/images/weighted_graph.png"),
     details:
       "Graphs model relationships as nodes connected by edges, optionally directed and weighted. " +
       "They are represented with adjacency lists or matrices. Many real-world problems (networks, prerequisites, maps) are graph problems. " +
@@ -151,7 +151,7 @@ export const DATA_STRUCTURE_TOPICS: LearnTopic[] = [
     subtitle: "Prefix trees for strings",
     level: 11,
     summary: "Efficiently store sets of strings by shared prefixes.",
-    image: require("../../../images/Tries.png"),
+    image: require("../../assets/images/Tries.png"),
     details:
       "A trie (prefix tree) stores characters along edges so that each path from root to node represents a prefix. " +
       "It supports prefix search in O(L) where L is the length of the word. " +
