@@ -11,6 +11,9 @@ export interface LearnTopic {
   summary: string;
   details: string;
   image?: ImageSourcePropType;
+  generalUnderstanding?: string;
+  leetcodeTactics?: string[];
+  relatedAlgorithmIds?: string[];
 }
 
 export const DATA_STRUCTURE_TOPICS: LearnTopic[] = [
@@ -27,6 +30,14 @@ export const DATA_STRUCTURE_TOPICS: LearnTopic[] = [
       "Random access is O(1), but inserting or deleting in the middle can be O(n) because elements may need to shift. " +
       "Most languages expose fixed-length arrays and dynamic array wrappers (like slices or vectors) that manage resizing. " +
       "Interview patterns like two pointers, sliding windows, and prefix sums almost always begin with arrays.",
+    generalUnderstanding:
+      "Arrays keep data in contiguous memory and allow direct index access. Use them when order matters, when you need fast random reads, and as the base container for many optimized techniques.",
+    leetcodeTactics: [
+      "Track boundaries and invariants for left/right pointers.",
+      "Precompute prefix/suffix values to answer range queries quickly.",
+      "Convert nested loops to one-pass or two-pass scans when possible.",
+    ],
+    relatedAlgorithmIds: ["algo-array-scan", "algo-two-pointers", "algo-sliding-window", "algo-binary-search"],
   },
   {
     id: "ds-strings",
@@ -40,6 +51,14 @@ export const DATA_STRUCTURE_TOPICS: LearnTopic[] = [
       "A string is usually an immutable array of characters. Under the hood it behaves like an array with length, indexing, and slicing. " +
       "Because strings are often immutable, operations that appear to modify a string create a new one. " +
       "In algorithm problems, string challenges are typically solved using array techniques such as sliding windows, hashing, and prefix sums.",
+    generalUnderstanding:
+      "Strings represent character sequences and are commonly immutable. They are ideal for pattern matching, parsing, and text constraints where indexing and frequency logic are needed.",
+    leetcodeTactics: [
+      "Use frequency maps to compare character windows efficiently.",
+      "Build canonical forms (sorted signature or counts) for grouping.",
+      "Use two pointers for palindrome and substring constraints.",
+    ],
+    relatedAlgorithmIds: ["algo-array-scan", "algo-sliding-window", "algo-two-pointers", "algo-dp-2d"],
   },
   {
     id: "ds-linked-lists",
@@ -53,6 +72,14 @@ export const DATA_STRUCTURE_TOPICS: LearnTopic[] = [
       "A linked list is a sequence of nodes where each node holds data and a reference to the next node (and sometimes the previous node). " +
       "Accessing the k-th element is O(k), but inserting or deleting at a known position is O(1). " +
       "Common interview patterns: fast/slow pointers, cycle detection (Floyd's algorithm), reversing a list, and merging sorted lists.",
+    generalUnderstanding:
+      "Linked lists trade random access for flexible insert/delete operations via pointer rewiring. They are useful when structural changes are frequent and contiguous memory is not required.",
+    leetcodeTactics: [
+      "Use dummy head nodes to simplify edge cases.",
+      "Track slow/fast pointers for midpoint and cycle detection.",
+      "Reverse in-place with prev/current/next pointer choreography.",
+    ],
+    relatedAlgorithmIds: ["algo-two-pointers", "algo-recursion"],
   },
   {
     id: "ds-stacks",
@@ -66,6 +93,14 @@ export const DATA_STRUCTURE_TOPICS: LearnTopic[] = [
       "A stack supports push and pop from one end in O(1). It is typically implemented using an array or a linked list. " +
       "Stacks naturally represent nested structure: parentheses validation, expression evaluation, monotonic stacks for next-greater-element, " +
       "and managing recursion frames (the call stack) are all stack-based patterns.",
+    generalUnderstanding:
+      "Stacks follow LIFO order and model 'most recent first' behavior. They are great for nested structures, undo flows, and monotonic constraints.",
+    leetcodeTactics: [
+      "Store indices on stack when positions matter.",
+      "Use monotonic stacks to find next greater/smaller elements in linear time.",
+      "Push sentinels to reduce empty-stack branching.",
+    ],
+    relatedAlgorithmIds: ["algo-array-scan", "algo-dfs"],
   },
   {
     id: "ds-queues",
@@ -79,6 +114,14 @@ export const DATA_STRUCTURE_TOPICS: LearnTopic[] = [
       "A queue supports enqueue at the back and dequeue from the front in O(1). It is used any time you need to process things in arrival order. " +
       "Breadth-first search (BFS) on trees and graphs is implemented with a queue. Deques (double-ended queues) generalize queues so you can push/pop from both ends, " +
       "and are the backbone of sliding-window maximum/minimum patterns.",
+    generalUnderstanding:
+      "Queues preserve processing order and support level-by-level workflows. Deques add flexibility for window-based optimization problems.",
+    leetcodeTactics: [
+      "For BFS, process one queue length at a time to isolate levels.",
+      "Use deque for sliding window max/min with a monotonic strategy.",
+      "Mark visited before enqueueing to avoid duplicate work.",
+    ],
+    relatedAlgorithmIds: ["algo-bfs", "algo-sliding-window"],
   },
   {
     id: "ds-hash-tables",
@@ -91,6 +134,14 @@ export const DATA_STRUCTURE_TOPICS: LearnTopic[] = [
     details:
       "A hash table uses a hash function to map keys to buckets. With good hashing and low load factor, inserts, deletes, and lookups are O(1) on average. " +
       "Hash maps and hash sets are your default tools for counting frequencies, detecting duplicates, grouping by key, and implementing caches.",
+    generalUnderstanding:
+      "Hash tables optimize lookup-heavy workflows. They are often the fastest path to remove repeated scans through frequency counting and membership checks.",
+    leetcodeTactics: [
+      "Replace nested loops with one-pass map/set lookups.",
+      "Store complement or needed value to solve pair-sum style problems.",
+      "Combine hash map with prefix sums for subarray counting.",
+    ],
+    relatedAlgorithmIds: ["algo-array-scan", "algo-sliding-window", "algo-dp-1d"],
   },
   {
     id: "ds-trees",
@@ -104,6 +155,14 @@ export const DATA_STRUCTURE_TOPICS: LearnTopic[] = [
       "A tree is a connected acyclic graph with a root. Binary trees restrict each node to at most two children. " +
       "Recursive definitions make traversal algorithms like pre-order, in-order, and post-order natural. " +
       "Many interview questions on recursion, divide-and-conquer, and dynamic programming are easier once you are comfortable with trees.",
+    generalUnderstanding:
+      "Trees encode hierarchy and naturally map to recursion. They are beneficial for divide-and-conquer reasoning and layered exploration.",
+    leetcodeTactics: [
+      "Return useful aggregates from recursion (height, balance, path sums).",
+      "Use preorder/inorder/postorder intentionally based on dependency order.",
+      "Switch to iterative traversal with explicit stack when needed.",
+    ],
+    relatedAlgorithmIds: ["algo-recursion", "algo-dfs", "algo-bfs"],
   },
   {
     id: "ds-bsts",
@@ -117,6 +176,14 @@ export const DATA_STRUCTURE_TOPICS: LearnTopic[] = [
       "A binary search tree (BST) maintains the invariant: left subtree < node < right subtree. " +
       "This allows search, insert, and delete in O(h) where h is the tree height. " +
       "In interviews, BSTs appear in problems about validation, kth-smallest elements, ranges, and building balanced trees from sorted arrays.",
+    generalUnderstanding:
+      "BSTs keep values ordered, enabling logarithmic operations in balanced cases. They are useful when you need both search capability and sorted traversal.",
+    leetcodeTactics: [
+      "Use inorder traversal to read keys in sorted order.",
+      "Maintain lower/upper bounds when validating BST constraints.",
+      "Track subtree sizes or reverse-inorder for kth element problems.",
+    ],
+    relatedAlgorithmIds: ["algo-binary-search", "algo-dfs", "algo-recursion"],
   },
   {
     id: "ds-heaps",
@@ -130,6 +197,14 @@ export const DATA_STRUCTURE_TOPICS: LearnTopic[] = [
       "A binary heap is an array-based tree that preserves a partial order: each parent is ≤ (min-heap) or ≥ (max-heap) its children. " +
       "Priority queues built on heaps support inserting and extracting the smallest or largest element in O(log n). " +
       "They are used in streaming top-k problems, scheduling, and shortest-path algorithms.",
+    generalUnderstanding:
+      "Heaps prioritize access to extreme values without full sorting. They shine in top-k, scheduling, and repeated best-next extraction problems.",
+    leetcodeTactics: [
+      "Use min-heap of size k for top-k largest stream patterns.",
+      "Use max-heap via negation or comparator for opposite priority.",
+      "Push updated states and ignore stale entries when popping.",
+    ],
+    relatedAlgorithmIds: ["algo-dijkstra", "algo-greedy", "algo-sorting"],
   },
   {
     id: "ds-graphs",
@@ -143,6 +218,14 @@ export const DATA_STRUCTURE_TOPICS: LearnTopic[] = [
       "Graphs model relationships as nodes connected by edges, optionally directed and weighted. " +
       "They are represented with adjacency lists or matrices. Many real-world problems (networks, prerequisites, maps) are graph problems. " +
       "Understanding graph representations is essential before learning BFS, DFS, Dijkstra, and topological sort.",
+    generalUnderstanding:
+      "Graphs model pairwise relationships between entities. They are beneficial for route planning, dependency handling, and connectivity analysis.",
+    leetcodeTactics: [
+      "Pick adjacency list by default for sparse graphs.",
+      "Track visited states carefully (node-only or node+extra-state).",
+      "Classify problems first: traversal, shortest path, cycle, ordering.",
+    ],
+    relatedAlgorithmIds: ["algo-bfs", "algo-dfs", "algo-dijkstra"],
   },
   {
     id: "ds-tries",
@@ -156,6 +239,14 @@ export const DATA_STRUCTURE_TOPICS: LearnTopic[] = [
       "A trie (prefix tree) stores characters along edges so that each path from root to node represents a prefix. " +
       "It supports prefix search in O(L) where L is the length of the word. " +
       "Tries are used for autocomplete, dictionary problems, and some pattern-matching questions.",
+    generalUnderstanding:
+      "Tries compress shared prefixes across many strings, enabling fast prefix queries. They are ideal for autocomplete and dictionary membership with prefix constraints.",
+    leetcodeTactics: [
+      "Store terminal flags and optional metadata at end-of-word nodes.",
+      "Use DFS from trie node for wildcard/prefix expansions.",
+      "Prune traversal early when character path is missing.",
+    ],
+    relatedAlgorithmIds: ["algo-dfs", "algo-backtracking"],
   },
 ];
 
@@ -310,5 +401,9 @@ export const ALGO_TOPICS: LearnTopic[] = [
 export function getLearnTopic(track: LearnTrack, id: string): LearnTopic | undefined {
   const source = track === "data-structures" ? DATA_STRUCTURE_TOPICS : ALGO_TOPICS;
   return source.find((t) => t.id === id);
+}
+
+export function getAlgorithmTopic(id: string): LearnTopic | undefined {
+  return ALGO_TOPICS.find((topic) => topic.id === id);
 }
 
