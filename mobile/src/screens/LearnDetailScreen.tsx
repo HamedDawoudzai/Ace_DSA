@@ -101,10 +101,31 @@ export default function LearnDetailScreen() {
         </View>
       ) : null}
 
-      <Text style={[styles.summary, { color: colors.text }]}>{topic.summary}</Text>
-      <Text style={[styles.details, { color: colors.textSecondary }]}>
-        {topic.details}
-      </Text>
+      <View
+        style={[
+          styles.sectionCard,
+          { backgroundColor: colors.surface, borderColor: colors.border },
+        ]}
+      >
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>What It Does</Text>
+        <Text style={[styles.sectionBody, { color: colors.textSecondary }]}>
+          {topic.summary}
+        </Text>
+      </View>
+
+      <View
+        style={[
+          styles.sectionCard,
+          { backgroundColor: colors.surface, borderColor: colors.border },
+        ]}
+      >
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>
+          How It Is Used + Why It Helps
+        </Text>
+        <Text style={[styles.sectionBody, { color: colors.textSecondary }]}>
+          {topic.details}
+        </Text>
+      </View>
 
       {topic.track === "data-structures" && topic.generalUnderstanding ? (
         <View
@@ -270,17 +291,8 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
   },
-  summary: {
-    fontSize: 15,
-    fontWeight: "600",
-    marginBottom: 10,
-  },
-  details: {
-    fontSize: 14,
-    lineHeight: 22,
-  },
   sectionCard: {
-    marginTop: 18,
+    marginTop: 12,
     borderWidth: 1,
     borderRadius: 16,
     padding: 14,
