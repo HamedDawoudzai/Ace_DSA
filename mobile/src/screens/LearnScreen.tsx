@@ -219,13 +219,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 8,
-    gap: 8,
+    paddingTop: 18,
+    paddingBottom: 10,
+    gap: 10,
   },
   headerTitle: {
-    fontSize: 16,
-    fontWeight: "700",
+    fontSize: 18,
+    fontWeight: "800",
   },
   segment: {
     flexDirection: "row",
@@ -252,8 +252,8 @@ const styles = StyleSheet.create({
   },
   card: {
     borderRadius: 20,
-    padding: 14,
-    marginBottom: 12,
+    padding: 15,
+    marginBottom: 14,
     borderWidth: 1,
     overflow: "hidden",
   },
@@ -329,13 +329,13 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   cardTitle: {
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: "800",
-    marginBottom: 3,
+    marginBottom: 4,
   },
   cardSubtitle: {
-    fontSize: 12,
-    lineHeight: 18,
+    fontSize: 13,
+    lineHeight: 19,
   },
   footerRow: {
     marginTop: 10,
