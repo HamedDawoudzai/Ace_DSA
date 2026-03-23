@@ -10,16 +10,22 @@ import {
   View,
 } from "react-native";
 import { MainStackParamList } from "../navigation/MainTabs";
-import { getLearnTopic, LearnTrack } from "../data/learnTopics";
+import {
+  getAlgorithmTopic,
+  getLearnTopic,
+  LearnTrack,
+} from "../data/learnTopics";
 import { useTheme } from "../context/ThemeContext";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 type LearnDetailRoute = RouteProp<MainStackParamList, "LearnDetail">;
+type DetailNavigation = NativeStackNavigationProp<MainStackParamList, "LearnDetail">;
 
 export default function LearnDetailScreen() {
   const route = useRoute<LearnDetailRoute>();
   const { id, track } = route.params;
   const { colors } = useTheme();
-  const navigation = useNavigation();
+  const navigation = useNavigation<DetailNavigation>();
 
   const topic = getLearnTopic(track as LearnTrack, id);
 
@@ -136,6 +142,52 @@ export default function LearnDetailScreen() {
               </Text>
             </View>
           ))}
+        </View>
+      ) : null}
+
+      {topic.track === "data-structures" &&
+      topic.relatedAlgorithmIds &&
+      topic.relatedAlgorithmIds.length > 0 ? (
+        <View
+          style={[
+            styles.sectionCard,
+            { backgroundColor: colors.surface, borderColor: colors.border },
+          ]}
+        >
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>
+            Algorithms With This Data Structure
+          </Text>
+          <Text style={[styles.sectionHint, { color: colors.textMuted }]}>
+            Tap an algorithm to open its dedicated guide.
+          </Text>
+          <View style={styles.algorithmWrap}>
+            {topic.relatedAlgorithmIds.map((algoId) => {
+              const algoTopic = getAlgorithmTopic(algoId);
+              if (!algoTopic) return null;
+              return (
+                <Pressable
+                  key={`${topic.id}-${algoId}`}
+                  onPress={() =>
+                    navigation.navigate("LearnDetail", {
+                      id: algoTopic.id,
+                      track: "algorithms",
+                    })
+                  }
+                  style={[
+                    styles.algorithmChip,
+                    {
+                      backgroundColor: colors.surfaceAlt,
+                      borderColor: colors.accent,
+                    },
+                  ]}
+                >
+                  <Text style={[styles.algorithmChipText, { color: colors.accent }]}>
+                    {algoTopic.title}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
         </View>
       ) : null}
     </ScrollView>
@@ -257,6 +309,25 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 14,
     lineHeight: 21,
+  },
+  sectionHint: {
+    fontSize: 12,
+    marginBottom: 10,
+  },
+  algorithmWrap: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  algorithmChip: {
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+  },
+  algorithmChipText: {
+    fontSize: 12,
+    fontWeight: "700",
   },
 });
 
