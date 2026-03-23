@@ -202,9 +202,13 @@ export default function LearnDetailScreen() {
                     },
                   ]}
                 >
-                  <Text style={[styles.algorithmChipText, { color: colors.accent }]}>
+                  <Text
+                    style={[styles.algorithmChipText, { color: colors.accent }]}
+                    numberOfLines={1}
+                  >
                     {algoTopic.title}
                   </Text>
+                  <Ionicons name="arrow-forward" size={12} color={colors.accent} />
                 </Pressable>
               );
             })}
@@ -336,6 +340,10 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     paddingHorizontal: 12,
     paddingVertical: 7,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    maxWidth: "100%",
   },
   algorithmChipText: {
     fontSize: 12,
