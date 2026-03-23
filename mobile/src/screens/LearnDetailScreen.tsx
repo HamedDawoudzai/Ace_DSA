@@ -99,6 +99,22 @@ export default function LearnDetailScreen() {
       <Text style={[styles.details, { color: colors.textSecondary }]}>
         {topic.details}
       </Text>
+
+      {topic.track === "data-structures" && topic.generalUnderstanding ? (
+        <View
+          style={[
+            styles.sectionCard,
+            { backgroundColor: colors.surface, borderColor: colors.border },
+          ]}
+        >
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>
+            General Understanding
+          </Text>
+          <Text style={[styles.sectionBody, { color: colors.textSecondary }]}>
+            {topic.generalUnderstanding}
+          </Text>
+        </View>
+      ) : null}
     </ScrollView>
   );
 }
@@ -185,6 +201,21 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   details: {
+    fontSize: 14,
+    lineHeight: 22,
+  },
+  sectionCard: {
+    marginTop: 18,
+    borderWidth: 1,
+    borderRadius: 16,
+    padding: 14,
+  },
+  sectionTitle: {
+    fontSize: 15,
+    fontWeight: "800",
+    marginBottom: 8,
+  },
+  sectionBody: {
     fontSize: 14,
     lineHeight: 22,
   },
