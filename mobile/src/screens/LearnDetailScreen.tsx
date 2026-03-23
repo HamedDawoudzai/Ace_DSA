@@ -95,13 +95,6 @@ export default function LearnDetailScreen() {
         </View>
       ) : null}
 
-      {/* Placeholder for future diagram / image */}
-      <View style={styles.diagramPlaceholder}>
-        <Text style={[styles.diagramText, { color: colors.textMuted }]}>
-          Description & usage notes below
-        </Text>
-      </View>
-
       <Text style={[styles.summary, { color: colors.text }]}>{topic.summary}</Text>
       <Text style={[styles.details, { color: colors.textSecondary }]}>
         {topic.details}
@@ -163,37 +156,24 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 14,
-    marginBottom: 18,
-  },
-  diagramPlaceholder: {
-    borderWidth: 1,
-    borderStyle: "dashed",
-    borderRadius: 16,
-    padding: 16,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 18,
-    minHeight: 120,
-  },
-  diagramText: {
-    fontSize: 12,
+    marginBottom: 14,
   },
   imageWrap: {
     borderRadius: 22,
     borderWidth: 1,
     overflow: "hidden",
     marginBottom: 18,
-    height: 270,
+    height: 300,
     justifyContent: "center",
     alignItems: "center",
-    padding: 12,
+    padding: 10,
   },
   imageInner: {
     width: "100%",
     height: "100%",
-    borderRadius: 16,
+    borderRadius: 14,
     overflow: "hidden",
-    backgroundColor: "rgba(255,255,255,0.22)",
+    backgroundColor: "rgba(255,255,255,0.12)",
   },
   image: {
     width: "100%",
