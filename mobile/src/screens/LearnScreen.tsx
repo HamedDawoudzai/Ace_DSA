@@ -15,6 +15,7 @@ import { useTheme } from "../context/ThemeContext";
 import {
   ALGO_TOPICS,
   DATA_STRUCTURE_TOPICS,
+  getAlgorithmTopic,
   LearnTopic,
   LearnTrack,
 } from "../data/learnTopics";
@@ -201,6 +202,32 @@ export default function LearnScreen() {
             >
               {item.subtitle}
             </Text>
+            {item.track === "data-structures" &&
+            item.relatedAlgorithmIds &&
+            item.relatedAlgorithmIds.length > 0 ? (
+              <View style={styles.relatedPreviewWrap}>
+                {item.relatedAlgorithmIds.slice(0, 3).map((algoId) => {
+                  const algo = getAlgorithmTopic(algoId);
+                  if (!algo) return null;
+                  return (
+                    <Text
+                      key={`${item.id}-${algoId}`}
+                      style={[
+                        styles.relatedPreviewChip,
+                        {
+                          color: colors.accent,
+                          backgroundColor: colors.surfaceAlt,
+                          borderColor: colors.border,
+                        },
+                      ]}
+                      numberOfLines={1}
+                    >
+                      {algo.title}
+                    </Text>
+                  );
+                })}
+              </View>
+            ) : null}
             <View style={styles.footerRow}>
               <Text style={[styles.footerText, { color: colors.textMuted }]}>
                 Tap to open guide
@@ -340,6 +367,22 @@ const styles = StyleSheet.create({
   cardSubtitle: {
     fontSize: 13,
     lineHeight: 19,
+  },
+  relatedPreviewWrap: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 6,
+    marginTop: 9,
+  },
+  relatedPreviewChip: {
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    fontSize: 10,
+    fontWeight: "700",
+    overflow: "hidden",
+    maxWidth: 180,
   },
   footerRow: {
     marginTop: 10,
