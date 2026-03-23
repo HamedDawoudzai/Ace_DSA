@@ -6,6 +6,7 @@ import {
   Pressable,
   FlatList,
   Image,
+  ImageStyle,
 } from "react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useNavigation } from "@react-navigation/native";
@@ -153,7 +154,12 @@ export default function LearnScreen() {
                 <View style={styles.imageInner}>
                   <Image
                     source={item.image}
-                    style={styles.image}
+                    style={[
+                      styles.image,
+                      item.track === "data-structures"
+                        ? styles.dataStructureImage
+                        : styles.algorithmImage,
+                    ]}
                     resizeMode="contain"
                   />
                 </View>
@@ -263,11 +269,11 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     borderWidth: 1,
     marginBottom: 10,
-    height: 152,
+    height: 176,
     justifyContent: "center",
     alignItems: "center",
     position: "relative",
-    padding: 10,
+    padding: 8,
   },
   imageInner: {
     width: "100%",
@@ -280,6 +286,12 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
   },
+  dataStructureImage: {
+    transform: [{ scale: 0.96 }],
+  } as ImageStyle,
+  algorithmImage: {
+    transform: [{ scale: 0.92 }],
+  } as ImageStyle,
   imageBadge: {
     position: "absolute",
     top: 8,
