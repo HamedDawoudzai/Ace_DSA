@@ -46,7 +46,10 @@ export default function LearnScreen() {
       <View
         style={[
           styles.segment,
-          { backgroundColor: colors.segmentedBackground || colors.surface },
+          {
+            backgroundColor: colors.segmentedBackground || colors.surface,
+            borderColor: colors.border,
+          },
         ]}
       >
         <Pressable
@@ -232,14 +235,15 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     borderRadius: 999,
     padding: 4,
-    marginBottom: 4,
+    marginBottom: 8,
+    borderWidth: 1,
   },
   segmentItem: {
     flex: 1,
     borderRadius: 999,
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 8,
+    paddingVertical: 9,
   },
   segmentLabel: {
     fontSize: 13,
