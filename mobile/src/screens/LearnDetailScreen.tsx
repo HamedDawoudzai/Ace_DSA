@@ -115,6 +115,29 @@ export default function LearnDetailScreen() {
           </Text>
         </View>
       ) : null}
+
+      {topic.track === "data-structures" &&
+      topic.leetcodeTactics &&
+      topic.leetcodeTactics.length > 0 ? (
+        <View
+          style={[
+            styles.sectionCard,
+            { backgroundColor: colors.surface, borderColor: colors.border },
+          ]}
+        >
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>
+            LeetCode Tactics
+          </Text>
+          {topic.leetcodeTactics.map((tactic, idx) => (
+            <View key={`${topic.id}-tactic-${idx}`} style={styles.bulletRow}>
+              <Text style={[styles.bulletDot, { color: colors.accent }]}>•</Text>
+              <Text style={[styles.bulletText, { color: colors.textSecondary }]}>
+                {tactic}
+              </Text>
+            </View>
+          ))}
+        </View>
+      ) : null}
     </ScrollView>
   );
 }
@@ -218,6 +241,22 @@ const styles = StyleSheet.create({
   sectionBody: {
     fontSize: 14,
     lineHeight: 22,
+  },
+  bulletRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 8,
+    marginBottom: 6,
+  },
+  bulletDot: {
+    fontSize: 18,
+    lineHeight: 20,
+    fontWeight: "800",
+  },
+  bulletText: {
+    flex: 1,
+    fontSize: 14,
+    lineHeight: 21,
   },
 });
 
