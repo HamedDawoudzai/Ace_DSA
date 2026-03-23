@@ -98,6 +98,11 @@ export default function LearnDetailScreen() {
               resizeMode="contain"
             />
           </View>
+          <View style={[styles.imageCaption, { backgroundColor: colors.surface }]}>
+            <Text style={[styles.imageCaptionText, { color: colors.textMuted }]}>
+              Visual reference
+            </Text>
+          </View>
         </View>
       ) : null}
 
@@ -279,21 +284,37 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     overflow: "hidden",
     marginBottom: 18,
-    height: 300,
+    minHeight: 260,
     justifyContent: "center",
     alignItems: "center",
     padding: 10,
+    position: "relative",
   },
   imageInner: {
     width: "100%",
-    height: "100%",
+    aspectRatio: 1.8,
     borderRadius: 14,
     overflow: "hidden",
-    backgroundColor: "rgba(255,255,255,0.12)",
+    backgroundColor: "rgba(255,255,255,0.16)",
   },
   image: {
     width: "100%",
     height: "100%",
+  },
+  imageCaption: {
+    position: "absolute",
+    right: 10,
+    top: 10,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: "rgba(0,0,0,0.08)",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  imageCaptionText: {
+    fontSize: 11,
+    fontWeight: "700",
+    letterSpacing: 0.2,
   },
   sectionCard: {
     marginTop: 12,
