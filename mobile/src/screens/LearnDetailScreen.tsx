@@ -48,7 +48,10 @@ export default function LearnDetailScreen() {
     return parts
       .filter(Boolean)
       .map((p, idx) => (
-        <Text key={`${topic.id}-para-${idx}`} style={styles.sectionParagraph}>
+        <Text
+          key={`${topic.id}-para-${idx}`}
+          style={[styles.sectionParagraph, { color: colors.textSecondary }]}
+        >
           {p}
         </Text>
       ));
