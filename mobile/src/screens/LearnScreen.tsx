@@ -16,6 +16,7 @@ import {
   ALGO_TOPICS,
   DATA_STRUCTURE_TOPICS,
   getAlgorithmTopic,
+  getTopicImage,
   LearnTopic,
   LearnTrack,
 } from "../data/learnTopics";
@@ -24,7 +25,7 @@ import { MainStackParamList } from "../navigation/MainTabs";
 type Nav = NativeStackNavigationProp<MainStackParamList, "Learn">;
 
 export default function LearnScreen() {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const navigation = useNavigation<Nav>();
   const [track, setTrack] = useState<LearnTrack>("data-structures");
   const [hoveredId, setHoveredId] = useState<string | null>(null);
@@ -34,6 +35,7 @@ export default function LearnScreen() {
       track === "data-structures" ? DATA_STRUCTURE_TOPICS : ALGO_TOPICS;
     return [...src].sort((a, b) => a.level - b.level);
   }, [track]);
+  const imageBackdrop = isDark ? "#060B16" : "#F7F2E8";
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -103,7 +105,9 @@ export default function LearnScreen() {
         data={topics}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
-        renderItem={({ item }) => (
+        renderItem={({ item }) => {
+          const cardImage = getTopicImage(item, isDark);
+          return (
           <Pressable
             onPress={() =>
               navigation.navigate("LearnDetail", {
@@ -121,15 +125,15 @@ export default function LearnScreen() {
                   backgroundColor: colors.surface,
                   borderColor: isHovered ? colors.accent : colors.border,
                   // Avoid scaling on hover (can cause overlapping on web).
-                  transform: [{ scale: pressed ? 0.995 : 1 }],
+                  transform: [{ scale: pressed ? 0.996 : 1 }],
                   zIndex: isHovered ? 10 : 1,
                 },
                 isHovered && {
                   shadowColor: colors.accent,
-                  shadowOffset: { width: 0, height: 6 },
-                  shadowOpacity: 0.12,
-                  shadowRadius: 12,
-                  elevation: 6,
+                  shadowOffset: { width: 0, height: 10 },
+                  shadowOpacity: 0.18,
+                  shadowRadius: 18,
+                  elevation: 10,
                 },
               ];
             }}
@@ -145,30 +149,41 @@ export default function LearnScreen() {
                 },
               ]}
             />
-            {item.image ? (
+            {cardImage ? (
               <View
                 style={[
                   styles.imageWrap,
                   {
-                    backgroundColor: colors.surfaceAlt,
+                    backgroundColor: imageBackdrop,
                     borderColor: colors.border,
                   },
                 ]}
               >
-                <View style={styles.imageInner}>
+                <View style={[styles.imageInner, { backgroundColor: imageBackdrop }]}>
                   <Image
-                    source={item.image}
+                    source={cardImage}
                     style={[
                       styles.image,
-                      item.track === "data-structures"
+                      item.id === "ds-stacks"
+                        ? styles.stackImageFit
+                        : item.id === "ds-trees"
+                        ? styles.treeImageFit
+                        : item.id === "ds-bsts"
+                        ? styles.bstImageFit
+                        : item.track === "data-structures"
                         ? styles.dataStructureImage
                         : styles.algorithmImage,
                     ]}
                     resizeMode="contain"
                   />
                 </View>
-                <View style={[styles.imageBadge, { backgroundColor: colors.surface }]}>
-                  <Text style={[styles.imageBadgeText, { color: colors.accent }]}>
+                <View
+                  style={[
+                    styles.imageBadge,
+                    { backgroundColor: colors.surface, borderColor: colors.border },
+                  ]}
+                >
+                  <Text style={[styles.imageBadgeText, { color: colors.text }]}>
                     Step {item.level}
                   </Text>
                 </View>
@@ -184,9 +199,9 @@ export default function LearnScreen() {
                 style={[
                   styles.badge,
                   {
-                    color: colors.accent,
-                    backgroundColor: colors.surfaceAlt,
-                    borderColor: colors.border,
+                    color: colors.accentText,
+                    backgroundColor: colors.accent,
+                    borderColor: colors.accent,
                   },
                 ]}
               >
@@ -202,6 +217,9 @@ export default function LearnScreen() {
             >
               {item.subtitle}
             </Text>
+            <Text style={[styles.summaryText, { color: colors.textSecondary }]} numberOfLines={2}>
+              {item.summary}
+            </Text>
             {item.track === "data-structures" &&
             item.relatedAlgorithmIds &&
             item.relatedAlgorithmIds.length > 0 ? (
@@ -215,7 +233,7 @@ export default function LearnScreen() {
                       style={[
                         styles.relatedPreviewChip,
                         {
-                          color: colors.accent,
+                          color: colors.text,
                           backgroundColor: colors.surfaceAlt,
                           borderColor: colors.border,
                         },
@@ -235,7 +253,8 @@ export default function LearnScreen() {
               <Ionicons name="arrow-forward-circle" size={18} color={colors.accent} />
             </View>
           </Pressable>
-        )}
+        );
+        }}
       />
     </View>
   );
@@ -282,9 +301,9 @@ const styles = StyleSheet.create({
     paddingBottom: 32,
   },
   card: {
-    borderRadius: 20,
-    padding: 15,
-    marginBottom: 14,
+    borderRadius: 22,
+    padding: 16,
+    marginBottom: 16,
     borderWidth: 1,
     overflow: "hidden",
   },
@@ -299,44 +318,52 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     overflow: "hidden",
     borderWidth: 1,
-    marginBottom: 10,
-    height: 176,
+    marginBottom: 12,
+    height: 196,
     justifyContent: "center",
     alignItems: "center",
     position: "relative",
-    padding: 8,
+    padding: 4,
   },
   imageInner: {
     width: "100%",
     height: "100%",
     borderRadius: 14,
     overflow: "hidden",
-    backgroundColor: "rgba(255,255,255,0.28)",
+    backgroundColor: "transparent",
   },
   image: {
     width: "100%",
     height: "100%",
   },
   dataStructureImage: {
-    transform: [{ scale: 0.96 }],
+    transform: [{ scale: 1 }, { scaleX: 1.06 }],
+  } as ImageStyle,
+  stackImageFit: {
+    transform: [{ scale: 0.9 }, { scaleX: 1.04 }],
+  } as ImageStyle,
+  treeImageFit: {
+    transform: [{ scale: 0.9 }, { scaleX: 1.04 }],
+  } as ImageStyle,
+  bstImageFit: {
+    transform: [{ scale: 0.9 }, { scaleX: 1.04 }],
   } as ImageStyle,
   algorithmImage: {
-    transform: [{ scale: 0.92 }],
+    transform: [{ scale: 1 }, { scaleX: 1.06 }],
   } as ImageStyle,
   imageBadge: {
     position: "absolute",
-    top: 8,
-    right: 8,
+    top: 10,
+    right: 10,
     borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingHorizontal: 11,
+    paddingVertical: 5,
     borderWidth: 1,
-    borderColor: "rgba(0,0,0,0.08)",
   },
   imageBadgeText: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "700",
-    letterSpacing: 0.2,
+    letterSpacing: 0.1,
   },
   cardHeader: {
     flexDirection: "row",
@@ -346,52 +373,60 @@ const styles = StyleSheet.create({
   },
   step: {
     fontSize: 11,
-    fontWeight: "600",
+    fontWeight: "700",
     textTransform: "uppercase",
-    letterSpacing: 0.8,
+    letterSpacing: 0.9,
   },
   badge: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "700",
-    paddingHorizontal: 8,
-    paddingVertical: 3,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
     borderRadius: 999,
     borderWidth: 1,
     overflow: "hidden",
   },
   cardTitle: {
-    fontSize: 17,
+    fontSize: 20,
     fontWeight: "800",
-    marginBottom: 4,
+    marginBottom: 5,
   },
   cardSubtitle: {
+    fontSize: 14,
+    lineHeight: 20,
+    marginBottom: 4,
+  },
+  summaryText: {
     fontSize: 13,
     lineHeight: 19,
   },
   relatedPreviewWrap: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 6,
-    marginTop: 9,
+    gap: 8,
+    marginTop: 12,
   },
   relatedPreviewChip: {
     borderWidth: 1,
-    borderRadius: 999,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    fontSize: 10,
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    fontSize: 12,
     fontWeight: "700",
     overflow: "hidden",
-    maxWidth: 180,
+    maxWidth: 240,
   },
   footerRow: {
-    marginTop: 10,
+    marginTop: 12,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(148,163,184,0.25)",
   },
   footerText: {
-    fontSize: 12,
-    fontWeight: "600",
+    fontSize: 13,
+    fontWeight: "700",
   },
 });
