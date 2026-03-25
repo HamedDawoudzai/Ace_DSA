@@ -13,6 +13,7 @@ import { MainStackParamList } from "../navigation/MainTabs";
 import {
   getAlgorithmTopic,
   getLearnTopic,
+  getTopicImage,
   LearnTrack,
 } from "../data/learnTopics";
 import { useTheme } from "../context/ThemeContext";
@@ -24,7 +25,7 @@ type DetailNavigation = NativeStackNavigationProp<MainStackParamList, "LearnDeta
 export default function LearnDetailScreen() {
   const route = useRoute<LearnDetailRoute>();
   const { id, track } = route.params;
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const navigation = useNavigation<DetailNavigation>();
 
   const topic = getLearnTopic(track as LearnTrack, id);
@@ -39,6 +40,19 @@ export default function LearnDetailScreen() {
 
   const trackLabel =
     topic.track === "data-structures" ? "Data Structures" : "Algorithms";
+  const topicImage = getTopicImage(topic, isDark);
+
+  const renderParagraphs = (text: string) => {
+    // Treat double-newlines as paragraph breaks for a beginner-friendly flow.
+    const parts = text.split(/\n\s*\n/).map((p) => p.trim());
+    return parts
+      .filter(Boolean)
+      .map((p, idx) => (
+        <Text key={`${topic.id}-para-${idx}`} style={styles.sectionParagraph}>
+          {p}
+        </Text>
+      ));
+  };
 
   return (
     <ScrollView
@@ -81,7 +95,7 @@ export default function LearnDetailScreen() {
         {topic.subtitle}
       </Text>
 
-      {topic.image ? (
+      {topicImage ? (
         <View
           style={[
             styles.imageWrap,
@@ -93,14 +107,14 @@ export default function LearnDetailScreen() {
         >
           <View style={styles.imageInner}>
             <Image
-              source={topic.image}
+              source={topicImage}
               style={styles.image}
               resizeMode="contain"
             />
           </View>
           <View style={[styles.imageCaption, { backgroundColor: colors.surface }]}>
             <Text style={[styles.imageCaptionText, { color: colors.textMuted }]}>
-              Visual reference
+              Visual model
             </Text>
           </View>
         </View>
@@ -112,8 +126,17 @@ export default function LearnDetailScreen() {
           { backgroundColor: colors.surface, borderColor: colors.border },
         ]}
       >
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>What It Does</Text>
-        <Text style={[styles.sectionBody, { color: colors.textSecondary }]}>
+        <View style={styles.sectionHeader}>
+          <Ionicons
+            name="information-circle-outline"
+            size={18}
+            color={colors.accent}
+          />
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>
+            What It Does
+          </Text>
+        </View>
+        <Text style={[styles.sectionLead, { color: colors.textSecondary }]}>
           {topic.summary}
         </Text>
       </View>
@@ -124,12 +147,13 @@ export default function LearnDetailScreen() {
           { backgroundColor: colors.surface, borderColor: colors.border },
         ]}
       >
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>
-          How It Is Used + Why It Helps
-        </Text>
-        <Text style={[styles.sectionBody, { color: colors.textSecondary }]}>
-          {topic.details}
-        </Text>
+        <View style={styles.sectionHeader}>
+          <Ionicons name="sparkles-outline" size={18} color={colors.accent} />
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>
+            How It Is Used + Why It Helps
+          </Text>
+        </View>
+        <View>{renderParagraphs(topic.details)}</View>
       </View>
 
       {topic.track === "data-structures" && topic.generalUnderstanding ? (
@@ -145,6 +169,29 @@ export default function LearnDetailScreen() {
           <Text style={[styles.sectionBody, { color: colors.textSecondary }]}>
             {topic.generalUnderstanding}
           </Text>
+        </View>
+      ) : null}
+
+      {topic.track === "data-structures" &&
+      topic.teachingNotes &&
+      topic.teachingNotes.length > 0 ? (
+        <View
+          style={[
+            styles.sectionCard,
+            { backgroundColor: colors.surface, borderColor: colors.border },
+          ]}
+        >
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>
+            Teaching Notes (Interview Lens)
+          </Text>
+          {topic.teachingNotes.map((note, idx) => (
+            <View key={`${topic.id}-teaching-note-${idx}`} style={styles.bulletRow}>
+              <Text style={[styles.bulletDot, { color: colors.accent }]}>•</Text>
+              <Text style={[styles.bulletText, { color: colors.textSecondary }]}>
+                {note}
+              </Text>
+            </View>
+          ))}
         </View>
       ) : null}
 
@@ -284,18 +331,18 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     overflow: "hidden",
     marginBottom: 18,
-    minHeight: 260,
+    minHeight: 280,
     justifyContent: "center",
     alignItems: "center",
-    padding: 10,
+    padding: 12,
     position: "relative",
   },
   imageInner: {
     width: "100%",
-    aspectRatio: 1.8,
+    aspectRatio: 1.7,
     borderRadius: 14,
     overflow: "hidden",
-    backgroundColor: "rgba(255,255,255,0.16)",
+    backgroundColor: "rgba(255,255,255,0.12)",
   },
   image: {
     width: "100%",
@@ -322,9 +369,24 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 14,
   },
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 8,
+  },
   sectionTitle: {
     fontSize: 15,
     fontWeight: "800",
+  },
+  sectionLead: {
+    fontSize: 15,
+    lineHeight: 22,
+    fontWeight: "700",
+  },
+  sectionParagraph: {
+    fontSize: 14,
+    lineHeight: 22,
     marginBottom: 8,
   },
   sectionBody: {

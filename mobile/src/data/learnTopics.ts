@@ -11,7 +11,10 @@ export interface LearnTopic {
   summary: string;
   details: string;
   image?: ImageSourcePropType;
+  imageLight?: ImageSourcePropType;
+  imageDark?: ImageSourcePropType;
   generalUnderstanding?: string;
+  teachingNotes?: string[];
   leetcodeTactics?: string[];
   relatedAlgorithmIds?: string[];
 }
@@ -23,15 +26,21 @@ export const DATA_STRUCTURE_TOPICS: LearnTopic[] = [
     title: "Arrays",
     subtitle: "Indexed contiguous storage",
     level: 1,
-    summary: "The foundation for most DSA problems and higher-level structures.",
-    image: require("../../assets/images/Arrays.png"),
+    summary: "Arrays are contiguous blocks of values you can jump to by index.",
+    imageLight: require("../../assets/images/arrays_light_mode.png"),
+    imageDark: require("../../assets/images/arrays_dark_mode.png"),
     details:
-      "An array is a contiguous block of memory where elements are stored back-to-back and accessed by index. " +
-      "Random access is O(1), but inserting or deleting in the middle can be O(n) because elements may need to shift. " +
-      "Most languages expose fixed-length arrays and dynamic array wrappers (like slices or vectors) that manage resizing. " +
-      "Interview patterns like two pointers, sliding windows, and prefix sums almost always begin with arrays.",
+      "Picture an array as a row of numbered boxes.\n\n" +
+      "The key benefit is speed: reading `arr[i]` is O(1) because the elements live next to each other in memory. " +
+      "The trade-off is what happens when you edit in the middle—if you insert/delete, many later elements may need to shift (O(n)).\n\n" +
+      "For LeetCode, arrays are where most “scanning” patterns start: keep an invariant with pointers, slide a window, or use prefix sums to answer range questions.",
     generalUnderstanding:
-      "Arrays keep data in contiguous memory and allow direct index access. Use them when order matters, when you need fast random reads, and as the base container for many optimized techniques.",
+      "Use arrays when the problem is naturally ordered and you need index-based access (subarrays, intervals, two pointers, windows).",
+    teachingNotes: [
+      "Index = position. Because arrays are contiguous, “jumping” to an element is fast.",
+      "If you change the middle, ask: “what needs to shift?” That’s where O(n) comes from.",
+      "Start every array solution by stating your invariant: what do `L` and `R` represent?",
+    ],
     leetcodeTactics: [
       "Track boundaries and invariants for left/right pointers.",
       "Precompute prefix/suffix values to answer range queries quickly.",
@@ -45,14 +54,20 @@ export const DATA_STRUCTURE_TOPICS: LearnTopic[] = [
     title: "Strings",
     subtitle: "Arrays of characters",
     level: 2,
-    summary: "Specialized arrays; core to many LeetCode-style questions.",
-    image: require("../../assets/images/Strings.png"),
+    summary: "Strings are sequences of characters—think “arrays,” with text rules.",
+    imageLight: require("../../assets/images/string_light_mode.png"),
+    imageDark: require("../../assets/images/string_dark_mode.png"),
     details:
-      "A string is usually an immutable array of characters. Under the hood it behaves like an array with length, indexing, and slicing. " +
-      "Because strings are often immutable, operations that appear to modify a string create a new one. " +
-      "In algorithm problems, string challenges are typically solved using array techniques such as sliding windows, hashing, and prefix sums.",
+      "Most programming languages treat a string like an array of characters, where you can still access characters by index.\n\n" +
+      "Two important “real world” details: (1) many strings are immutable, so “changing” them can create a new string, and (2) string problems often care about character order and counts.\n\n" +
+      "That’s why many LeetCode string problems reduce to classic array patterns: two pointers, sliding windows, and frequency/hash checks.",
     generalUnderstanding:
-      "Strings represent character sequences and are commonly immutable. They are ideal for pattern matching, parsing, and text constraints where indexing and frequency logic are needed.",
+      "Use strings when the order of characters matters and you need constraints on substrings (frequency, uniqueness, palindromes).",
+    teachingNotes: [
+      "Convert “text” problems into index logic: windows, pointers, and comparisons.",
+      "When the task mentions frequency/uniqueness, reach for a map/set with a sliding window.",
+      "For palindromes and symmetry, two pointers (expand inward) are usually the cleanest first idea.",
+    ],
     leetcodeTactics: [
       "Use frequency maps to compare character windows efficiently.",
       "Build canonical forms (sorted signature or counts) for grouping.",
@@ -66,14 +81,20 @@ export const DATA_STRUCTURE_TOPICS: LearnTopic[] = [
     title: "Linked Lists",
     subtitle: "Nodes connected by pointers",
     level: 3,
-    summary: "Lets you insert/delete in the middle by rewiring pointers instead of shifting elements.",
-    image: require("../../assets/images/singly_linked_list.png"),
+    summary: "Linked lists chain nodes, making “re-linking” easy and random access slow.",
+    imageLight: require("../../assets/images/singly_linked_list_light_mode.png"),
+    imageDark: require("../../assets/images/singly_linked_list_dark_mode.png"),
     details:
-      "A linked list is a sequence of nodes where each node holds data and a reference to the next node (and sometimes the previous node). " +
-      "Accessing the k-th element is O(k), but inserting or deleting at a known position is O(1). " +
-      "Common interview patterns: fast/slow pointers, cycle detection (Floyd's algorithm), reversing a list, and merging sorted lists.",
+      "Picture a linked list as a line of nodes where each node points to the next one.\n\n" +
+      "Because nodes aren’t stored contiguously, reaching the k-th element takes O(k). But once you’re at the right neighborhood, inserting/deleting is often O(1) because you only update pointers.\n\n" +
+      "That pointer rewiring leads to classic interview patterns: cycle detection (fast/slow), reversing a list, and merging lists.",
     generalUnderstanding:
-      "Linked lists trade random access for flexible insert/delete operations via pointer rewiring. They are useful when structural changes are frequent and contiguous memory is not required.",
+      "Use linked lists when the problem’s focus is changing structure (insert/delete/reverse) rather than random reads.",
+    teachingNotes: [
+      "Pointer choreography matters: always know what `prev`, `curr`, and `next` mean.",
+      "Dummy head nodes simplify edge cases (especially operations that might change the real head).",
+      "Fast/slow pointers are your go-to tool for “where is the middle/cycle?” problems.",
+    ],
     leetcodeTactics: [
       "Use dummy head nodes to simplify edge cases.",
       "Track slow/fast pointers for midpoint and cycle detection.",
@@ -87,14 +108,20 @@ export const DATA_STRUCTURE_TOPICS: LearnTopic[] = [
     title: "Stacks",
     subtitle: "Last-in, first-out (LIFO)",
     level: 4,
-    summary: "Used for undo, parsing, recursion, and many monotonic-stack problems.",
-    image: require("../../assets/images/Stack.png"),
+    summary: "Stacks are LIFO “history” structures: last in, first out.",
+    imageLight: require("../../assets/images/stack_light_mode.png"),
+    imageDark: require("../../assets/images/stack_dark_mode.png"),
     details:
-      "A stack supports push and pop from one end in O(1). It is typically implemented using an array or a linked list. " +
-      "Stacks naturally represent nested structure: parentheses validation, expression evaluation, monotonic stacks for next-greater-element, " +
-      "and managing recursion frames (the call stack) are all stack-based patterns.",
+      "A stack supports two main actions: `push` (add) and `pop` (remove). The last thing you added is the first thing you remove (LIFO).\n\n" +
+      "Stacks model “nested” reasoning: parsing parentheses, validating expressions, and simulating recursion frames all become straightforward when you think in terms of the most recent unresolved item.\n\n" +
+      "A special family you’ll see often is the monotonic stack, which keeps candidates in order so you can answer “next greater/smaller” queries efficiently.",
     generalUnderstanding:
-      "Stacks follow LIFO order and model 'most recent first' behavior. They are great for nested structures, undo flows, and monotonic constraints.",
+      "Use stacks when the problem describes nesting, undo/rollback, or “resolve the most recent unfinished thing first.”",
+    teachingNotes: [
+      "Think “resolve the latest.” LIFO is exactly what makes many parsing problems easy.",
+      "For brackets/parsing, push what you expect to see next (not just raw characters).",
+      "Monotonic stacks make repeated comparisons linear because each element is pushed and popped at most once.",
+    ],
     leetcodeTactics: [
       "Store indices on stack when positions matter.",
       "Use monotonic stacks to find next greater/smaller elements in linear time.",
@@ -108,14 +135,20 @@ export const DATA_STRUCTURE_TOPICS: LearnTopic[] = [
     title: "Queues & Deques",
     subtitle: "First-in, first-out and double-ended",
     level: 5,
-    summary: "Natural for processing items in arrival order; core for BFS and sliding window.",
-    image: require("../../assets/images/Queue.png"),
+    summary: "Queues are FIFO for “arrival order.” Deques add flexibility for window problems.",
+    imageLight: require("../../assets/images/queue_light_mode.png"),
+    imageDark: require("../../assets/images/queue_dark_mode.png"),
     details:
-      "A queue supports enqueue at the back and dequeue from the front in O(1). It is used any time you need to process things in arrival order. " +
-      "Breadth-first search (BFS) on trees and graphs is implemented with a queue. Deques (double-ended queues) generalize queues so you can push/pop from both ends, " +
-      "and are the backbone of sliding-window maximum/minimum patterns.",
+      "A queue processes items in the same order they arrive: enqueue at the back, dequeue from the front.\n\n" +
+      "This is why BFS (level-by-level graph/tree traversal) is implemented with a queue: you explore all nodes at distance `k` before moving to `k+1`.\n\n" +
+      "A deque (double-ended queue) lets you operate on both ends. That extra control is the key to sliding-window maximum/minimum patterns where you keep only the useful candidates.",
     generalUnderstanding:
-      "Queues preserve processing order and support level-by-level workflows. Deques add flexibility for window-based optimization problems.",
+      "Use queues for level-order workflows (BFS). Use deques when your task is about maintaining the best candidate inside a moving window.",
+    teachingNotes: [
+      "BFS works because FIFO matches “distance waves.” That’s what gives shortest paths in unweighted graphs.",
+      "A deque is the difference between scanning everything and keeping a clean candidate set for windows.",
+      "For traversals, mark visited early (before enqueue) to avoid duplicate work.",
+    ],
     leetcodeTactics: [
       "For BFS, process one queue length at a time to isolate levels.",
       "Use deque for sliding window max/min with a monotonic strategy.",
@@ -129,13 +162,20 @@ export const DATA_STRUCTURE_TOPICS: LearnTopic[] = [
     title: "Hash Tables / Sets",
     subtitle: "Key → value lookup in O(1) average time",
     level: 6,
-    summary: "The workhorse for counting, membership tests, and grouping.",
-    image: require("../../assets/images/hash_map.png"),
+    summary: "Hash tables let you look up by key fast (average O(1)).",
+    imageLight: require("../../assets/images/hash_map_light_mode.png"),
+    imageDark: require("../../assets/images/hash_map_dark_mode.png"),
     details:
-      "A hash table uses a hash function to map keys to buckets. With good hashing and low load factor, inserts, deletes, and lookups are O(1) on average. " +
-      "Hash maps and hash sets are your default tools for counting frequencies, detecting duplicates, grouping by key, and implementing caches.",
+      "A hash table turns a key into a bucket index using a hash function.\n\n" +
+      "If hashing distributes keys well, insert/delete/lookup are O(1) on average. Internally, collisions are handled by storing multiple items per bucket (details vary by language).\n\n" +
+      "In LeetCode, hashing replaces slow nested scans: you store what you’ve already seen (counts, complements, last positions) and then answer membership/queries in constant time.",
     generalUnderstanding:
-      "Hash tables optimize lookup-heavy workflows. They are often the fastest path to remove repeated scans through frequency counting and membership checks.",
+      "Use hash tables when you need frequent membership checks, counting, or grouping by key—especially when you’re tempted to write nested loops.",
+    teachingNotes: [
+      "Hashing is “fast lookup, no ordering.” If you need order, you’ll sort later or use a tree structure.",
+      "Many O(n²) problems become O(n) when you store answers as you scan once.",
+      "Key design is a superpower: sometimes you combine fields into one string/tuple key.",
+    ],
     leetcodeTactics: [
       "Replace nested loops with one-pass map/set lookups.",
       "Store complement or needed value to solve pair-sum style problems.",
@@ -149,14 +189,20 @@ export const DATA_STRUCTURE_TOPICS: LearnTopic[] = [
     title: "Trees & Binary Trees",
     subtitle: "Hierarchical, recursively defined structures",
     level: 7,
-    summary: "Powerful for representing hierarchies; prepares you for BSTs and heaps.",
-    image: require("../../assets/images/binary_tree.png"),
+    summary: "Trees model hierarchy. Traversal turns structure into something you can compute on.",
+    imageLight: require("../../assets/images/Binary_tree_light_mode.png"),
+    imageDark: require("../../assets/images/Binary_tree_dark_mode.png"),
     details:
-      "A tree is a connected acyclic graph with a root. Binary trees restrict each node to at most two children. " +
-      "Recursive definitions make traversal algorithms like pre-order, in-order, and post-order natural. " +
-      "Many interview questions on recursion, divide-and-conquer, and dynamic programming are easier once you are comfortable with trees.",
+      "A tree is a connected structure with a root and edges leading to children, with no cycles.\n\n" +
+      "A binary tree is the common variant where each node has at most two children (left and right).\n\n" +
+      "The big beginner win: trees encourage recursion. You can define what a “helper” returns for each node (height, sum, max, paths), then combine child results at the current node.",
     generalUnderstanding:
-      "Trees encode hierarchy and naturally map to recursion. They are beneficial for divide-and-conquer reasoning and layered exploration.",
+      "Use trees when relationships are hierarchical (parent/child). Learn traversals because most tree problems boil down to the right traversal + the right “return value.”",
+    teachingNotes: [
+      "In recursion, always define: “what does my function return for a node?”",
+      "Traversal order is not arbitrary: preorder vs inorder vs postorder matches *when* you need children values.",
+      "If recursion is confusing, simulate the call stack with an explicit stack to debug.",
+    ],
     leetcodeTactics: [
       "Return useful aggregates from recursion (height, balance, path sums).",
       "Use preorder/inorder/postorder intentionally based on dependency order.",
@@ -170,14 +216,20 @@ export const DATA_STRUCTURE_TOPICS: LearnTopic[] = [
     title: "Binary Search Trees",
     subtitle: "Ordered binary trees",
     level: 8,
-    summary: "Maintain sorted data with efficient inserts, deletes, and lookups.",
-    image: require("../../assets/images/bst.png"),
+    summary: "BSTs keep data ordered so search and updates can be fast.",
+    imageLight: require("../../assets/images/bst.png"),
+    imageDark: require("../../assets/images/bst_dark_mode.png"),
     details:
-      "A binary search tree (BST) maintains the invariant: left subtree < node < right subtree. " +
-      "This allows search, insert, and delete in O(h) where h is the tree height. " +
-      "In interviews, BSTs appear in problems about validation, kth-smallest elements, ranges, and building balanced trees from sorted arrays.",
+      "A binary search tree (BST) has an ordering rule: everything in the left subtree is smaller than the node, and everything in the right subtree is larger.\n\n" +
+      "Because of that invariant, you can search by narrowing the allowed range at each step. The time is O(h), where `h` is the height.\n\n" +
+      "If the tree is balanced, O(log n) behavior appears. If it becomes skewed, worst-case height becomes O(n).",
     generalUnderstanding:
-      "BSTs keep values ordered, enabling logarithmic operations in balanced cases. They are useful when you need both search capability and sorted traversal.",
+      "Use a BST mindset when the problem asks for validation, range queries, or “k-th smallest” reasoning via ordered traversal.",
+    teachingNotes: [
+      "BST validation feels easiest when you carry lower/upper bounds down the recursion.",
+      "Deletion is all about handling cases (no child, one child, two children).",
+      "Always remember: height matters. Balanced is good; skewed can degrade to O(n).",
+    ],
     leetcodeTactics: [
       "Use inorder traversal to read keys in sorted order.",
       "Maintain lower/upper bounds when validating BST constraints.",
@@ -191,14 +243,20 @@ export const DATA_STRUCTURE_TOPICS: LearnTopic[] = [
     title: "Heaps & Priority Queues",
     subtitle: "Efficient access to min/max elements",
     level: 9,
-    summary: "Great for top-k, scheduling, and graph algorithms like Dijkstra.",
-    image: require("../../assets/images/priority_queue.png"),
+    summary: "Heaps let you repeatedly get the smallest/largest element efficiently.",
+    imageLight: require("../../assets/images/max_min_heap_light_mode.png"),
+    imageDark: require("../../assets/images/max_min_heap_dark_mode.png"),
     details:
-      "A binary heap is an array-based tree that preserves a partial order: each parent is ≤ (min-heap) or ≥ (max-heap) its children. " +
-      "Priority queues built on heaps support inserting and extracting the smallest or largest element in O(log n). " +
-      "They are used in streaming top-k problems, scheduling, and shortest-path algorithms.",
+      "A heap is a tree stored in an array where only a partial order is guaranteed.\n\n" +
+      "In a min-heap, every parent is smaller than its children, so the smallest value is always at the root (and similarly for max-heaps with the largest at the root).\n\n" +
+      "That partial order is enough for a priority queue: insert and extract min/max are O(log n). This is the backbone of top-k problems and shortest-path style algorithms.",
     generalUnderstanding:
-      "Heaps prioritize access to extreme values without full sorting. They shine in top-k, scheduling, and repeated best-next extraction problems.",
+      "Use heaps when the next step depends on the extreme element (min/max) without needing full sorting every time.",
+    teachingNotes: [
+      "Heaps do not fully sort. Only the root is guaranteed to be the extreme.",
+      "Top-k strategy: keep k best candidates in a heap and discard the rest as you scan.",
+      "In some graph problems, you may push “stale” entries. It’s normal—just validate when popping.",
+    ],
     leetcodeTactics: [
       "Use min-heap of size k for top-k largest stream patterns.",
       "Use max-heap via negation or comparator for opposite priority.",
@@ -212,14 +270,20 @@ export const DATA_STRUCTURE_TOPICS: LearnTopic[] = [
     title: "Graphs",
     subtitle: "Nodes and edges",
     level: 10,
-    summary: "Model relationships and networks; backbone for many advanced algorithms.",
-    image: require("../../assets/images/weighted_graph.png"),
+    summary: "Graphs model relationships using nodes (entities) and edges (connections).",
+    imageLight: require("../../assets/images/weighted_graph_light_mode.png"),
+    imageDark: require("../../assets/images/weighted_graph_dark_mode.png"),
     details:
-      "Graphs model relationships as nodes connected by edges, optionally directed and weighted. " +
-      "They are represented with adjacency lists or matrices. Many real-world problems (networks, prerequisites, maps) are graph problems. " +
-      "Understanding graph representations is essential before learning BFS, DFS, Dijkstra, and topological sort.",
+      "A graph is a set of nodes connected by edges.\n\n" +
+      "Edges can be directed or undirected, and they can have weights (costs) or not. Real problems like networks, prerequisites, and routing all reduce to graph questions.\n\n" +
+      "In programming, graphs are usually stored as adjacency lists (neighbors per node). Once you’ve chosen the right representation, the main “moves” are BFS/DFS for traversal and Dijkstra for shortest paths with non-negative weights.",
     generalUnderstanding:
-      "Graphs model pairwise relationships between entities. They are beneficial for route planning, dependency handling, and connectivity analysis.",
+      "Use graphs when the relationships between items matter—especially for reachability, shortest paths, cycles, and ordering.",
+    teachingNotes: [
+      "Start by modeling: directed vs undirected, weighted vs unweighted, cyclic vs acyclic.",
+      "Adjacency lists are usually the default and keep traversal efficient (O(V + E)).",
+      "Visited state must match the problem. Sometimes it’s just `node`; sometimes it’s `node + state`.",
+    ],
     leetcodeTactics: [
       "Pick adjacency list by default for sparse graphs.",
       "Track visited states carefully (node-only or node+extra-state).",
@@ -233,14 +297,20 @@ export const DATA_STRUCTURE_TOPICS: LearnTopic[] = [
     title: "Tries",
     subtitle: "Prefix trees for strings",
     level: 11,
-    summary: "Efficiently store sets of strings by shared prefixes.",
-    image: require("../../assets/images/Tries.png"),
+    summary: "Tries store strings by shared prefixes so prefix queries are fast.",
+    imageLight: require("../../assets/images/trie_light_mode.png"),
+    imageDark: require("../../assets/images/trie_dark_mode.png"),
     details:
-      "A trie (prefix tree) stores characters along edges so that each path from root to node represents a prefix. " +
-      "It supports prefix search in O(L) where L is the length of the word. " +
-      "Tries are used for autocomplete, dictionary problems, and some pattern-matching questions.",
+      "A trie is a prefix tree: each edge represents a character, and each root-to-node path forms a prefix.\n\n" +
+      "That means prefix search takes time proportional to the word length: O(L).\n\n" +
+      "Tries trade memory for speed. They are ideal for autocomplete, “dictionary word with prefix,” and wildcard/pattern expansion problems.",
     generalUnderstanding:
-      "Tries compress shared prefixes across many strings, enabling fast prefix queries. They are ideal for autocomplete and dictionary membership with prefix constraints.",
+      "Use tries when the problem repeatedly asks about prefixes (not just full strings).",
+    teachingNotes: [
+      "Prefix query time depends on word length L, not the number of stored words.",
+      "At minimum you need an end-of-word flag; sometimes you store frequency or an index list.",
+      "If a character path is missing, you can prune immediately—tries make that fast.",
+    ],
     leetcodeTactics: [
       "Store terminal flags and optional metadata at end-of-word nodes.",
       "Use DFS from trie node for wildcard/prefix expansions.",
@@ -405,5 +475,12 @@ export function getLearnTopic(track: LearnTrack, id: string): LearnTopic | undef
 
 export function getAlgorithmTopic(id: string): LearnTopic | undefined {
   return ALGO_TOPICS.find((topic) => topic.id === id);
+}
+
+export function getTopicImage(topic: LearnTopic, isDark: boolean): ImageSourcePropType | undefined {
+  if (isDark) {
+    return topic.imageDark ?? topic.image ?? topic.imageLight;
+  }
+  return topic.imageLight ?? topic.image ?? topic.imageDark;
 }
 
