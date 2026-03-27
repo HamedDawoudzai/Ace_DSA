@@ -81,8 +81,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     (async () => {
-      const token = await storage.getItem("access_token");
-      dispatch({ type: "RESTORE_TOKEN", token });
+      try {
+        const token = await storage.getItem("access_token");
+        dispatch({ type: "RESTORE_TOKEN", token });
+      } catch {
+        await storage.deleteItem("access_token");
+        await storage.deleteItem("refresh_token");
+        dispatch({ type: "RESTORE_TOKEN", token: null });
+      }
     })();
   }, []);
 
