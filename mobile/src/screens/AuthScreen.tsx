@@ -79,6 +79,7 @@ export default function AuthScreen() {
   const pwValid = allPassed(pwChecks);
 
   const handleModeSwitch = (next: Mode) => {
+    if (loading) return;
     setMode(next);
     logoRef.current?.spin();
   };
@@ -100,6 +101,7 @@ export default function AuthScreen() {
   }, [btnScale]);
 
   const handleLogin = async () => {
+    if (loading) return;
     if (!identifier.trim() || !password) {
       notify({
         type: "error",
@@ -128,6 +130,7 @@ export default function AuthScreen() {
   };
 
   const handleSignup = async () => {
+    if (loading) return;
     if (!firstName.trim() || !lastName.trim()) {
       notify({
         type: "error",
@@ -384,6 +387,7 @@ export default function AuthScreen() {
             onPress={() =>
               handleModeSwitch(mode === "login" ? "signup" : "login")
             }
+            disabled={loading}
           >
             <Text style={[styles.switchText, { color: colors.accent }]}>
               {mode === "login"
@@ -411,6 +415,7 @@ export default function AuthScreen() {
           onPress={() =>
             handleModeSwitch(mode === "login" ? "signup" : "login")
           }
+          disabled={loading}
           hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
         >
           <Text style={[styles.bottomLink, { color: colors.accent }]}>
