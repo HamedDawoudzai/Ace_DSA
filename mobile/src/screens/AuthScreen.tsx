@@ -162,15 +162,15 @@ export default function AuthScreen() {
         email: signupEmail.trim().toLowerCase(),
         password: signupPassword,
       });
-    } catch (err: any) {
-      const msg =
-        err?.response?.data ||
-        err?.message ||
-        "We couldn’t create your account. Please try again.";
+    } catch (error: unknown) {
+      const message = getAuthErrorMessage(
+        error,
+        "We couldn’t create your account. Please try again."
+      );
       notify({
         type: "error",
         title: "Sign up failed",
-        message: typeof msg === "string" ? msg : JSON.stringify(msg),
+        message,
       });
     } finally {
       setLoading(false);
