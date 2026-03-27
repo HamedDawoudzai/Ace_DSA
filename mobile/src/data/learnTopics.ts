@@ -349,6 +349,7 @@ export const ALGO_TOPICS: LearnTopic[] = [
       "Two pointers means maintaining two indices (left/right or slow/fast) so you explore the structure in one pass instead of trying every pair with nested loops. " +
       "On sorted arrays, opposite ends often let you increase or decrease a sum deterministically.",
     detailSections: TWO_POINTERS_SECTIONS,
+    lastUpdated: "27 Mar 2026",
   },
   {
     id: "algo-sliding-window",
