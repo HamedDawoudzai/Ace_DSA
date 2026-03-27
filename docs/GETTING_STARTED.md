@@ -118,7 +118,7 @@ Then choose how to view it:
 - **Android emulator:** Press **a** (requires Android Studio with an AVD configured)
 - **iOS simulator:** Press **i** (requires macOS with Xcode)
 
-**Important for phone/emulator testing:** Update `BASE_URL` in `mobile/src/services/api.ts` from `http://localhost:8080` to your machine's LAN IP (e.g. `http://192.168.1.x:8080`). `localhost` only works in a web browser on the same machine.
+**Important for phone/emulator testing:** set `EXPO_PUBLIC_API_BASE_URL` (or `expo.extra.apiBaseUrl` in `mobile/app.json`) to your machine LAN IP, e.g. `http://192.168.1.x:8080`. `localhost` only works on the same machine.
 
 ## 5. Stop everything
 
