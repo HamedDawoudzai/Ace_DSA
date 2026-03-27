@@ -17,6 +17,7 @@ import { useTheme } from "../context/ThemeContext";
 import { useNotify } from "../context/NotificationContext";
 import SpinningLogo, { SpinningLogoHandle } from "../components/SpinningLogo";
 import ThemeToggle from "../components/ThemeToggle";
+import { getAuthErrorMessage } from "../services/httpError";
 
 type Mode = "login" | "signup";
 
@@ -107,16 +108,15 @@ export default function AuthScreen() {
     setLoading(true);
     try {
       await signIn(identifier.trim().toLowerCase(), password);
-    } catch (err: any) {
-      const status = err?.response?.status;
-      const msg =
-        status === 401
-          ? "Username or password is incorrect."
-          : err?.response?.data || err?.message || "We couldn’t sign you in. Please try again.";
+    } catch (error: unknown) {
+      const message = getAuthErrorMessage(
+        error,
+        "We couldn’t sign you in. Please try again."
+      );
       notify({
         type: "error",
         title: "Login failed",
-        message: typeof msg === "string" ? msg : JSON.stringify(msg),
+        message,
       });
     } finally {
       setLoading(false);
