@@ -267,8 +267,10 @@ export default function AuthScreen() {
                   placeholder="USERNAME"
                   placeholderTextColor={colors.placeholderText}
                   autoCapitalize="none"
+                  autoCorrect={false}
                   value={username}
                   onChangeText={setUsername}
+                  returnKeyType="next"
                 />
               </>
             )}
@@ -278,9 +280,12 @@ export default function AuthScreen() {
               placeholder={mode === "login" ? "EMAIL OR USERNAME" : "EMAIL"}
               placeholderTextColor={colors.placeholderText}
               autoCapitalize="none"
+              autoCorrect={false}
               keyboardType="email-address"
+              textContentType="username"
               value={mode === "login" ? identifier : signupEmail}
               onChangeText={mode === "login" ? setIdentifier : setSignupEmail}
+              returnKeyType="next"
             />
 
             <View style={[styles.passwordWrap, { borderColor: inputBorder, backgroundColor: inputBg }]}>
@@ -291,6 +296,9 @@ export default function AuthScreen() {
                 secureTextEntry={mode === "login" ? !showLoginPassword : !showSignupPassword}
                 value={mode === "login" ? password : signupPassword}
                 onChangeText={mode === "login" ? setPassword : setSignupPassword}
+                textContentType="password"
+                returnKeyType={mode === "login" ? "go" : "done"}
+                onSubmitEditing={handleSubmit}
               />
               <Pressable
                 onPress={() =>
