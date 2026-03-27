@@ -44,6 +44,14 @@ function allPassed(checks: PasswordChecks): boolean {
   return checks.length && checks.upper && checks.lower && checks.digit && checks.special;
 }
 
+function normalizeIdentifier(identifier: string): string {
+  const trimmed = identifier.trim();
+  if (trimmed.includes("@")) {
+    return trimmed.toLowerCase();
+  }
+  return trimmed;
+}
+
 export default function AuthScreen() {
   const { signIn, signUp } = useAuth();
   const { colors, isDark } = useTheme();
@@ -113,7 +121,7 @@ export default function AuthScreen() {
     logoRef.current?.spin();
     setLoading(true);
     try {
-      await signIn(identifier.trim().toLowerCase(), password);
+      await signIn(normalizeIdentifier(identifier), password);
     } catch (error: unknown) {
       const message = getAuthErrorMessage(
         error,
