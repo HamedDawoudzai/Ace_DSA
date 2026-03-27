@@ -58,6 +58,8 @@ export default function AuthScreen() {
   const [username, setUsername] = useState("");
   const [signupEmail, setSignupEmail] = useState("");
   const [signupPassword, setSignupPassword] = useState("");
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [showSignupPassword, setShowSignupPassword] = useState(false);
 
   const [loading, setLoading] = useState(false);
 
@@ -281,14 +283,38 @@ export default function AuthScreen() {
               onChangeText={mode === "login" ? setIdentifier : setSignupEmail}
             />
 
-            <TextInput
-              style={inputStyle}
-              placeholder="PASSWORD"
-              placeholderTextColor={colors.placeholderText}
-              secureTextEntry
-              value={mode === "login" ? password : signupPassword}
-              onChangeText={mode === "login" ? setPassword : setSignupPassword}
-            />
+            <View style={[styles.passwordWrap, { borderColor: inputBorder, backgroundColor: inputBg }]}>
+              <TextInput
+                style={[styles.passwordInput, { color: colors.inputText }]}
+                placeholder="PASSWORD"
+                placeholderTextColor={colors.placeholderText}
+                secureTextEntry={mode === "login" ? !showLoginPassword : !showSignupPassword}
+                value={mode === "login" ? password : signupPassword}
+                onChangeText={mode === "login" ? setPassword : setSignupPassword}
+              />
+              <Pressable
+                onPress={() =>
+                  mode === "login"
+                    ? setShowLoginPassword((cur) => !cur)
+                    : setShowSignupPassword((cur) => !cur)
+                }
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <Ionicons
+                  name={
+                    mode === "login"
+                      ? showLoginPassword
+                        ? "eye-off-outline"
+                        : "eye-outline"
+                      : showSignupPassword
+                        ? "eye-off-outline"
+                        : "eye-outline"
+                  }
+                  size={18}
+                  color={colors.textMuted}
+                />
+              </Pressable>
+            </View>
 
             {mode === "signup" && signupPassword.length > 0 && (
               <View style={styles.checksContainer}>
@@ -438,6 +464,21 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     borderWidth: 1,
     paddingHorizontal: 16,
+    fontSize: 13,
+    letterSpacing: 1,
+    fontWeight: "500",
+  },
+  passwordWrap: {
+    height: 50,
+    borderRadius: 6,
+    borderWidth: 1,
+    paddingHorizontal: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  passwordInput: {
+    flex: 1,
     fontSize: 13,
     letterSpacing: 1,
     fontWeight: "500",
