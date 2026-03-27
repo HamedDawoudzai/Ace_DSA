@@ -3,6 +3,7 @@ import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import {
   Image,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -97,6 +98,11 @@ export default function LearnDetailScreen() {
       <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
         {topic.subtitle}
       </Text>
+      {topic.lastUpdated ? (
+        <Text style={[styles.lastUpdated, { color: colors.textMuted }]}>
+          Last updated {topic.lastUpdated}
+        </Text>
+      ) : null}
 
       {topicImage ? (
         <View
@@ -158,6 +164,41 @@ export default function LearnDetailScreen() {
         </View>
         <View>{renderParagraphs(topic.details)}</View>
       </View>
+
+      {topic.detailSections && topic.detailSections.length > 0
+        ? topic.detailSections.map((section, sIdx) => (
+            <View
+              key={`${topic.id}-detail-section-${sIdx}`}
+              style={[
+                styles.sectionCard,
+                { backgroundColor: colors.surface, borderColor: colors.border },
+              ]}
+            >
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                {section.title}
+              </Text>
+              <View>{renderParagraphs(section.body)}</View>
+              {section.code ? (
+                <View
+                  style={[
+                    styles.codeBlock,
+                    {
+                      backgroundColor: colors.surfaceAlt,
+                      borderColor: colors.border,
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[styles.codeText, { color: colors.textSecondary }]}
+                    selectable
+                  >
+                    {section.code.trim()}
+                  </Text>
+                </View>
+              ) : null}
+            </View>
+          ))
+        : null}
 
       {topic.track === "data-structures" && topic.generalUnderstanding ? (
         <View
@@ -327,6 +368,11 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 14,
+    marginBottom: 6,
+  },
+  lastUpdated: {
+    fontSize: 12,
+    fontWeight: "600",
     marginBottom: 14,
   },
   imageWrap: {
@@ -391,6 +437,18 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 22,
     marginBottom: 8,
+  },
+  codeBlock: {
+    marginTop: 10,
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+  },
+  codeText: {
+    fontFamily: Platform.select({ ios: "Menlo", android: "monospace", default: "monospace" }),
+    fontSize: 12,
+    lineHeight: 18,
   },
   sectionBody: {
     fontSize: 14,

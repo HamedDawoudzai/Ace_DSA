@@ -1,4 +1,6 @@
 import { ImageSourcePropType } from "react-native";
+import type { LearnDetailSection } from "./learnSectionTypes";
+import { TWO_POINTERS_SECTIONS } from "./learn/twoPointers";
 
 export type LearnTrack = "data-structures" | "algorithms";
 
@@ -10,6 +12,10 @@ export interface LearnTopic {
   level: number;
   summary: string;
   details: string;
+  /** Optional deep-dive sections (e.g. Python snippets) for algorithm guides */
+  detailSections?: LearnDetailSection[];
+  /** Shown on detail screen when set, e.g. "27 Mar 2026" */
+  lastUpdated?: string;
   image?: ImageSourcePropType;
   imageLight?: ImageSourcePropType;
   imageDark?: ImageSourcePropType;
@@ -340,8 +346,9 @@ export const ALGO_TOPICS: LearnTopic[] = [
     level: 2,
     summary: "Optimize from O(n²) to O(n) by scanning once from both ends or at different speeds.",
     details:
-      "Two pointers can both move forward (slow/fast) or start at opposite ends. " +
-      "Patterns include removing duplicates, partitioning arrays, palindrome checks, and linked-list cycle detection.",
+      "Two pointers means maintaining two indices (left/right or slow/fast) so you explore the structure in one pass instead of trying every pair with nested loops. " +
+      "On sorted arrays, opposite ends often let you increase or decrease a sum deterministically.",
+    detailSections: TWO_POINTERS_SECTIONS,
   },
   {
     id: "algo-sliding-window",
