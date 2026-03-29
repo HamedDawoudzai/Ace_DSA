@@ -13,7 +13,7 @@ import { StatsResponse } from "../types";
 import { useTheme } from "../context/ThemeContext";
 
 export default function StatsScreen() {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const [stats, setStats] = useState<StatsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -59,7 +59,25 @@ export default function StatsScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.summaryRow}>
-        <View style={[styles.summaryCard, { backgroundColor: colors.surface }]}>
+        <View
+          style={[
+            styles.summaryCard,
+            {
+              backgroundColor: colors.surface,
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: isDark ? 0.2 : 0.06,
+              shadowRadius: 6,
+              elevation: 2,
+            },
+          ]}
+        >
+          <Ionicons
+            name="flash-outline"
+            size={26}
+            color={colors.accent}
+            style={styles.summaryIcon}
+          />
           <Text style={[styles.summaryValue, { color: colors.accent }]}>
             {stats.total_attempts}
           </Text>
@@ -67,7 +85,25 @@ export default function StatsScreen() {
             Attempts
           </Text>
         </View>
-        <View style={[styles.summaryCard, { backgroundColor: colors.surface }]}>
+        <View
+          style={[
+            styles.summaryCard,
+            {
+              backgroundColor: colors.surface,
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: isDark ? 0.2 : 0.06,
+              shadowRadius: 6,
+              elevation: 2,
+            },
+          ]}
+        >
+          <Ionicons
+            name="flame-outline"
+            size={26}
+            color={colors.accent}
+            style={styles.summaryIcon}
+          />
           <Text style={[styles.summaryValue, { color: colors.accent }]}>
             {stats.streak}
           </Text>
@@ -96,14 +132,36 @@ export default function StatsScreen() {
         }
         renderItem={({ item }) => (
           <View
-            style={[styles.patternRow, { backgroundColor: colors.surface }]}
+            style={[
+              styles.patternRow,
+              {
+                backgroundColor: colors.surface,
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: isDark ? 0.15 : 0.05,
+                shadowRadius: 4,
+                elevation: 1,
+              },
+            ]}
           >
+            <View style={[styles.patternDot, { backgroundColor: colors.accent }]} />
             <Text style={[styles.patternName, { color: colors.text }]}>
               {item.pattern}
             </Text>
-            <Text style={[styles.patternCount, { color: colors.accent }]}>
-              {item.total}
-            </Text>
+            <View
+              style={[
+                styles.countBadge,
+                {
+                  backgroundColor: isDark
+                    ? "rgba(45,212,191,0.12)"
+                    : "rgba(245,200,66,0.2)",
+                },
+              ]}
+            >
+              <Text style={[styles.patternCount, { color: colors.accent }]}>
+                {item.total}
+              </Text>
+            </View>
           </View>
         )}
       />
@@ -143,6 +201,9 @@ const styles = StyleSheet.create({
     padding: 20,
     alignItems: "center",
   },
+  summaryIcon: {
+    marginBottom: 6,
+  },
   summaryValue: {
     fontSize: 32,
     fontWeight: "800",
@@ -164,18 +225,29 @@ const styles = StyleSheet.create({
   },
   patternRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
     borderRadius: 12,
     padding: 16,
     marginBottom: 10,
+    gap: 12,
+  },
+  patternDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
   },
   patternName: {
     fontSize: 16,
     fontWeight: "600",
+    flex: 1,
+  },
+  countBadge: {
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
   },
   patternCount: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "700",
   },
 });
