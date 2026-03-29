@@ -1,6 +1,18 @@
 import { ImageSourcePropType } from "react-native";
 import type { LearnDetailSection } from "./learnSectionTypes";
+import { ARRAY_SCAN_SECTIONS } from "./learn/arrayScan";
 import { TWO_POINTERS_SECTIONS } from "./learn/twoPointers";
+import { SLIDING_WINDOW_SECTIONS } from "./learn/slidingWindow";
+import { BINARY_SEARCH_SECTIONS } from "./learn/binarySearch";
+import { RECURSION_SECTIONS } from "./learn/recursion";
+import { BACKTRACKING_SECTIONS } from "./learn/backtracking";
+import { SORTING_SECTIONS } from "./learn/sorting";
+import { BFS_SECTIONS } from "./learn/bfs";
+import { DFS_SECTIONS } from "./learn/dfs";
+import { DIJKSTRA_SECTIONS } from "./learn/dijkstra";
+import { GREEDY_SECTIONS } from "./learn/greedy";
+import { DP_1D_SECTIONS } from "./learn/dp1d";
+import { DP_2D_SECTIONS } from "./learn/dp2d";
 
 export type LearnTrack = "data-structures" | "algorithms";
 
@@ -223,7 +235,7 @@ export const DATA_STRUCTURE_TOPICS: LearnTopic[] = [
     subtitle: "Ordered binary trees",
     level: 8,
     summary: "BSTs keep data ordered so search and updates can be fast.",
-    imageLight: require("../../assets/images/bst.png"),
+    imageLight: require("../../assets/images/bst_light.png"),
     imageDark: require("../../assets/images/bst_dark_mode.png"),
     details:
       "A binary search tree (BST) has an ordering rule: everything in the left subtree is smaller than the node, and everything in the right subtree is larger.\n\n" +
@@ -334,9 +346,19 @@ export const ALGO_TOPICS: LearnTopic[] = [
     subtitle: "Single-pass patterns",
     level: 1,
     summary: "Straightforward passes through arrays and strings to build intuition.",
+    imageLight: require("../../assets/images/linear_traversal_light.png"),
+    imageDark: require("../../assets/images/linear_traversal_dark.png"),
     details:
-      "Before fancy techniques, many interview problems reduce to a careful single pass. " +
-      "Get comfortable iterating, tracking running values, using prefix and suffix computations, and reasoning about off-by-one errors.",
+      "Before fancy data structures or multi-pointer tricks, many interview problems reduce to a careful single pass through an array or string.\n\n" +
+      "The key idea: compute something in one sweep—a running maximum, a running sum, a frequency count—so that questions about ranges or positions can be answered instantly without re-scanning.\n\n" +
+      "When to reach for a scan-based approach:\n" +
+      "• Range queries on a static array — build a prefix sum array once in O(n); every query then answers in O(1).\n" +
+      "• Running extremes — track the max or min seen so far while iterating; useful for 'Best Time to Buy and Sell Stock'.\n" +
+      "• Decision at each step — Kadane's algorithm (max subarray sum) decides whether to extend the current subarray or restart, all in one pass.\n" +
+      "• Frequency and counting — build a character or value map in O(n) to answer 'does X appear?' in O(1) afterward.\n\n" +
+      "Concrete starting point below: multiple range-sum queries on a static array. Brute force sums the slice each time in O(n). A prefix sum array built in one O(n) scan reduces every future query to O(1).",
+    detailSections: ARRAY_SCAN_SECTIONS,
+    lastUpdated: "29 Mar 2026",
   },
   {
     id: "algo-two-pointers",
@@ -345,6 +367,8 @@ export const ALGO_TOPICS: LearnTopic[] = [
     subtitle: "Move two indices through an array/string",
     level: 2,
     summary: "Optimize from O(n²) to O(n) by scanning once from both ends or at different speeds.",
+    imageLight: require("../../assets/images/two_pointer_light.png"),
+    imageDark: require("../../assets/images/two_pointer_dark.png"),
     details:
       "The two-pointers technique is a simple but powerful idea: you keep two indices (pointers) that move through a structure—an array, list, or string—either toward each other or in the same direction, so you can solve many problems in one pass instead of nested loops.\n\n" +
       "It shows up constantly in interviews: two sum in a sorted array, closest pair to a target, 3Sum / 4Sum, trapping rain water, palindrome checks, merging sorted arrays, and many more.\n\n" +
@@ -364,10 +388,20 @@ export const ALGO_TOPICS: LearnTopic[] = [
     subtitle: "Fixed and variable windows over sequences",
     level: 3,
     summary: "Solve substring/subarray problems in O(n) instead of O(n²).",
+    imageLight: require("../../assets/images/sliding_window_light.png"),
+    imageDark: require("../../assets/images/sliding_window_dark.png"),
     details:
-      "A sliding window maintains a contiguous range [L, R] while you expand or shrink it. " +
-      "Fixed-size windows slide with constant length; variable windows grow and shrink depending on constraints. " +
-      "This pattern underlies many substring, subarray, and stream-processing questions.",
+      "A sliding window maintains a contiguous range [L, R] as it moves through a sequence. Instead of recomputing the window from scratch each step, you add the new element on the right and remove the old element on the left—constant work per step.\n\n" +
+      "Two shapes:\n" +
+      "• Fixed-size windows — the window length k is given; slide it right by one each step. Classic use: maximum or minimum subarray sum of size k.\n" +
+      "• Variable-size windows — the window expands (move R right) until a constraint breaks, then shrinks (move L right) to restore it. Classic uses: longest substring without repeating characters, smallest subarray with sum ≥ k.\n\n" +
+      "When to reach for a sliding window:\n" +
+      "• The problem asks about a contiguous subarray or substring.\n" +
+      "• An inner loop re-examines elements the outer loop already processed—the window eliminates that.\n" +
+      "• There is a monotonic relationship: as the window grows, the metric can only get better (or worse), so shrinking from the left is always safe.\n\n" +
+      "Concrete starting point below: maximum sum subarray of size k. Brute force sums k elements for each of n − k + 1 starting positions in O(n × k). One initial sum plus n − k incremental additions brings it to O(n).",
+    detailSections: SLIDING_WINDOW_SECTIONS,
+    lastUpdated: "29 Mar 2026",
   },
   {
     id: "algo-binary-search",
@@ -376,9 +410,20 @@ export const ALGO_TOPICS: LearnTopic[] = [
     subtitle: "Search sorted data or answer space",
     level: 4,
     summary: "Halve the search space repeatedly to find positions or optimal values.",
+    imageLight: require("../../assets/images/binary_search_light.png"),
+    imageDark: require("../../assets/images/binary_search_dark.png"),
     details:
-      "Classic binary search finds a target in a sorted array. More advanced uses search \"answer space\" for the smallest or largest value satisfying a condition, " +
-      "as long as the predicate is monotonic (false...false true...true).",
+      "Binary search is the art of eliminating half the remaining candidates with a single comparison. The prerequisite: some ordering or monotonic property that tells you which half to discard.\n\n" +
+      "Two shapes:\n" +
+      "• Classic — find a target in a sorted array. Compare the midpoint; go left or right based on whether mid is too small or too large. O(log n) comparisons.\n" +
+      "• Answer-space search — you do not search the array itself; you search for the smallest (or largest) value that satisfies a condition. As long as the predicate is monotonic (false…false true…true), binary search on the answer space works. Examples: Koko eating bananas, minimum capacity to ship packages, split array largest sum.\n\n" +
+      "When to reach for binary search:\n" +
+      "• Sorted input and you need a position — textbook binary search.\n" +
+      "• 'Find the minimum X such that condition(X) is true' — search answer space.\n" +
+      "• You spot O(n) and wonder if O(log n) is possible — think binary search.\n\n" +
+      "Concrete starting point below: find a target index in a sorted array. Linear scan is O(n). Binary search halves the space each step for O(log n).",
+    detailSections: BINARY_SEARCH_SECTIONS,
+    lastUpdated: "29 Mar 2026",
   },
   {
     id: "algo-recursion",
@@ -388,8 +433,18 @@ export const ALGO_TOPICS: LearnTopic[] = [
     level: 5,
     summary: "Fundamental for trees, backtracking, and many divide-and-conquer solutions.",
     details:
-      "Recursion solves a problem by calling itself on smaller inputs until reaching a base case. " +
-      "Understanding the call stack and being able to reason about state across calls is critical for tree traversals and search algorithms.",
+      "Recursion is the skill of trusting that a function can solve a smaller version of its own problem. You define two things: a base case (the simplest input you handle directly) and a recursive case (how you reduce the current input into something smaller).\n\n" +
+      "The runtime model: every recursive call is pushed onto the call stack. Stack depth equals the recursion depth, so a function on input n with depth n uses O(n) stack space. A stack overflow usually means a missing base case.\n\n" +
+      "When to reach for recursion:\n" +
+      "• The problem is defined in terms of itself — Fibonacci, factorial, tree height.\n" +
+      "• You need to explore a branching structure — trees, graphs, combination generation.\n" +
+      "• Divide-and-conquer — split the problem, solve each half, merge results (merge sort, quick sort).\n" +
+      "• The solution is naturally expressed as 'solve for n using the answer for n−1'.\n\n" +
+      "Concrete starting point below: Fibonacci numbers—defined recursively. Naive recursion is O(2^n) because sub-problems overlap. Adding a memo cache (memoization) turns it into O(n).",
+    imageLight: require("../../assets/images/recursion_light.png"),
+    imageDark: require("../../assets/images/recursion_dark.png"),
+    detailSections: RECURSION_SECTIONS,
+    lastUpdated: "29 Mar 2026",
   },
   {
     id: "algo-backtracking",
@@ -399,9 +454,19 @@ export const ALGO_TOPICS: LearnTopic[] = [
     level: 6,
     summary: "Generate permutations, combinations, and paths while pruning dead ends.",
     details:
-      "Backtracking incrementally builds a candidate solution and abandons it when constraints fail. " +
-      "Typical problems include subsets, permutations, N-Queens, and word search. " +
-      "Being able to clearly define the state, choices, and constraints is key.",
+      "Backtracking is a refined brute force: you build a solution step by step and abandon a branch the moment you know it cannot lead to a valid answer.\n\n" +
+      "The template is always: choose → explore → un-choose (backtrack). The 'un-choose' step is what makes backtracking different from plain recursion—it restores state so the next sibling branch starts clean.\n\n" +
+      "When to reach for backtracking:\n" +
+      "• Exhaustive enumeration — subsets, permutations, combinations (all valid configurations).\n" +
+      "• Constraint satisfaction — N-Queens, Sudoku, crossword fill (reject invalid states early).\n" +
+      "• Path finding in an explicit search space — word search in a grid, generating valid parentheses.\n" +
+      "• Optimization over all candidates — when DP does not apply and you must try every option.\n\n" +
+      "The power is in pruning: a good constraint check at each level can eliminate enormous subtrees, turning what looks exponential into something practical.\n\n" +
+      "Concrete starting point below: generate all subsets of a set. Every element is either included or not—a binary tree of choices. Backtracking walks that tree and records each node as a valid answer.",
+    imageLight: require("../../assets/images/backtracking_light.png"),
+    imageDark: require("../../assets/images/backtracking_dark.png"),
+    detailSections: BACKTRACKING_SECTIONS,
+    lastUpdated: "29 Mar 2026",
   },
   {
     id: "algo-sorting",
@@ -411,8 +476,19 @@ export const ALGO_TOPICS: LearnTopic[] = [
     level: 7,
     summary: "Use sort as a pre-processing step for greedy, two-pointers, and sweeping algorithms.",
     details:
-      "Most languages give you an O(n log n) sort with customizable comparators. " +
-      "In interviews, you rarely implement quicksort from scratch; instead you rely on sorting to structure data for simpler algorithms.",
+      "Sorting is rarely the final answer—it is the move that makes the next step obvious. Once data is ordered, neighbouring elements are candidates, opposites are the cheapest pair to compare, and sweeping algorithms become trivial.\n\n" +
+      "Python's sort (Timsort) is O(n log n) and stable. You customise it with a key= function that maps each element to a comparable value. For multi-key or non-standard comparisons, use functools.cmp_to_key.\n\n" +
+      "When to reach for sorting:\n" +
+      "• You want to compare adjacent elements — merge intervals, meeting overlap detection.\n" +
+      "• Two-pointer or binary search on unsorted input — sort first, then apply the pattern.\n" +
+      "• Greedy algorithms that need a canonical order — interval scheduling (sort by end), task scheduling (sort by deadline), Huffman coding.\n" +
+      "• Grouping / deduplication — sorted order clusters equal elements together.\n\n" +
+      "Cost: O(n log n) time. If that is too slow, check whether a counting sort (O(n + k) for bounded values) or a partial sort (heap, quickselect) fits better.\n\n" +
+      "Concrete starting point below: detect if any two meetings overlap. Brute force compares all O(n²) pairs. Sorting by start time lets a single O(n) sweep do the job.",
+    imageLight: require("../../assets/images/sorting_light.png"),
+    imageDark: require("../../assets/images/sorting_dark.png"),
+    detailSections: SORTING_SECTIONS,
+    lastUpdated: "29 Mar 2026",
   },
   {
     id: "algo-bfs",
@@ -422,8 +498,19 @@ export const ALGO_TOPICS: LearnTopic[] = [
     level: 8,
     summary: "Ideal for shortest path in unweighted graphs and level-order tree traversal.",
     details:
-      "BFS uses a queue to process nodes in waves: visit all nodes at distance k before distance k+1. " +
-      "This guarantees shortest paths in unweighted graphs and is widely used for grid problems, word-ladder style transformations, and multi-source searches.",
+      "BFS explores a graph level by level: first all nodes one hop from the start, then all nodes two hops away, and so on. This wave-by-wave expansion is what makes BFS uniquely suited for shortest-path problems in unweighted graphs.\n\n" +
+      "The tool: a queue (FIFO). Seed it with the start node, mark it visited, then repeatedly dequeue a node, process it, and enqueue all unvisited neighbours.\n\n" +
+      "When to reach for BFS:\n" +
+      "• Shortest path or minimum steps in an unweighted graph or grid — BFS gives the first answer, which is guaranteed shortest.\n" +
+      "• Level-order tree traversal — process all nodes at depth k before depth k+1.\n" +
+      "• Multi-source problems — seed the queue with multiple starting nodes simultaneously (rotting oranges, walls and gates).\n" +
+      "• 'Minimum moves' puzzles — word ladder, sliding puzzle, knight moves.\n\n" +
+      "DFS vs BFS: use DFS when you need to explore a full path (cycle detection, backtracking). Use BFS when you need the shortest or minimum-cost path in an unweighted space.\n\n" +
+      "Concrete starting point below: shortest path in a binary grid. DFS finds a path but not necessarily the shortest. BFS guarantees it.",
+    imageLight: require("../../assets/images/bfs_light.png"),
+    imageDark: require("../../assets/images/bfs_dark.png"),
+    detailSections: BFS_SECTIONS,
+    lastUpdated: "29 Mar 2026",
   },
   {
     id: "algo-dfs",
@@ -433,8 +520,20 @@ export const ALGO_TOPICS: LearnTopic[] = [
     level: 9,
     summary: "Explore as far as possible along each branch before backtracking.",
     details:
-      "DFS uses a stack or recursion to go deep along a path, then backtrack. " +
-      "Applications include connected components, cycle detection, topological sort, and many backtracking problems.",
+      "DFS plunges as deep as possible along one path before backing up to try the next branch. Implemented with recursion (implicit stack) or an explicit stack.\n\n" +
+      "The pattern: visit a node, mark it visited, recurse into each unvisited neighbour, return when there are no more unvisited neighbours.\n\n" +
+      "When to reach for DFS:\n" +
+      "• Connected components — count how many times DFS is launched from the outer loop.\n" +
+      "• Flood fill — once you find a target cell, sink its entire connected region before moving on.\n" +
+      "• Cycle detection — track the recursion stack; revisiting a node on the current stack means a cycle.\n" +
+      "• Topological sort — push each node after all its neighbours are processed.\n" +
+      "• Tree traversals — pre-order, in-order, post-order are all DFS with different recording points.\n" +
+      "• Backtracking problems — DFS is the engine; backtracking is the undo logic at each step.\n\n" +
+      "Concrete starting point below: count islands in a grid. Each land cell launches a DFS that sinks its entire connected island, so the outer loop counts islands by counting DFS launches.",
+    imageLight: require("../../assets/images/dfs_light.png"),
+    imageDark: require("../../assets/images/dfs_dark.png"),
+    detailSections: DFS_SECTIONS,
+    lastUpdated: "29 Mar 2026",
   },
   {
     id: "algo-dijkstra",
@@ -443,9 +542,20 @@ export const ALGO_TOPICS: LearnTopic[] = [
     subtitle: "Shortest paths in weighted graphs",
     level: 10,
     summary: "Find the cheapest path when edges have non-negative weights.",
+    imageLight: require("../../assets/images/djikstras_light.png"),
+    imageDark: require("../../assets/images/djikstras_dark.png"),
     details:
-      "Dijkstra's algorithm uses a priority queue to repeatedly expand the closest unvisited node, relaxing edges. " +
-      "It is used in routing, maps, and any problem involving minimal cost paths with non-negative weights.",
+      "Dijkstra's algorithm is BFS's weighted sibling: instead of a plain queue, it uses a min-heap (priority queue) so the node with the smallest known cost is always processed next.\n\n" +
+      "Core idea: maintain a dist table of the best-known cost to reach each node. Start with dist[src] = 0 and everything else at infinity. Each time you pop a node from the heap, you try to improve the cost of each neighbour (edge relaxation). The first time you pop a node, its cost is final—provided all weights are non-negative.\n\n" +
+      "When to reach for Dijkstra's:\n" +
+      "• Shortest path in a weighted graph with non-negative edge weights.\n" +
+      "• Navigation and routing — maps, network routing protocols (OSPF).\n" +
+      "• 'Minimum cost to reach destination' problems with weighted state transitions.\n" +
+      "• As a subroutine in other algorithms (A*, Johnson's).\n\n" +
+      "Limitations: does not handle negative edge weights (use Bellman-Ford) and does not work for graphs with negative cycles.\n\n" +
+      "Concrete starting point below: find the cheapest flight cost between cities. Brute force tries all paths (factorial). Dijkstra's processes each city at most once in O((V + E) log V).",
+    detailSections: DIJKSTRA_SECTIONS,
+    lastUpdated: "29 Mar 2026",
   },
   {
     id: "algo-greedy",
@@ -455,8 +565,19 @@ export const ALGO_TOPICS: LearnTopic[] = [
     level: 11,
     summary: "Select the best local option assuming it leads to a global optimum.",
     details:
-      "Greedy algorithms build solutions step by step by always choosing the locally optimal move. " +
-      "They work when the problem has a matroid-like structure or optimal substructure. Classic examples include interval scheduling and some coin-change problems.",
+      "A greedy algorithm builds its solution one step at a time, always picking the locally best option—without reconsidering past decisions. The catch: this only works when the problem has the greedy-choice property (a local optimum leads to a global optimum).\n\n" +
+      "How to verify a greedy approach: use an exchange argument. Suppose the greedy choice at step k is G and some other algorithm picks A instead. Show that swapping A for G either keeps the solution equally good or improves it. If that holds for every step, greedy is provably optimal.\n\n" +
+      "When to reach for greedy:\n" +
+      "• Interval problems — activity selection, minimum rooms, minimum arrows. Sort by end time, pick greedily.\n" +
+      "• Jump problems — can you reach the end? Track the furthest reachable index.\n" +
+      "• Task scheduling — earliest deadline first, shortest job first.\n" +
+      "• Classic graph algorithms — Dijkstra's and Prim's MST are greedy at their core.\n\n" +
+      "When NOT to use greedy: coin change with arbitrary denominations, 0-1 knapsack, and other problems where a local optimum blocks the global one—use DP instead.\n\n" +
+      "Concrete starting point below: select the maximum number of non-overlapping meetings. Brute force checks all 2^n subsets. Greedy (sort by end, pick greedily) does it in O(n log n).",
+    imageLight: require("../../assets/images/greedy_light.png"),
+    imageDark: require("../../assets/images/greedy_dark.png"),
+    detailSections: GREEDY_SECTIONS,
+    lastUpdated: "29 Mar 2026",
   },
   {
     id: "algo-dp-1d",
@@ -466,8 +587,21 @@ export const ALGO_TOPICS: LearnTopic[] = [
     level: 12,
     summary: "Turn exponential recursion into polynomial-time solutions.",
     details:
-      "1D DP stores answers to subproblems in an array or map so each state is computed once. " +
-      "Typical examples: climbing stairs, house robber, coin change, and longest increasing subsequence.",
+      "Dynamic programming (DP) solves problems by breaking them into overlapping sub-problems, solving each once, and storing the results. 1D DP means the state can be described by a single index—usually the position in an array or the target value.\n\n" +
+      "Two flavours:\n" +
+      "• Top-down (memoization) — write the natural recursion, add a cache. Easiest to derive from the recurrence.\n" +
+      "• Bottom-up (tabulation) — fill a table from the base cases upward. Usually faster in practice (no recursion overhead).\n\n" +
+      "The four-step DP process:\n" +
+      "1. Define the state — what does dp[i] represent?\n" +
+      "2. Write the recurrence — how does dp[i] depend on smaller states?\n" +
+      "3. Identify base cases — what are the smallest dp values you know directly?\n" +
+      "4. Choose fill order — bottom-up: fill from base cases; top-down: memoize recursively.\n\n" +
+      "When to reach for 1D DP: you spot a naive recursion with repeated sub-problems and the sub-problem space is O(n).\n\n" +
+      "Concrete starting point below: climbing stairs with 1-step or 2-step moves. Naive recursion recomputes the same steps over and over in O(2^n). 1D DP stores each step's count once for O(n).",
+    imageLight: require("../../assets/images/1d_dp_light.png"),
+    imageDark: require("../../assets/images/1d_dp_dark.png"),
+    detailSections: DP_1D_SECTIONS,
+    lastUpdated: "29 Mar 2026",
   },
   {
     id: "algo-dp-2d",
@@ -477,8 +611,22 @@ export const ALGO_TOPICS: LearnTopic[] = [
     level: 13,
     summary: "Solve grid and string problems by filling a 2D table systematically.",
     details:
-      "2D DP tables encode relationships between prefixes or positions in two dimensions. " +
-      "Examples include edit distance, longest common subsequence, and path counting in grids with obstacles.",
+      "2D DP extends the 1D idea to states described by two indices—typically two positions in two strings, or a row and column in a grid. The table dp[i][j] stores the answer for the sub-problem defined by the first i characters of one string and the first j characters of another (or cell (i, j) in a grid).\n\n" +
+      "The setup:\n" +
+      "• Allocate a (m+1) × (n+1) table (sentinel row/column of zeros handles base cases cleanly).\n" +
+      "• Fill row by row (or column by column), each cell depending on cells already filled.\n" +
+      "• Read the answer from dp[m][n].\n\n" +
+      "When to reach for 2D DP:\n" +
+      "• Two-string problems — LCS, edit distance, regular expression matching.\n" +
+      "• Grid path counting or path optimization — unique paths, minimum path sum, dungeon game.\n" +
+      "• Knapsack variants — item index × remaining capacity.\n" +
+      "• Interval DP — dp[i][j] = answer for the sub-array or sub-string from i to j (burst balloons, matrix chain multiplication).\n\n" +
+      "Space optimisation: if dp[i][j] only depends on the previous row, you can keep just two rows (or even one row updated in place) to reduce O(m × n) space to O(n).\n\n" +
+      "Concrete starting point below: Longest Common Subsequence of two strings. Naive recursion is O(2^(m+n)). A 2D DP table fills all O(m × n) unique prefix pairs exactly once.",
+    imageLight: require("../../assets/images/2d_dp_light.png"),
+    imageDark: require("../../assets/images/2d_dp_dark.png"),
+    detailSections: DP_2D_SECTIONS,
+    lastUpdated: "29 Mar 2026",
   },
 ];
 
