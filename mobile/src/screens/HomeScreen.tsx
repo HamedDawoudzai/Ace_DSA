@@ -74,7 +74,7 @@ const styles = StyleSheet.create({
   },
   logoContainer: {
     alignItems: "center",
-    marginBottom: 4,
+    marginBottom: 20,
   },
   title: {
     fontSize: 38,
