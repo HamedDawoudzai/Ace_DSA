@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   RefreshControl,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useNavigation } from "@react-navigation/native";
 import api from "../services/api";
@@ -22,19 +23,44 @@ const DrillCard = memo(function DrillCard({
   drill: Drill;
   onPress: (d: Drill) => void;
 }) {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   return (
     <TouchableOpacity
-      style={[styles.card, { backgroundColor: colors.surface }]}
+      style={[
+        styles.card,
+        {
+          backgroundColor: colors.surface,
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: isDark ? 0.22 : 0.07,
+          shadowRadius: 8,
+          elevation: 3,
+        },
+      ]}
       onPress={() => onPress(drill)}
       activeOpacity={0.8}
     >
-      <Text style={[styles.category, { color: colors.accent }]}>
-        {drill.pattern_category}
-      </Text>
+      <View style={[styles.accentBar, { backgroundColor: colors.accent }]} />
+      <View style={styles.cardTop}>
+        <View
+          style={[
+            styles.categoryPill,
+            {
+              backgroundColor: isDark
+                ? "rgba(45,212,191,0.12)"
+                : "rgba(245,200,66,0.22)",
+            },
+          ]}
+        >
+          <Text style={[styles.category, { color: colors.accent }]}>
+            {drill.pattern_category}
+          </Text>
+        </View>
+        <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
+      </View>
       <Text style={[styles.prompt, { color: colors.text }]}>{drill.prompt}</Text>
       <Text style={[styles.count, { color: colors.textMuted }]}>
-        {drill.choices.length} choices
+        {drill.choices.length} answer choices
       </Text>
     </TouchableOpacity>
   );
@@ -117,7 +143,8 @@ export default function DrillsScreen() {
         windowSize={7}
         removeClippedSubviews
         ListEmptyComponent={
-          <View style={styles.center}>
+          <View style={styles.emptyWrap}>
+            <Ionicons name="code-slash-outline" size={48} color={colors.textMuted} />
             <Text style={[styles.emptyText, { color: colors.textMuted }]}>
               No drills available yet.
             </Text>
@@ -140,26 +167,48 @@ const styles = StyleSheet.create({
   },
   list: {
     padding: 16,
+    paddingTop: 20,
   },
   card: {
     borderRadius: 14,
     padding: 18,
+    paddingLeft: 22,
     marginBottom: 14,
+    overflow: "hidden",
+  },
+  accentBar: {
+    position: "absolute",
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 4,
+  },
+  cardTop: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 10,
+  },
+  categoryPill: {
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
   },
   category: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: "700",
     textTransform: "uppercase",
-    letterSpacing: 1,
-    marginBottom: 6,
+    letterSpacing: 0.8,
   },
   prompt: {
     fontSize: 16,
     fontWeight: "600",
     marginBottom: 8,
+    lineHeight: 22,
   },
   count: {
-    fontSize: 13,
+    fontSize: 12,
+    fontWeight: "500",
   },
   errorText: {
     fontSize: 16,
@@ -172,6 +221,13 @@ const styles = StyleSheet.create({
   },
   retryText: {
     fontWeight: "700",
+  },
+  emptyWrap: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingTop: 60,
+    gap: 12,
   },
   emptyText: {
     fontSize: 16,
