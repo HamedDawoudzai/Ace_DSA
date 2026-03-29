@@ -78,7 +78,7 @@ def representative_path(paths: List[str]) -> str | None:
         "mobile/src/screens/WelcomeScreen.tsx",
         "mobile/src/screens/AuthScreen.tsx",
         "mobile/src/services/api.ts",
-        "docker-compose.yml",
+        "Makefile",
         "README.md",
     ]
     for cand in preferred:
@@ -117,9 +117,9 @@ def subject_from_paths(ctype: str, scope: str | None, paths: List[str], changes:
     elif rep == "backend/internal/middleware/ratelimit.go":
         ctype, scope = "feat", "backend"
         phrase = "add rate limiting middleware"
-    elif rep == "docker-compose.yml":
-        ctype, scope = "chore", "docker"
-        phrase = "update dev compose config"
+    elif rep == "Makefile":
+        ctype, scope = "chore", None
+        phrase = "update dev Makefile"
     elif rep:
         base = rep.split("/")[-1]
         if adds and not mods and not dels:

@@ -85,9 +85,6 @@ ehthumbs.db
 !.vscode/extensions.json
 !.vscode/settings.json
 
-# --- Docker ---
-docker-compose.override.yml
-
 # --- Node / Mobile ---
 node_modules/
 mobile/node_modules/
