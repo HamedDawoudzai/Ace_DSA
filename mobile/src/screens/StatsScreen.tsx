@@ -151,11 +151,7 @@ export default function StatsScreen() {
             <View
               style={[
                 styles.countBadge,
-                {
-                  backgroundColor: isDark
-                    ? "rgba(45,212,191,0.12)"
-                    : "rgba(245,200,66,0.2)",
-                },
+                { backgroundColor: colors.accentSubtle },
               ]}
             >
               <Text style={[styles.patternCount, { color: colors.accent }]}>

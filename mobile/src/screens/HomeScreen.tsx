@@ -2,51 +2,66 @@ import React from "react";
 import { View, Text, StyleSheet, SafeAreaView } from "react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useNavigation } from "@react-navigation/native";
+import { Ionicons } from "@expo/vector-icons";
 import HomeCard from "../components/HomeCard";
 import SpinningLogo from "../components/SpinningLogo";
 import ThemeToggle from "../components/ThemeToggle";
 import { MainStackParamList } from "../navigation/MainTabs";
 import { useTheme } from "../context/ThemeContext";
 
+function getGreeting(): { text: string; icon: keyof typeof Ionicons.glyphMap } {
+  const h = new Date().getHours();
+  if (h < 12) return { text: "Good morning", icon: "sunny-outline" };
+  if (h < 17) return { text: "Good afternoon", icon: "partly-sunny-outline" };
+  return { text: "Good evening", icon: "moon-outline" };
+}
+
 export default function HomeScreen() {
   const navigation =
     useNavigation<NativeStackNavigationProp<MainStackParamList>>();
   const { colors } = useTheme();
+  const { text: greetingText, icon: greetingIcon } = getGreeting();
 
   return (
     <SafeAreaView
       style={[styles.container, { backgroundColor: colors.background }]}
     >
-      <View style={styles.topBar}>
-        <View style={styles.topBarSpacer} />
+      {/* Header */}
+      <View style={styles.header}>
+        <View style={styles.greetingBlock}>
+          <View style={styles.greetingRow}>
+            <Text style={[styles.greeting, { color: colors.text }]}>
+              {greetingText}
+            </Text>
+            <Ionicons name={greetingIcon} size={20} color={colors.accent} />
+          </View>
+          <Text style={[styles.headerSub, { color: colors.textMuted }]}>
+            Let's practice some DSA today
+          </Text>
+        </View>
         <ThemeToggle />
       </View>
 
-      <View style={styles.content}>
-        <View style={styles.logoContainer}>
-          <SpinningLogo size={200} />
-        </View>
+      {/* Hero */}
+      <View style={styles.hero}>
+        <SpinningLogo size={176} />
+        <Text style={[styles.appName, { color: colors.accent }]}>Ace DSA</Text>
+      </View>
 
-        <Text style={[styles.title, { color: colors.accent }]}>Ace DSA</Text>
-        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-          What do you want to do today?
-        </Text>
-
-        <View style={styles.cards}>
-          <HomeCard
-            title="Learn About DSA"
-            subtitle="Understand patterns and concepts"
-            icon="book"
-            onPress={() => navigation.navigate("Learn")}
-          />
-          <View style={styles.spacer} />
-          <HomeCard
-            title="Practice DSA"
-            subtitle="Drill problems and sharpen your skills"
-            icon="bulb"
-            onPress={() => navigation.navigate("Drills")}
-          />
-        </View>
+      {/* Cards */}
+      <View style={styles.cards}>
+        <HomeCard
+          title="Learn About DSA"
+          subtitle="Understand patterns and concepts"
+          icon="book-outline"
+          onPress={() => navigation.navigate("Learn")}
+        />
+        <HomeCard
+          title="Practice Drills"
+          subtitle="Drill problems and sharpen your skills"
+          icon="flash-outline"
+          onPress={() => navigation.navigate("Drills")}
+        />
       </View>
     </SafeAreaView>
   );
@@ -56,41 +71,47 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  topBar: {
+  header: {
     flexDirection: "row",
-    justifyContent: "flex-end",
-    paddingHorizontal: 20,
-    paddingTop: 8,
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    paddingHorizontal: 24,
+    paddingTop: 16,
     paddingBottom: 4,
   },
-  topBarSpacer: {
+  greetingBlock: {
     flex: 1,
   },
-  content: {
-    flex: 1,
-    justifyContent: "center",
-    paddingHorizontal: 24,
-    paddingBottom: 40,
-  },
-  logoContainer: {
+  greetingRow: {
+    flexDirection: "row",
     alignItems: "center",
-    marginBottom: 20,
+    gap: 6,
   },
-  title: {
+  greeting: {
+    fontSize: 22,
+    fontWeight: "800",
+    letterSpacing: -0.4,
+  },
+  headerSub: {
+    fontSize: 13,
+    fontWeight: "500",
+    marginTop: 3,
+  },
+  hero: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingBottom: 8,
+  },
+  appName: {
     fontSize: 38,
     fontWeight: "900",
-    textAlign: "center",
-    marginBottom: 6,
-    letterSpacing: 0.5,
+    letterSpacing: -0.8,
+    marginTop: 6,
   },
-  subtitle: {
-    fontSize: 16,
-    textAlign: "center",
-    marginBottom: 36,
-    fontWeight: "500",
-  },
-  cards: {},
-  spacer: {
-    height: 16,
+  cards: {
+    paddingHorizontal: 24,
+    paddingBottom: 32,
+    gap: 12,
   },
 });

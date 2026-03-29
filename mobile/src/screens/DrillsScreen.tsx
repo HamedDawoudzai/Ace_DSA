@@ -45,11 +45,7 @@ const DrillCard = memo(function DrillCard({
         <View
           style={[
             styles.categoryPill,
-            {
-              backgroundColor: isDark
-                ? "rgba(45,212,191,0.12)"
-                : "rgba(245,200,66,0.22)",
-            },
+            { backgroundColor: colors.accentSubtle },
           ]}
         >
           <Text style={[styles.category, { color: colors.accent }]}>
@@ -138,6 +134,18 @@ export default function DrillsScreen() {
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}
         refreshControl={refreshControl}
+        ListHeaderComponent={
+          <View style={styles.listHeader}>
+            <Text style={[styles.listHeaderTitle, { color: colors.text }]}>
+              All Problems
+            </Text>
+            <View style={[styles.listCount, { backgroundColor: colors.accentSubtle }]}>
+              <Text style={[styles.listCountText, { color: colors.accent }]}>
+                {drills.length}
+              </Text>
+            </View>
+          </View>
+        }
         renderItem={({ item }) => <DrillCard drill={item} onPress={onPressDrill} />}
         initialNumToRender={8}
         windowSize={7}
@@ -166,8 +174,29 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   list: {
-    padding: 16,
-    paddingTop: 20,
+    paddingHorizontal: 16,
+    paddingBottom: 24,
+  },
+  listHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingTop: 16,
+    paddingBottom: 12,
+  },
+  listHeaderTitle: {
+    fontSize: 20,
+    fontWeight: "800",
+    letterSpacing: -0.3,
+  },
+  listCount: {
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+  },
+  listCountText: {
+    fontSize: 13,
+    fontWeight: "700",
   },
   card: {
     borderRadius: 14,
