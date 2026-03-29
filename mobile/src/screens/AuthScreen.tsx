@@ -35,7 +35,7 @@ function checkPassword(pw: string): PasswordChecks {
     upper: /[A-Z]/.test(pw),
     lower: /[a-z]/.test(pw),
     digit: /[0-9]/.test(pw),
-    special: /[^A-Za-z0-9]/.test(pw),
+    special: /[^a-zA-Z0-9\s]/.test(pw),
   };
 }
 
@@ -209,9 +209,20 @@ export default function AuthScreen() {
     </View>
   );
 
+  // Web: tame autofill / focus chrome on inputs (password uses same full field as email).
+  const webFieldChrome =
+    Platform.OS === "web"
+      ? ({
+          outlineStyle: "none" as const,
+          outlineWidth: 0,
+          boxShadow: `0 0 0 1000px ${inputBg} inset`,
+        } as const)
+      : null;
+
   const inputStyle = [
     styles.input,
     { backgroundColor: inputBg, borderColor: inputBorder, color: colors.inputText },
+    webFieldChrome,
   ];
 
   return (
@@ -290,19 +301,22 @@ export default function AuthScreen() {
               returnKeyType="next"
             />
 
-            <View style={[styles.passwordWrap, { borderColor: inputBorder, backgroundColor: inputBg }]}>
+            {/* Same layout as email field: one full-height input + overlay icon (avoids broken autofill strip on web). */}
+            <View style={styles.passwordFieldWrap}>
               <TextInput
-                style={[styles.passwordInput, { color: colors.inputText }]}
+                style={[inputStyle, styles.passwordInputFull]}
                 placeholder="PASSWORD"
                 placeholderTextColor={colors.placeholderText}
                 secureTextEntry={mode === "login" ? !showLoginPassword : !showSignupPassword}
                 value={mode === "login" ? password : signupPassword}
                 onChangeText={mode === "login" ? setPassword : setSignupPassword}
-                textContentType="password"
+                textContentType={mode === "signup" ? "newPassword" : "password"}
+                autoComplete={mode === "signup" ? "password-new" : "current-password"}
                 returnKeyType={mode === "login" ? "go" : "done"}
                 onSubmitEditing={handleSubmit}
               />
               <Pressable
+                style={styles.passwordIconBtn}
                 onPress={() =>
                   mode === "login"
                     ? setShowLoginPassword((cur) => !cur)
@@ -341,11 +355,9 @@ export default function AuthScreen() {
                 style={({ pressed }) => [
                   styles.submitBtn,
                   {
-                    borderColor: colors.accent,
-                    backgroundColor:
-                      pressed ? accentGlow : "transparent",
+                    backgroundColor: colors.accent,
+                    opacity: pressed ? 0.88 : loading ? 0.65 : 1,
                   },
-                  loading && { opacity: 0.6 },
                 ]}
                 onPress={handleSubmit}
                 onPressIn={animateBtnIn}
@@ -353,9 +365,9 @@ export default function AuthScreen() {
                 disabled={loading}
               >
                 {loading ? (
-                  <ActivityIndicator color={colors.accent} />
+                  <ActivityIndicator color={colors.accentText} />
                 ) : (
-                  <Text style={[styles.submitText, { color: colors.accent }]}>
+                  <Text style={[styles.submitText, { color: colors.accentText }]}>
                     {mode === "login" ? "LOG IN" : "SIGN UP"}
                   </Text>
                 )}
@@ -467,28 +479,31 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   input: {
-    height: 50,
-    borderRadius: 6,
+    height: 52,
+    borderRadius: 14,
     borderWidth: 1,
     paddingHorizontal: 16,
-    fontSize: 13,
-    letterSpacing: 1,
+    fontSize: 14,
+    letterSpacing: 0.5,
     fontWeight: "500",
   },
-  passwordWrap: {
-    height: 50,
-    borderRadius: 6,
-    borderWidth: 1,
-    paddingHorizontal: 16,
-    flexDirection: "row",
+  passwordFieldWrap: {
+    position: "relative",
+    width: "100%",
+  },
+  passwordInputFull: {
+    paddingRight: 48,
+    letterSpacing: 0.5,
+  },
+  passwordIconBtn: {
+    position: "absolute",
+    right: 4,
+    top: 0,
+    bottom: 0,
+    width: 44,
+    justifyContent: "center",
     alignItems: "center",
-    gap: 10,
-  },
-  passwordInput: {
-    flex: 1,
-    fontSize: 13,
-    letterSpacing: 1,
-    fontWeight: "500",
+    zIndex: 2,
   },
   checksContainer: {
     gap: 4,
@@ -505,16 +520,16 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   submitBtn: {
-    height: 50,
-    borderRadius: 6,
-    borderWidth: 1.5,
+    height: 54,
+    borderRadius: 16,
     justifyContent: "center",
     alignItems: "center",
+    overflow: "hidden",
   },
   submitText: {
-    fontSize: 14,
-    fontWeight: "700",
-    letterSpacing: 1.5,
+    fontSize: 15,
+    fontWeight: "800",
+    letterSpacing: 1.2,
   },
   dividerRow: {
     flexDirection: "row",
