@@ -31,6 +31,23 @@ export default function LearnDetailScreen() {
 
   const topic = getLearnTopic(track as LearnTrack, id);
 
+  const topicImageRaw = topic ? getTopicImage(topic, isDark) : undefined;
+
+  // Start with 1.5 (matches every _light_mode / _dark_mode image in the project).
+  // onLoad refines it for images with a different natural ratio (e.g. two_pointer = 2.29).
+  // Using a View wrapper that always has an explicit aspectRatio means the layout
+  // never collapses to 0-height on narrow viewports before the callback fires.
+  const [imageAspectRatio, setImageAspectRatio] = React.useState(1.5);
+  React.useEffect(() => { setImageAspectRatio(1.5); }, [topicImageRaw]);
+
+  const handleImageLoad = React.useCallback((e: any) => {
+    const src = e?.nativeEvent?.source;           // native
+    const tgt = e?.nativeEvent?.target;           // web DOM element
+    const w: number = (src?.width > 0 ? src.width : tgt?.naturalWidth) ?? 0;
+    const h: number = (src?.height > 0 ? src.height : tgt?.naturalHeight) ?? 0;
+    if (w > 0 && h > 0) setImageAspectRatio(w / h);
+  }, []);
+
   if (!topic) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -41,7 +58,7 @@ export default function LearnDetailScreen() {
 
   const trackLabel =
     topic.track === "data-structures" ? "Data Structures" : "Algorithms";
-  const topicImage = getTopicImage(topic, isDark);
+  const topicImage = topicImageRaw;
 
   const renderParagraphs = (text: string) => {
     // Treat double-newlines as paragraph breaks for a beginner-friendly flow.
@@ -105,27 +122,13 @@ export default function LearnDetailScreen() {
       ) : null}
 
       {topicImage ? (
-        <View
-          style={[
-            styles.imageWrap,
-            {
-              borderColor: colors.border,
-              backgroundColor: colors.surfaceAlt,
-            },
-          ]}
-        >
-          <View style={styles.imageInner}>
-            <Image
-              source={topicImage}
-              style={styles.image}
-              resizeMode="contain"
-            />
-          </View>
-          <View style={[styles.imageCaption, { backgroundColor: colors.surface }]}>
-            <Text style={[styles.imageCaptionText, { color: colors.textMuted }]}>
-              Visual model
-            </Text>
-          </View>
+        <View style={[styles.imageWrap, { aspectRatio: imageAspectRatio }]}>
+          <Image
+            source={topicImage}
+            style={styles.image}
+            resizeMode="contain"
+            onLoad={handleImageLoad}
+          />
         </View>
       ) : null}
 
@@ -364,41 +367,13 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   imageWrap: {
-    borderRadius: 22,
-    borderWidth: 1,
-    overflow: "hidden",
-    marginBottom: 18,
-    minHeight: 280,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 12,
-    position: "relative",
-  },
-  imageInner: {
     width: "100%",
-    aspectRatio: 1.7,
-    borderRadius: 14,
-    overflow: "hidden",
-    backgroundColor: "rgba(255,255,255,0.12)",
+    marginBottom: 18,
+    overflow: "hidden" as const,
   },
   image: {
     width: "100%",
     height: "100%",
-  },
-  imageCaption: {
-    position: "absolute",
-    right: 10,
-    top: 10,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: "rgba(0,0,0,0.08)",
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-  },
-  imageCaptionText: {
-    fontSize: 11,
-    fontWeight: "700",
-    letterSpacing: 0.2,
   },
   sectionCard: {
     marginTop: 12,
