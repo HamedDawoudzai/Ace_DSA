@@ -67,7 +67,7 @@ api.interceptors.response.use(
     try {
       const refreshToken = await storage.getItem("refresh_token");
       if (!refreshToken) {
-        throw new Error("Username or password is incorrect.");
+        throw new Error("Session expired. Please log in again.");
       }
 
       const body: RefreshRequest = { refresh_token: refreshToken };
