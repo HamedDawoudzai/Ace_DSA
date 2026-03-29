@@ -18,7 +18,6 @@ import { useNotify } from "../context/NotificationContext";
 import SpinningLogo, { SpinningLogoHandle } from "../components/SpinningLogo";
 import ThemeToggle from "../components/ThemeToggle";
 import { getAuthErrorMessage } from "../services/httpError";
-import { getApiBaseUrl } from "../config";
 
 type Mode = "login" | "signup";
 
@@ -81,8 +80,6 @@ export default function AuthScreen() {
   const accentGlow = isDark
     ? "rgba(45, 212, 191, 0.15)"
     : "rgba(245, 200, 66, 0.25)";
-  const apiBaseUrl = getApiBaseUrl();
-
   const pwChecks = checkPassword(signupPassword);
   const pwValid = allPassed(pwChecks);
 
@@ -241,12 +238,6 @@ export default function AuthScreen() {
               ? "Log in to practice DSA drills\nand ace your interviews"
               : "Create your account to get started"}
           </Text>
-          {mode === "login" ? (
-            <Text style={[styles.connectionHint, { color: colors.textMuted }]}>
-              API: {apiBaseUrl}
-            </Text>
-          ) : null}
-
           <View style={styles.form}>
             {mode === "signup" && (
               <>
@@ -464,11 +455,6 @@ const styles = StyleSheet.create({
     lineHeight: 21,
     marginTop: 2,
     marginBottom: 8,
-  },
-  connectionHint: {
-    textAlign: "center",
-    fontSize: 11,
-    marginBottom: 18,
   },
   form: {
     gap: 10,
