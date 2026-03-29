@@ -3,7 +3,6 @@ import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import {
   Image,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -18,6 +17,7 @@ import {
   LearnTrack,
 } from "../data/learnTopics";
 import { useTheme } from "../context/ThemeContext";
+import LearnCodeBlock from "../components/LearnCodeBlock";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 type LearnDetailRoute = RouteProp<MainStackParamList, "LearnDetail">;
@@ -179,22 +179,10 @@ export default function LearnDetailScreen() {
               </Text>
               <View>{renderParagraphs(section.body)}</View>
               {section.code ? (
-                <View
-                  style={[
-                    styles.codeBlock,
-                    {
-                      backgroundColor: colors.surfaceAlt,
-                      borderColor: colors.border,
-                    },
-                  ]}
-                >
-                  <Text
-                    style={[styles.codeText, { color: colors.textSecondary }]}
-                    selectable
-                  >
-                    {section.code.trim()}
-                  </Text>
-                </View>
+                <LearnCodeBlock
+                  code={section.code}
+                  language={section.codeLanguage ?? "python"}
+                />
               ) : null}
             </View>
           ))
@@ -437,18 +425,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 22,
     marginBottom: 8,
-  },
-  codeBlock: {
-    marginTop: 10,
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-  },
-  codeText: {
-    fontFamily: Platform.select({ ios: "Menlo", android: "monospace", default: "monospace" }),
-    fontSize: 12,
-    lineHeight: 18,
   },
   sectionBody: {
     fontSize: 14,

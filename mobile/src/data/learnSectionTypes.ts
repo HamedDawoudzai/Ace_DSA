@@ -2,6 +2,8 @@
 export interface LearnDetailSection {
   title: string;
   body: string;
-  /** Optional Python 3 (or other) snippet shown in a monospace block */
+  /** Optional snippet shown in a themed syntax-highlighted block (web) */
   code?: string;
+  /** Passed to the highlighter, default `python` */
+  codeLanguage?: string;
 }

@@ -346,8 +346,14 @@ export const ALGO_TOPICS: LearnTopic[] = [
     level: 2,
     summary: "Optimize from O(n²) to O(n) by scanning once from both ends or at different speeds.",
     details:
-      "Two pointers means maintaining two indices (left/right or slow/fast) so you explore the structure in one pass instead of trying every pair with nested loops. " +
-      "On sorted arrays, opposite ends often let you increase or decrease a sum deterministically.",
+      "The two-pointers technique is a simple but powerful idea: you keep two indices (pointers) that move through a structure—an array, list, or string—either toward each other or in the same direction, so you can solve many problems in one pass instead of nested loops.\n\n" +
+      "It shows up constantly in interviews: two sum in a sorted array, closest pair to a target, 3Sum / 4Sum, trapping rain water, palindrome checks, merging sorted arrays, and many more.\n\n" +
+      "When to reach for two pointers:\n" +
+      "• Sorted (or sortable) input — pairs, triples, or ranges often shrink nicely with left/right movement. Example: two numbers in a sorted array that sum to a target.\n" +
+      "• Pairs, subarrays, or ranges — questions about two elements or a segment instead of a single index. Examples: longest substring without repeating characters, max consecutive ones, palindrome validation.\n" +
+      "• Sliding-window family — related mindset: two edges of a window that expand or contract. Examples: smallest subarray with sum ≥ k, move zeros to the end while preserving order.\n" +
+      "• Linked lists — slow and fast pointers for cycles, middle node, or reordering. Example: Floyd’s cycle detection (tortoise and hare).\n\n" +
+      "Concrete starting point below: on a sorted array, does any pair sum to a target? Brute force tries every pair in O(n²). Two pointers start at both ends and move inward depending on whether the current sum is too small or too large—one linear pass, O(n) time and O(1) extra space.",
     detailSections: TWO_POINTERS_SECTIONS,
     lastUpdated: "27 Mar 2026",
   },

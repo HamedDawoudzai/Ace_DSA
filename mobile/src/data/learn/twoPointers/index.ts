@@ -1,15 +1,13 @@
 import type { LearnDetailSection } from "../../learnSectionTypes";
-import { twoPointersIntro } from "./01-intro";
-import { twoPointersNaive } from "./02-naive";
-import { twoPointersOpposing } from "./03-opposingPointers";
-import { twoPointersCorrectness } from "./04-correctness";
-import { twoPointersPractice } from "./05-practice";
+import { whereTwoPointersOptimal } from "./01-where-optimal";
+import { bruteForceSection } from "./02-brute";
+import { twoPointerOptimizedSection } from "./03-optimized";
+import { practiceSection } from "./04-practice";
 
-/** Ordered sections for the Two Pointers algorithm topic in Learn. */
+/** Ordered sections: problem → brute force → two-pointer optimization → practice. */
 export const TWO_POINTERS_SECTIONS: LearnDetailSection[] = [
-  twoPointersIntro,
-  twoPointersNaive,
-  twoPointersOpposing,
-  twoPointersCorrectness,
-  twoPointersPractice,
+  whereTwoPointersOptimal,
+  bruteForceSection,
+  twoPointerOptimizedSection,
+  practiceSection,
 ];
