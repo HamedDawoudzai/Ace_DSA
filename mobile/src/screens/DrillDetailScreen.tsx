@@ -8,6 +8,7 @@ import {
   Alert,
   ActivityIndicator,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { RouteProp, useRoute } from "@react-navigation/native";
 import api from "../services/api";
 import { AttemptRequest, AttemptResponse } from "../types";
@@ -94,6 +95,10 @@ export default function DrillDetailScreen() {
 
       {drill.choices.map((choice, index) => {
         const dynamicStyle = getChoiceStyle(index);
+        const letter = String.fromCharCode(65 + index);
+        const isSelected = selected === index;
+        const isCorrectChoice = result !== null && index === drill.correct_option;
+        const isWrongChoice = result !== null && isSelected && !result.is_correct;
 
         return (
           <TouchableOpacity
@@ -103,7 +108,39 @@ export default function DrillDetailScreen() {
             activeOpacity={result ? 1 : 0.7}
             disabled={result !== null}
           >
-            <Text style={[styles.choiceText, { color: colors.text }]}>
+            <View
+              style={[
+                styles.letterCircle,
+                {
+                  backgroundColor: isCorrectChoice
+                    ? colors.success
+                    : isWrongChoice
+                    ? colors.error
+                    : isSelected
+                    ? colors.accent
+                    : isDark
+                    ? "rgba(255,255,255,0.08)"
+                    : "rgba(0,0,0,0.07)",
+                },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.letterText,
+                  {
+                    color:
+                      isCorrectChoice || isWrongChoice
+                        ? "#fff"
+                        : isSelected
+                        ? colors.accentText
+                        : colors.textMuted,
+                  },
+                ]}
+              >
+                {letter}
+              </Text>
+            </View>
+            <Text style={[styles.choiceText, { color: colors.text, flex: 1 }]}>
               {choice}
             </Text>
           </TouchableOpacity>
@@ -111,7 +148,26 @@ export default function DrillDetailScreen() {
       })}
 
       {result ? (
-        <View style={styles.resultContainer}>
+        <View
+          style={[
+            styles.resultCard,
+            {
+              backgroundColor: result.is_correct
+                ? isDark
+                  ? "rgba(34,197,94,0.12)"
+                  : "rgba(76,175,80,0.1)"
+                : isDark
+                ? "rgba(239,68,68,0.12)"
+                : "rgba(244,67,54,0.08)",
+              borderColor: result.is_correct ? colors.success : colors.error,
+            },
+          ]}
+        >
+          <Ionicons
+            name={result.is_correct ? "checkmark-circle" : "close-circle"}
+            size={36}
+            color={result.is_correct ? colors.success : colors.error}
+          />
           <Text
             style={[
               styles.resultText,
@@ -158,6 +214,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 20,
+    paddingBottom: 40,
   },
   category: {
     fontSize: 12,
@@ -174,9 +231,23 @@ const styles = StyleSheet.create({
   },
   choice: {
     borderRadius: 12,
-    padding: 16,
+    padding: 14,
     marginBottom: 12,
     borderWidth: 2,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  letterCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  letterText: {
+    fontSize: 14,
+    fontWeight: "700",
   },
   choiceText: {
     fontSize: 16,
@@ -195,19 +266,23 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: "700",
   },
-  resultContainer: {
+  resultCard: {
+    borderRadius: 16,
+    borderWidth: 1.5,
+    padding: 24,
     alignItems: "center",
     marginTop: 16,
+    gap: 12,
   },
   resultText: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: "800",
-    marginBottom: 16,
   },
   resetBtn: {
     borderRadius: 12,
     paddingVertical: 12,
     paddingHorizontal: 32,
+    marginTop: 4,
   },
   resetText: {
     fontSize: 16,
