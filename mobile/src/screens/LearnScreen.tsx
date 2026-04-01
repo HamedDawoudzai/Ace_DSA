@@ -35,8 +35,6 @@ export default function LearnScreen() {
       track === "data-structures" ? DATA_STRUCTURE_TOPICS : ALGO_TOPICS;
     return [...src].sort((a, b) => a.level - b.level);
   }, [track]);
-  const imageBackdrop = isDark ? "#060B16" : "#F7F2E8";
-
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.header}>
@@ -165,13 +163,15 @@ export default function LearnScreen() {
               <View
                 style={[
                   styles.imageWrap,
-                  {
-                    backgroundColor: imageBackdrop,
-                    borderColor: colors.border,
-                  },
+                  { backgroundColor: "transparent", borderColor: "transparent" },
                 ]}
               >
-                <View style={[styles.imageInner, { backgroundColor: imageBackdrop }]}>
+                <View
+                  style={[
+                    styles.imageInner,
+                    { backgroundColor: "transparent" },
+                  ]}
+                >
                   <Image
                     source={cardImage}
                     style={[

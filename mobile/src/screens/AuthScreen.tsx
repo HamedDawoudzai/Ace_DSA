@@ -10,6 +10,7 @@ import {
   Platform,
   ScrollView,
   Animated,
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../context/AuthContext";
@@ -18,8 +19,9 @@ import { useNotify } from "../context/NotificationContext";
 import SpinningLogo, { SpinningLogoHandle } from "../components/SpinningLogo";
 import ThemeToggle from "../components/ThemeToggle";
 import { getAuthErrorMessage } from "../services/httpError";
+import api from "../services/api";
 
-type Mode = "login" | "signup";
+type Mode = "login" | "signup" | "forgot";
 
 interface PasswordChecks {
   length: boolean;
@@ -67,6 +69,12 @@ export default function AuthScreen() {
   const [signupPassword, setSignupPassword] = useState("");
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [showSignupPassword, setShowSignupPassword] = useState(false);
+
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [resetToken, setResetToken] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [forgotStep, setForgotStep] = useState<"email" | "reset">("email");
 
   const [loading, setLoading] = useState(false);
 
@@ -189,7 +197,53 @@ export default function AuthScreen() {
     }
   };
 
-  const handleSubmit = mode === "login" ? handleLogin : handleSignup;
+  const handleForgotPassword = async () => {
+    if (loading) return;
+    if (forgotStep === "email") {
+      if (!forgotEmail.trim()) {
+        notify({ type: "error", title: "Missing email", message: "Enter your email address." });
+        return;
+      }
+      setLoading(true);
+      try {
+        const { data } = await api.post("/auth/forgot-password", { email: forgotEmail.trim().toLowerCase() });
+        if (data.token) {
+          setResetToken(data.token);
+          setForgotStep("reset");
+          notify({ type: "success", title: "Token generated", message: "Enter the token and your new password." });
+        } else {
+          notify({ type: "info", title: "Check your email", message: data.status || "If that email exists, a reset was sent." });
+        }
+      } catch (error: unknown) {
+        const message = getAuthErrorMessage(error, "Could not process reset request.");
+        notify({ type: "error", title: "Error", message });
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      if (!resetToken.trim() || !newPassword) {
+        notify({ type: "error", title: "Missing fields", message: "Token and new password are required." });
+        return;
+      }
+      setLoading(true);
+      try {
+        await api.post("/auth/reset-password", { token: resetToken.trim(), new_password: newPassword });
+        notify({ type: "success", title: "Password reset!", message: "You can now log in with your new password." });
+        setMode("login");
+        setForgotStep("email");
+        setForgotEmail("");
+        setResetToken("");
+        setNewPassword("");
+      } catch (error: unknown) {
+        const message = getAuthErrorMessage(error, "Could not reset password.");
+        notify({ type: "error", title: "Error", message });
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
+  const handleSubmit = mode === "login" ? handleLogin : mode === "signup" ? handleSignup : handleForgotPassword;
 
   const renderCheck = (label: string, passed: boolean) => (
     <View style={styles.checkRow} key={label}>
@@ -247,9 +301,64 @@ export default function AuthScreen() {
           <Text style={[styles.tagline, { color: colors.textSecondary }]}>
             {mode === "login"
               ? "Log in to practice DSA drills\nand ace your interviews"
-              : "Create your account to get started"}
+              : mode === "signup"
+              ? "Create your account to get started"
+              : "Reset your password"}
           </Text>
           <View style={styles.form}>
+            {mode === "forgot" && (
+              <>
+                {forgotStep === "email" ? (
+                  <TextInput
+                    style={inputStyle}
+                    placeholder="EMAIL ADDRESS"
+                    placeholderTextColor={colors.placeholderText}
+                    autoCapitalize="none"
+                    keyboardType="email-address"
+                    value={forgotEmail}
+                    onChangeText={setForgotEmail}
+                    returnKeyType="go"
+                    onSubmitEditing={handleForgotPassword}
+                  />
+                ) : (
+                  <>
+                    <TextInput
+                      style={inputStyle}
+                      placeholder="RESET TOKEN"
+                      placeholderTextColor={colors.placeholderText}
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      value={resetToken}
+                      onChangeText={setResetToken}
+                      returnKeyType="next"
+                    />
+                    <View style={styles.passwordFieldWrap}>
+                      <TextInput
+                        style={[inputStyle, styles.passwordInputFull]}
+                        placeholder="NEW PASSWORD"
+                        placeholderTextColor={colors.placeholderText}
+                        secureTextEntry={!showNewPassword}
+                        value={newPassword}
+                        onChangeText={setNewPassword}
+                        returnKeyType="go"
+                        onSubmitEditing={handleForgotPassword}
+                      />
+                      <Pressable
+                        style={styles.passwordIconBtn}
+                        onPress={() => setShowNewPassword((c) => !c)}
+                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                      >
+                        <Ionicons
+                          name={showNewPassword ? "eye-off-outline" : "eye-outline"}
+                          size={18}
+                          color={colors.textMuted}
+                        />
+                      </Pressable>
+                    </View>
+                  </>
+                )}
+              </>
+            )}
             {mode === "signup" && (
               <>
                 <View style={styles.nameRow}>
@@ -288,57 +397,60 @@ export default function AuthScreen() {
               </>
             )}
 
-            <TextInput
-              style={inputStyle}
-              placeholder={mode === "login" ? "EMAIL OR USERNAME" : "EMAIL"}
-              placeholderTextColor={colors.placeholderText}
-              autoCapitalize="none"
-              autoCorrect={false}
-              keyboardType="email-address"
-              textContentType="username"
-              value={mode === "login" ? identifier : signupEmail}
-              onChangeText={mode === "login" ? setIdentifier : setSignupEmail}
-              returnKeyType="next"
-            />
-
-            {/* Same layout as email field: one full-height input + overlay icon (avoids broken autofill strip on web). */}
-            <View style={styles.passwordFieldWrap}>
-              <TextInput
-                style={[inputStyle, styles.passwordInputFull]}
-                placeholder="PASSWORD"
-                placeholderTextColor={colors.placeholderText}
-                secureTextEntry={mode === "login" ? !showLoginPassword : !showSignupPassword}
-                value={mode === "login" ? password : signupPassword}
-                onChangeText={mode === "login" ? setPassword : setSignupPassword}
-                textContentType={mode === "signup" ? "newPassword" : "password"}
-                autoComplete={mode === "signup" ? "password-new" : "current-password"}
-                returnKeyType={mode === "login" ? "go" : "done"}
-                onSubmitEditing={handleSubmit}
-              />
-              <Pressable
-                style={styles.passwordIconBtn}
-                onPress={() =>
-                  mode === "login"
-                    ? setShowLoginPassword((cur) => !cur)
-                    : setShowSignupPassword((cur) => !cur)
-                }
-                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-              >
-                <Ionicons
-                  name={
-                    mode === "login"
-                      ? showLoginPassword
-                        ? "eye-off-outline"
-                        : "eye-outline"
-                      : showSignupPassword
-                        ? "eye-off-outline"
-                        : "eye-outline"
-                  }
-                  size={18}
-                  color={colors.textMuted}
+            {mode !== "forgot" && (
+              <>
+                <TextInput
+                  style={inputStyle}
+                  placeholder={mode === "login" ? "EMAIL OR USERNAME" : "EMAIL"}
+                  placeholderTextColor={colors.placeholderText}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  keyboardType="email-address"
+                  textContentType="username"
+                  value={mode === "login" ? identifier : signupEmail}
+                  onChangeText={mode === "login" ? setIdentifier : setSignupEmail}
+                  returnKeyType="next"
                 />
-              </Pressable>
-            </View>
+
+                <View style={styles.passwordFieldWrap}>
+                  <TextInput
+                    style={[inputStyle, styles.passwordInputFull]}
+                    placeholder="PASSWORD"
+                    placeholderTextColor={colors.placeholderText}
+                    secureTextEntry={mode === "login" ? !showLoginPassword : !showSignupPassword}
+                    value={mode === "login" ? password : signupPassword}
+                    onChangeText={mode === "login" ? setPassword : setSignupPassword}
+                    textContentType={mode === "signup" ? "newPassword" : "password"}
+                    autoComplete={mode === "signup" ? "password-new" : "current-password"}
+                    returnKeyType={mode === "login" ? "go" : "done"}
+                    onSubmitEditing={handleSubmit}
+                  />
+                  <Pressable
+                    style={styles.passwordIconBtn}
+                    onPress={() =>
+                      mode === "login"
+                        ? setShowLoginPassword((cur) => !cur)
+                        : setShowSignupPassword((cur) => !cur)
+                    }
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  >
+                    <Ionicons
+                      name={
+                        mode === "login"
+                          ? showLoginPassword
+                            ? "eye-off-outline"
+                            : "eye-outline"
+                          : showSignupPassword
+                            ? "eye-off-outline"
+                            : "eye-outline"
+                      }
+                      size={18}
+                      color={colors.textMuted}
+                    />
+                  </Pressable>
+                </View>
+              </>
+            )}
 
             {mode === "signup" && signupPassword.length > 0 && (
               <View style={styles.checksContainer}>
@@ -348,6 +460,21 @@ export default function AuthScreen() {
                 {renderCheck("One digit", pwChecks.digit)}
                 {renderCheck("One special character", pwChecks.special)}
               </View>
+            )}
+
+            {mode === "login" && (
+              <Pressable
+                onPress={() => {
+                  setMode("forgot");
+                  setForgotStep("email");
+                  setForgotEmail(identifier.includes("@") ? identifier : "");
+                }}
+                style={styles.forgotLink}
+              >
+                <Text style={[styles.forgotText, { color: colors.accent }]}>
+                  Forgot Password?
+                </Text>
+              </Pressable>
             )}
 
             <Animated.View style={{ transform: [{ scale: btnScale }] }}>
@@ -368,7 +495,7 @@ export default function AuthScreen() {
                   <ActivityIndicator color={colors.accentText} />
                 ) : (
                   <Text style={[styles.submitText, { color: colors.accentText }]}>
-                    {mode === "login" ? "LOG IN" : "SIGN UP"}
+                    {mode === "login" ? "LOG IN" : mode === "signup" ? "SIGN UP" : forgotStep === "email" ? "SEND RESET TOKEN" : "RESET PASSWORD"}
                   </Text>
                 )}
               </Pressable>
@@ -395,13 +522,19 @@ export default function AuthScreen() {
                   pressed ? accentGlow : "transparent",
               },
             ]}
-            onPress={() =>
-              handleModeSwitch(mode === "login" ? "signup" : "login")
-            }
+            onPress={() => {
+              if (mode === "forgot") {
+                handleModeSwitch("login");
+              } else {
+                handleModeSwitch(mode === "login" ? "signup" : "login");
+              }
+            }}
             disabled={loading}
           >
             <Text style={[styles.switchText, { color: colors.accent }]}>
-              {mode === "login"
+              {mode === "forgot"
+                ? "Back to Login"
+                : mode === "login"
                 ? "Create a New Account"
                 : "Log In to Existing Account"}
             </Text>
@@ -411,7 +544,9 @@ export default function AuthScreen() {
 
       <View style={[styles.bottomBar, { borderTopColor: inputBorder }]}>
         <Text style={[styles.bottomText, { color: colors.textMuted }]}>
-          {mode === "login"
+          {mode === "forgot"
+            ? "Remember your password? "
+            : mode === "login"
             ? "Don't have an account? "
             : "Already have an account? "}
         </Text>
@@ -423,14 +558,18 @@ export default function AuthScreen() {
                 pressed ? accentGlow : "transparent",
             },
           ]}
-          onPress={() =>
-            handleModeSwitch(mode === "login" ? "signup" : "login")
-          }
+          onPress={() => {
+            if (mode === "forgot") {
+              handleModeSwitch("login");
+            } else {
+              handleModeSwitch(mode === "login" ? "signup" : "login");
+            }
+          }}
           disabled={loading}
           hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
         >
           <Text style={[styles.bottomLink, { color: colors.accent }]}>
-            {mode === "login" ? "Sign Up" : "Log In"}
+            {mode === "forgot" ? "Log In" : mode === "login" ? "Sign Up" : "Log In"}
           </Text>
         </Pressable>
       </View>
@@ -518,6 +657,15 @@ const styles = StyleSheet.create({
   checkLabel: {
     fontSize: 12,
     fontWeight: "500",
+  },
+  forgotLink: {
+    alignSelf: "flex-end",
+    paddingVertical: 2,
+    paddingHorizontal: 4,
+  },
+  forgotText: {
+    fontSize: 13,
+    fontWeight: "600",
   },
   submitBtn: {
     height: 54,

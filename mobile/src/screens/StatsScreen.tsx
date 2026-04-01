@@ -6,31 +6,117 @@ import {
   ActivityIndicator,
   FlatList,
   RefreshControl,
+  TouchableOpacity,
+  Alert,
+  Pressable,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import Svg, { Circle } from "react-native-svg";
 import api from "../services/api";
-import { StatsResponse } from "../types";
+import { StatsResponse, CategoryStats } from "../types";
 import { useTheme } from "../context/ThemeContext";
+
+const RING_SIZE = 160;
+const STROKE_WIDTH = 14;
+const RADIUS = (RING_SIZE - STROKE_WIDTH) / 2;
+const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
+
+function ProgressRing({
+  percent,
+  accentColor,
+  trackColor,
+}: {
+  percent: number;
+  accentColor: string;
+  trackColor: string;
+}) {
+  const strokeDashoffset = CIRCUMFERENCE * (1 - percent / 100);
+
+  return (
+    <Svg width={RING_SIZE} height={RING_SIZE}>
+      <Circle
+        cx={RING_SIZE / 2}
+        cy={RING_SIZE / 2}
+        r={RADIUS}
+        stroke={trackColor}
+        strokeWidth={STROKE_WIDTH}
+        fill="none"
+      />
+      <Circle
+        cx={RING_SIZE / 2}
+        cy={RING_SIZE / 2}
+        r={RADIUS}
+        stroke={accentColor}
+        strokeWidth={STROKE_WIDTH}
+        fill="none"
+        strokeDasharray={CIRCUMFERENCE}
+        strokeDashoffset={strokeDashoffset}
+        strokeLinecap="round"
+        rotation="-90"
+        origin={`${RING_SIZE / 2}, ${RING_SIZE / 2}`}
+      />
+    </Svg>
+  );
+}
 
 export default function StatsScreen() {
   const { colors, isDark } = useTheme();
   const [stats, setStats] = useState<StatsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [resetting, setResetting] = useState(false);
+
+  const handleResetProgress = useCallback(() => {
+    Alert.alert(
+      "Reset Progress",
+      "This will erase all your progress and attempt history. This cannot be undone. Are you sure?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Reset",
+          style: "destructive",
+          onPress: async () => {
+            setResetting(true);
+            try {
+              await api.delete("/me/stats/reset");
+              await fetchStatsInner();
+            } catch {
+              setError("Failed to reset progress.");
+            } finally {
+              setResetting(false);
+            }
+          },
+        },
+      ]
+    );
+  }, []);
 
   const fetchStats = useCallback(async () => {
     try {
+      setError(null);
       const { data } = await api.get<StatsResponse>("/me/stats");
       setStats(data);
-    } catch {
-      // silently fail for placeholder
+    } catch (err: any) {
+      const message =
+        err?.response?.data?.error ||
+        err?.message ||
+        "Failed to load stats. Please try again.";
+      setError(message);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
   }, []);
 
+  const fetchStatsInner = fetchStats;
+
   useEffect(() => {
+    fetchStats();
+  }, [fetchStats]);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
     fetchStats();
   }, [fetchStats]);
 
@@ -42,10 +128,45 @@ export default function StatsScreen() {
     );
   }
 
-  if (!stats || stats.patterns.length === 0) {
+  if (error) {
     return (
       <View style={[styles.center, { backgroundColor: colors.background }]}>
-        <Ionicons name="stats-chart-outline" size={64} color={colors.textMuted} />
+        <Ionicons name="cloud-offline-outline" size={64} color={colors.error} />
+        <Text style={[styles.errorTitle, { color: colors.text }]}>
+          Something went wrong
+        </Text>
+        <Text style={[styles.errorMessage, { color: colors.textSecondary }]}>
+          {error}
+        </Text>
+        <TouchableOpacity
+          style={[styles.retryButton, { backgroundColor: colors.accent }]}
+          onPress={() => {
+            setLoading(true);
+            fetchStats();
+          }}
+          activeOpacity={0.8}
+        >
+          <Ionicons
+            name="refresh-outline"
+            size={18}
+            color={colors.accentText}
+          />
+          <Text style={[styles.retryText, { color: colors.accentText }]}>
+            Retry
+          </Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  if (!stats || stats.categories.length === 0) {
+    return (
+      <View style={[styles.center, { backgroundColor: colors.background }]}>
+        <Ionicons
+          name="stats-chart-outline"
+          size={64}
+          color={colors.textMuted}
+        />
         <Text style={[styles.emptyTitle, { color: colors.text }]}>
           No Stats Yet
         </Text>
@@ -56,46 +177,47 @@ export default function StatsScreen() {
     );
   }
 
-  return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+  const completionPercent =
+    stats.total_problems > 0
+      ? Math.round((stats.total_completed / stats.total_problems) * 100)
+      : 0;
+
+  const cardShadow = {
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: isDark ? 0.2 : 0.06,
+    shadowRadius: 6,
+    elevation: 2,
+  };
+
+  const renderHeader = () => (
+    <>
       <View style={styles.summaryRow}>
         <View
           style={[
             styles.summaryCard,
-            {
-              backgroundColor: colors.surface,
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: isDark ? 0.2 : 0.06,
-              shadowRadius: 6,
-              elevation: 2,
-            },
+            { backgroundColor: colors.surface },
+            cardShadow,
           ]}
         >
           <Ionicons
-            name="flash-outline"
+            name="checkmark-circle-outline"
             size={26}
             color={colors.accent}
             style={styles.summaryIcon}
           />
           <Text style={[styles.summaryValue, { color: colors.accent }]}>
-            {stats.total_attempts}
+            {stats.total_completed}/{stats.total_problems}
           </Text>
           <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>
-            Attempts
+            Completed
           </Text>
         </View>
         <View
           style={[
             styles.summaryCard,
-            {
-              backgroundColor: colors.surface,
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: isDark ? 0.2 : 0.06,
-              shadowRadius: 6,
-              elevation: 2,
-            },
+            { backgroundColor: colors.surface },
+            cardShadow,
           ]}
         >
           <Ionicons
@@ -111,55 +233,145 @@ export default function StatsScreen() {
             Day Streak
           </Text>
         </View>
+        <View
+          style={[
+            styles.summaryCard,
+            { backgroundColor: colors.surface },
+            cardShadow,
+          ]}
+        >
+          <Ionicons
+            name="flash-outline"
+            size={26}
+            color={colors.accent}
+            style={styles.summaryIcon}
+          />
+          <Text style={[styles.summaryValue, { color: colors.accent }]}>
+            {stats.total_attempts}
+          </Text>
+          <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>
+            Attempts
+          </Text>
+        </View>
       </View>
 
-      <Text style={[styles.sectionTitle, { color: colors.text }]}>
-        By Pattern
-      </Text>
+      <View
+        style={[
+          styles.progressSection,
+          { backgroundColor: colors.surface },
+          cardShadow,
+        ]}
+      >
+        <ProgressRing
+          percent={completionPercent}
+          accentColor={colors.accent}
+          trackColor={colors.border}
+        />
+        <View style={styles.progressLabel}>
+          <Text style={[styles.progressPercent, { color: colors.accent }]}>
+            {completionPercent}%
+          </Text>
+          <Text
+            style={[styles.progressSubtext, { color: colors.textSecondary }]}
+          >
+            Complete
+          </Text>
+        </View>
+      </View>
 
+      <View style={styles.sectionHeader}>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>
+          By Category
+        </Text>
+        <Pressable
+          style={({ pressed }) => [
+            styles.resetBtn,
+            {
+              backgroundColor: isDark
+                ? "rgba(248,113,113,0.08)"
+                : "rgba(239,68,68,0.07)",
+              borderColor: isDark
+                ? "rgba(248,113,113,0.18)"
+                : "rgba(239,68,68,0.15)",
+              opacity: pressed ? 0.7 : resetting ? 0.5 : 1,
+            },
+          ]}
+          onPress={handleResetProgress}
+          disabled={resetting}
+        >
+          {resetting ? (
+            <ActivityIndicator size={14} color={colors.error} />
+          ) : (
+            <Ionicons name="trash-outline" size={14} color={colors.error} />
+          )}
+          <Text style={[styles.resetBtnText, { color: colors.error }]}>
+            Reset
+          </Text>
+        </Pressable>
+      </View>
+    </>
+  );
+
+  const renderCategoryRow = ({ item }: { item: CategoryStats }) => {
+    const ratio = item.total > 0 ? item.completed / item.total : 0;
+
+    return (
+      <View
+        style={[
+          styles.categoryRow,
+          {
+            backgroundColor: colors.surface,
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 1 },
+            shadowOpacity: isDark ? 0.15 : 0.05,
+            shadowRadius: 4,
+            elevation: 1,
+          },
+        ]}
+      >
+        <View style={styles.categoryHeader}>
+          <Text style={[styles.categoryName, { color: colors.text }]}>
+            {item.name}
+          </Text>
+          <Text
+            style={[styles.categoryCount, { color: colors.textSecondary }]}
+          >
+            {item.completed}/{item.total}
+          </Text>
+        </View>
+        <View
+          style={[styles.progressBarTrack, { backgroundColor: colors.border }]}
+        >
+          <View
+            style={[
+              styles.progressBarFill,
+              {
+                backgroundColor: colors.accent,
+                width: `${Math.round(ratio * 100)}%`,
+              },
+            ]}
+          />
+        </View>
+      </View>
+    );
+  };
+
+  return (
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <FlatList
-        data={stats.patterns}
-        keyExtractor={(item) => item.pattern}
+        data={stats.categories}
+        keyExtractor={(item) => item.name}
+        ListHeaderComponent={renderHeader}
         contentContainerStyle={styles.list}
+        renderItem={renderCategoryRow}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
-            onRefresh={() => {
-              setRefreshing(true);
-              fetchStats();
-            }}
+            onRefresh={onRefresh}
+            tintColor={colors.accent}
+            colors={[colors.accent]}
           />
         }
-        renderItem={({ item }) => (
-          <View
-            style={[
-              styles.patternRow,
-              {
-                backgroundColor: colors.surface,
-                shadowColor: "#000",
-                shadowOffset: { width: 0, height: 1 },
-                shadowOpacity: isDark ? 0.15 : 0.05,
-                shadowRadius: 4,
-                elevation: 1,
-              },
-            ]}
-          >
-            <View style={[styles.patternDot, { backgroundColor: colors.accent }]} />
-            <Text style={[styles.patternName, { color: colors.text }]}>
-              {item.pattern}
-            </Text>
-            <View
-              style={[
-                styles.countBadge,
-                { backgroundColor: colors.accentSubtle },
-              ]}
-            >
-              <Text style={[styles.patternCount, { color: colors.accent }]}>
-                {item.total}
-              </Text>
-            </View>
-          </View>
-        )}
       />
     </View>
   );
@@ -186,64 +398,133 @@ const styles = StyleSheet.create({
     marginTop: 8,
     lineHeight: 22,
   },
+  errorTitle: {
+    fontSize: 22,
+    fontWeight: "700",
+    marginTop: 16,
+  },
+  errorMessage: {
+    fontSize: 15,
+    textAlign: "center",
+    marginTop: 8,
+    lineHeight: 22,
+    paddingHorizontal: 24,
+  },
+  retryButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginTop: 24,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+  retryText: {
+    fontSize: 16,
+    fontWeight: "700",
+  },
   summaryRow: {
     flexDirection: "row",
     padding: 16,
-    gap: 12,
+    gap: 10,
   },
   summaryCard: {
     flex: 1,
     borderRadius: 14,
-    padding: 20,
+    padding: 16,
     alignItems: "center",
   },
   summaryIcon: {
     marginBottom: 6,
   },
   summaryValue: {
-    fontSize: 32,
+    fontSize: 22,
     fontWeight: "800",
   },
   summaryLabel: {
-    fontSize: 14,
+    fontSize: 12,
     marginTop: 4,
+  },
+  progressSection: {
+    marginHorizontal: 16,
+    marginBottom: 8,
+    borderRadius: 16,
+    padding: 24,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 24,
+  },
+  progressLabel: {
+    alignItems: "flex-start",
+  },
+  progressPercent: {
+    fontSize: 42,
+    fontWeight: "800",
+  },
+  progressSubtext: {
+    fontSize: 16,
+    fontWeight: "600",
+    marginTop: 2,
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 8,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: "700",
-    paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 8,
   },
-  list: {
-    paddingHorizontal: 16,
-    paddingBottom: 16,
-  },
-  patternRow: {
+  resetBtn: {
     flexDirection: "row",
     alignItems: "center",
+    gap: 5,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  resetBtnText: {
+    fontSize: 12,
+    fontWeight: "700",
+  },
+  list: {
+    paddingBottom: 32,
+  },
+  categoryRow: {
+    marginHorizontal: 16,
     borderRadius: 12,
-    padding: 16,
+    padding: 14,
     marginBottom: 10,
-    gap: 12,
   },
-  patternDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+  categoryHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
   },
-  patternName: {
-    fontSize: 16,
+  categoryName: {
+    fontSize: 15,
     fontWeight: "600",
     flex: 1,
   },
-  countBadge: {
-    borderRadius: 999,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-  },
-  patternCount: {
+  categoryCount: {
     fontSize: 14,
-    fontWeight: "700",
+    fontWeight: "600",
+    marginLeft: 8,
+  },
+  progressBarTrack: {
+    height: 8,
+    borderRadius: 4,
+    overflow: "hidden",
+  },
+  progressBarFill: {
+    height: "100%",
+    borderRadius: 4,
+    minWidth: 0,
   },
 });

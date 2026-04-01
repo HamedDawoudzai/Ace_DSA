@@ -1,107 +1,221 @@
-import React, { memo, useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   View,
   Text,
-  FlatList,
-  TouchableOpacity,
   StyleSheet,
+  Animated,
+  Pressable,
+  Dimensions,
   ActivityIndicator,
-  RefreshControl,
+  ScrollView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
+import { useFocusEffect } from "@react-navigation/native";
 import api from "../services/api";
-import { Drill } from "../types";
+import { Drill, DrillCategory, UserProgress } from "../types";
 import { MainStackParamList } from "../navigation/MainTabs";
 import { useTheme } from "../context/ThemeContext";
 
-const DrillCard = memo(function DrillCard({
-  drill,
-  onPress,
-}: {
-  drill: Drill;
-  onPress: (d: Drill) => void;
-}) {
-  const { colors, isDark } = useTheme();
-  return (
-    <TouchableOpacity
-      style={[
-        styles.card,
-        {
-          backgroundColor: colors.surface,
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: isDark ? 0.22 : 0.07,
-          shadowRadius: 8,
-          elevation: 3,
-        },
-      ]}
-      onPress={() => onPress(drill)}
-      activeOpacity={0.8}
-    >
-      <View style={[styles.accentBar, { backgroundColor: colors.accent }]} />
-      <View style={styles.cardTop}>
-        <View
-          style={[
-            styles.categoryPill,
-            { backgroundColor: colors.accentSubtle },
-          ]}
-        >
-          <Text style={[styles.category, { color: colors.accent }]}>
-            {drill.pattern_category}
-          </Text>
-        </View>
-        <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
-      </View>
-      <Text style={[styles.prompt, { color: colors.text }]}>{drill.prompt}</Text>
-      <Text style={[styles.count, { color: colors.textMuted }]}>
-        {drill.choices.length} answer choices
-      </Text>
-    </TouchableOpacity>
-  );
-});
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
+
+const CATEGORY_ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
+  "Arrays & Hashing": "grid-outline",
+  "Two Pointers": "git-compare-outline",
+  "Sliding Window": "resize-outline",
+  Stack: "layers-outline",
+  "Binary Search": "search-outline",
+  "Linked List": "link-outline",
+  Trees: "leaf-outline",
+  "Heap / Priority Queue": "triangle-outline",
+  Backtracking: "return-up-back-outline",
+  Tries: "text-outline",
+  Graphs: "git-network-outline",
+  "Advanced Graphs": "analytics-outline",
+  "1-D Dynamic Programming": "trending-up-outline",
+  "2-D Dynamic Programming": "apps-outline",
+  Greedy: "flash-outline",
+  Intervals: "time-outline",
+  "Math & Geometry": "calculator-outline",
+  "Bit Manipulation": "code-slash-outline",
+};
+
+type Phase = "welcome" | "letsBegin" | "drilling" | "complete";
+
+function shuffle<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
 
 export default function DrillsScreen() {
-  const navigation =
-    useNavigation<NativeStackNavigationProp<MainStackParamList>>();
-  const { colors } = useTheme();
-  const [drills, setDrills] = useState<Drill[]>([]);
+  const { colors, isDark } = useTheme();
+  const navigation = useNavigation<NativeStackNavigationProp<MainStackParamList>>();
+  const route = useRoute<RouteProp<MainStackParamList, "Drills">>();
+
+  const [phase, setPhase] = useState<Phase>("welcome");
+  const [categories, setCategories] = useState<DrillCategory[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchDrills = useCallback(async () => {
+  const [drillQueue, setDrillQueue] = useState<Drill[]>([]);
+  const [currentDrillIndex, setCurrentDrillIndex] = useState(0);
+  const [drillLoading, setDrillLoading] = useState(false);
+
+  const welcomeAnim = useRef(new Animated.Value(0)).current;
+  const cardAnims = useRef<Animated.Value[]>([]);
+  const letsBeginAnim = useRef(new Animated.Value(0)).current;
+  const completeAnim = useRef(new Animated.Value(0)).current;
+
+  const fetchCategories = useCallback(async () => {
     try {
       setError(null);
-      const { data } = await api.get<Drill[]>("/drills");
-      setDrills(data);
+      const { data } = await api.get<DrillCategory[]>("/drills/categories");
+      setCategories(data);
     } catch {
-      setError("Failed to load drills.");
+      setError("Could not load categories. Pull down to retry.");
     } finally {
       setLoading(false);
-      setRefreshing(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchDrills();
-  }, [fetchDrills]);
+    fetchCategories();
+  }, [fetchCategories]);
 
-  const onRefresh = () => {
-    setRefreshing(true);
-    fetchDrills();
-  };
+  useEffect(() => {
+    if (phase === "welcome" && categories.length > 0) {
+      const totalCards = categories.length + 1;
+      cardAnims.current = Array.from({ length: totalCards }, () => new Animated.Value(0));
 
-  const onPressDrill = useCallback(
-    (drill: Drill) => navigation.navigate("DrillDetail", { drill }),
-    [navigation]
+      welcomeAnim.setValue(0);
+      Animated.spring(welcomeAnim, {
+        toValue: 1,
+        friction: 8,
+        tension: 40,
+        useNativeDriver: true,
+      }).start();
+
+      const stagger = Animated.stagger(
+        50,
+        cardAnims.current.map((anim) =>
+          Animated.spring(anim, {
+            toValue: 1,
+            friction: 7,
+            tension: 50,
+            useNativeDriver: true,
+          })
+        )
+      );
+      setTimeout(() => stagger.start(), 200);
+    }
+  }, [phase, categories.length, welcomeAnim]);
+
+  const fetchDrillsAndStart = useCallback(
+    async (category: string | null) => {
+      setDrillLoading(true);
+      try {
+        const url = category ? `/drills?category=${encodeURIComponent(category)}` : "/drills";
+        const [drillsRes, progressRes] = await Promise.all([
+          api.get<Drill[]>(url),
+          api.get<UserProgress[]>("/me/progress"),
+        ]);
+
+        const completedIds = new Set(
+          progressRes.data
+            .filter((p) => p.completed_at !== null)
+            .map((p) => p.drill_id)
+        );
+        const remaining = drillsRes.data.filter((d) => !completedIds.has(d.id));
+
+        if (remaining.length === 0) {
+          setDrillQueue([]);
+          setPhase("complete");
+          completeAnim.setValue(0);
+          Animated.spring(completeAnim, {
+            toValue: 1,
+            friction: 6,
+            tension: 40,
+            useNativeDriver: true,
+          }).start();
+          return;
+        }
+
+        const shuffled = shuffle(remaining);
+        setDrillQueue(shuffled);
+        setCurrentDrillIndex(0);
+        setPhase("drilling");
+        navigation.navigate("DrillDetail", { drill: shuffled[0], fromQueue: true });
+      } catch {
+        setError("Could not load drills. Try again.");
+        setPhase("welcome");
+      } finally {
+        setDrillLoading(false);
+      }
+    },
+    [navigation, completeAnim]
   );
 
-  const refreshControl = useMemo(
-    () => <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />,
-    [refreshing]
+  const handleCategoryPress = useCallback(
+    (category: string | null) => {
+      setSelectedCategory(category);
+      setPhase("letsBegin");
+      letsBeginAnim.setValue(0);
+      Animated.spring(letsBeginAnim, {
+        toValue: 1,
+        friction: 7,
+        tension: 45,
+        useNativeDriver: true,
+      }).start();
+
+      setTimeout(() => {
+        fetchDrillsAndStart(category);
+      }, 1200);
+    },
+    [letsBeginAnim, fetchDrillsAndStart]
   );
+
+  const resetToWelcome = useCallback(() => {
+    setPhase("welcome");
+    setSelectedCategory(null);
+    setDrillQueue([]);
+    setCurrentDrillIndex(0);
+    setError(null);
+    fetchCategories();
+  }, [fetchCategories]);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (phase !== "drilling" || drillQueue.length === 0) return;
+
+      const shouldAdvance = route.params?.advance === true;
+      if (!shouldAdvance) {
+        resetToWelcome();
+        return;
+      }
+
+      navigation.setParams({ advance: undefined });
+
+      const nextIndex = currentDrillIndex + 1;
+      if (nextIndex < drillQueue.length) {
+        setCurrentDrillIndex(nextIndex);
+        setTimeout(() => {
+          navigation.navigate("DrillDetail", { drill: drillQueue[nextIndex], fromQueue: true });
+        }, 300);
+      } else {
+        fetchDrillsAndStart(selectedCategory);
+      }
+    }, [phase, drillQueue, currentDrillIndex, selectedCategory, navigation, fetchDrillsAndStart, resetToWelcome, route.params])
+  );
+
+  const allCategories = useMemo(() => {
+    return [{ name: "Random", total: 0, completed: 0 }, ...categories];
+  }, [categories]);
 
   if (loading) {
     return (
@@ -111,55 +225,261 @@ export default function DrillsScreen() {
     );
   }
 
-  if (error) {
+  if (error && phase === "welcome") {
     return (
       <View style={[styles.center, { backgroundColor: colors.background }]}>
-        <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>
-        <TouchableOpacity
+        <Ionicons name="cloud-offline-outline" size={48} color={colors.textMuted} />
+        <Text style={[styles.errorText, { color: colors.textSecondary }]}>{error}</Text>
+        <Pressable
           style={[styles.retryBtn, { backgroundColor: colors.accent }]}
-          onPress={fetchDrills}
+          onPress={() => {
+            setLoading(true);
+            fetchCategories();
+          }}
         >
-          <Text style={[styles.retryText, { color: colors.accentText }]}>
-            Retry
+          <Text style={[styles.retryText, { color: colors.accentText }]}>Retry</Text>
+        </Pressable>
+      </View>
+    );
+  }
+
+  if (phase === "welcome") {
+    return (
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          <Animated.View
+            style={[
+              styles.welcomeHeader,
+              {
+                opacity: welcomeAnim,
+                transform: [
+                  {
+                    translateY: welcomeAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [30, 0],
+                    }),
+                  },
+                ],
+              },
+            ]}
+          >
+            <Text style={[styles.welcomeTitle, { color: colors.text }]}>
+              What would you like{"\n"}to practice today?
+            </Text>
+          </Animated.View>
+
+          <View style={styles.grid}>
+            {allCategories.map((cat, index) => {
+              const anim = cardAnims.current[index] || new Animated.Value(1);
+              const isRandom = cat.name === "Random";
+              return (
+                <CategoryCard
+                  key={cat.name}
+                  name={cat.name}
+                  icon={isRandom ? "shuffle-outline" : CATEGORY_ICONS[cat.name] || "help-outline"}
+                  isRandom={isRandom}
+                  anim={anim}
+                  colors={colors}
+                  isDark={isDark}
+                  onPress={() => handleCategoryPress(isRandom ? null : cat.name)}
+                />
+              );
+            })}
+          </View>
+        </ScrollView>
+      </View>
+    );
+  }
+
+  if (phase === "letsBegin") {
+    return (
+      <View style={[styles.center, { backgroundColor: colors.background }]}>
+        <Animated.View
+          style={{
+            opacity: letsBeginAnim,
+            transform: [
+              {
+                translateY: letsBeginAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [40, 0],
+                }),
+              },
+              {
+                scale: letsBeginAnim.interpolate({
+                  inputRange: [0, 0.5, 1],
+                  outputRange: [0.8, 1.05, 1],
+                }),
+              },
+            ],
+          }}
+        >
+          <Text style={[styles.letsBeginText, { color: colors.accent }]}>Let's begin</Text>
+          <Text style={[styles.letsBeginCategory, { color: colors.textSecondary }]}>
+            {selectedCategory || "Random Mix"}
           </Text>
-        </TouchableOpacity>
+          {drillLoading && (
+            <ActivityIndicator size="small" color={colors.accent} style={{ marginTop: 20 }} />
+          )}
+        </Animated.View>
+      </View>
+    );
+  }
+
+  if (phase === "complete") {
+    return (
+      <View style={[styles.center, { backgroundColor: colors.background }]}>
+        <Animated.View
+          style={[
+            styles.completeCard,
+            {
+              backgroundColor: colors.surface,
+              borderColor: colors.border,
+              opacity: completeAnim,
+              transform: [
+                {
+                  scale: completeAnim.interpolate({
+                    inputRange: [0, 0.6, 1],
+                    outputRange: [0.5, 1.08, 1],
+                  }),
+                },
+              ],
+            },
+          ]}
+        >
+          <View style={[styles.completeIconCircle, { backgroundColor: colors.accentSubtle }]}>
+            <Ionicons name="trophy" size={48} color={colors.accent} />
+          </View>
+          <Text style={[styles.completeTitle, { color: colors.text }]}>
+            {selectedCategory ? "Category Complete!" : "All Done!"}
+          </Text>
+          <Text style={[styles.completeSubtitle, { color: colors.textSecondary }]}>
+            {selectedCategory
+              ? `You've completed all ${selectedCategory} problems.`
+              : "You've completed every available problem. Amazing!"}
+          </Text>
+          <Pressable
+            style={[styles.completeBtn, { backgroundColor: colors.accent }]}
+            onPress={resetToWelcome}
+          >
+            <Text style={[styles.completeBtnText, { color: colors.accentText }]}>
+              Back to Categories
+            </Text>
+          </Pressable>
+        </Animated.View>
       </View>
     );
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <FlatList
-        data={drills}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.list}
-        refreshControl={refreshControl}
-        ListHeaderComponent={
-          <View style={styles.listHeader}>
-            <Text style={[styles.listHeaderTitle, { color: colors.text }]}>
-              All Problems
-            </Text>
-            <View style={[styles.listCount, { backgroundColor: colors.accentSubtle }]}>
-              <Text style={[styles.listCountText, { color: colors.accent }]}>
-                {drills.length}
-              </Text>
-            </View>
-          </View>
-        }
-        renderItem={({ item }) => <DrillCard drill={item} onPress={onPressDrill} />}
-        initialNumToRender={8}
-        windowSize={7}
-        removeClippedSubviews
-        ListEmptyComponent={
-          <View style={styles.emptyWrap}>
-            <Ionicons name="code-slash-outline" size={48} color={colors.textMuted} />
-            <Text style={[styles.emptyText, { color: colors.textMuted }]}>
-              No drills available yet.
-            </Text>
-          </View>
-        }
-      />
+    <View style={[styles.center, { backgroundColor: colors.background }]}>
+      <ActivityIndicator size="large" color={colors.accent} />
     </View>
+  );
+}
+
+interface CategoryCardProps {
+  name: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  isRandom: boolean;
+  anim: Animated.Value;
+  colors: any;
+  isDark: boolean;
+  onPress: () => void;
+}
+
+function CategoryCard({ name, icon, isRandom, anim, colors, isDark, onPress }: CategoryCardProps) {
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+
+  const onPressIn = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 0.94,
+      friction: 8,
+      useNativeDriver: true,
+    }).start();
+  };
+  const onPressOut = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      friction: 5,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const cardBg = isRandom
+    ? isDark
+      ? "rgba(45, 212, 191, 0.12)"
+      : "rgba(245, 200, 66, 0.15)"
+    : colors.surface;
+  const borderCol = isRandom ? colors.accent : colors.border;
+
+  return (
+    <Animated.View
+      style={[
+        isRandom ? styles.randomCardWrapper : styles.cardWrapper,
+        {
+          opacity: anim,
+          transform: [
+            { scale: scaleAnim },
+            {
+              translateY: anim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [20, 0],
+              }),
+            },
+          ],
+        },
+      ]}
+    >
+      <Pressable
+        style={[
+          styles.card,
+          isRandom && styles.randomCard,
+          {
+            backgroundColor: cardBg,
+            borderColor: borderCol,
+          },
+        ]}
+        onPress={onPress}
+        onPressIn={onPressIn}
+        onPressOut={onPressOut}
+      >
+        <View
+          style={[
+            styles.cardIconCircle,
+            {
+              backgroundColor: isRandom
+                ? isDark
+                  ? "rgba(45, 212, 191, 0.2)"
+                  : "rgba(245, 200, 66, 0.25)"
+                : colors.accentSubtle,
+            },
+          ]}
+        >
+          <Ionicons name={icon} size={isRandom ? 28 : 22} color={colors.accent} />
+        </View>
+        <Text
+          style={[
+            styles.cardName,
+            isRandom && styles.randomCardName,
+            { color: isRandom ? colors.accent : colors.text },
+          ]}
+          numberOfLines={2}
+        >
+          {name}
+        </Text>
+        {isRandom && (
+          <Text style={[styles.randomSubtext, { color: colors.textMuted }]}>
+            Practice from all categories
+          </Text>
+        )}
+        <Ionicons
+          name="chevron-forward"
+          size={16}
+          color={colors.textMuted}
+          style={styles.cardChevron}
+        />
+      </Pressable>
+    </Animated.View>
   );
 }
 
@@ -171,94 +491,143 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    padding: 24,
+    paddingHorizontal: 24,
   },
-  list: {
-    paddingHorizontal: 16,
-    paddingBottom: 24,
+  scrollContent: {
+    paddingHorizontal: 20,
+    paddingTop: 60,
+    paddingBottom: 40,
   },
-  listHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingTop: 16,
-    paddingBottom: 12,
+  welcomeHeader: {
+    marginBottom: 28,
+    paddingHorizontal: 4,
   },
-  listHeaderTitle: {
-    fontSize: 20,
+  welcomeTitle: {
+    fontSize: 28,
     fontWeight: "800",
-    letterSpacing: -0.3,
+    lineHeight: 36,
+    letterSpacing: -0.5,
   },
-  listCount: {
-    borderRadius: 999,
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-  },
-  listCountText: {
-    fontSize: 13,
-    fontWeight: "700",
-  },
-  card: {
-    borderRadius: 14,
-    padding: 18,
-    paddingLeft: 22,
-    marginBottom: 14,
-    overflow: "hidden",
-  },
-  accentBar: {
-    position: "absolute",
-    left: 0,
-    top: 0,
-    bottom: 0,
-    width: 4,
-  },
-  cardTop: {
+  grid: {
     flexDirection: "row",
-    alignItems: "center",
+    flexWrap: "wrap",
     justifyContent: "space-between",
-    marginBottom: 10,
   },
-  categoryPill: {
-    borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-  },
-  category: {
-    fontSize: 11,
-    fontWeight: "700",
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
-  },
-  prompt: {
-    fontSize: 16,
-    fontWeight: "600",
-    marginBottom: 8,
-    lineHeight: 22,
-  },
-  count: {
-    fontSize: 12,
-    fontWeight: "500",
-  },
-  errorText: {
-    fontSize: 16,
+  cardWrapper: {
+    width: (SCREEN_WIDTH - 52) / 2,
     marginBottom: 12,
   },
-  retryBtn: {
-    borderRadius: 10,
-    paddingHorizontal: 24,
-    paddingVertical: 10,
+  randomCardWrapper: {
+    width: "100%",
+    marginBottom: 16,
   },
-  retryText: {
+  card: {
+    borderRadius: 16,
+    borderWidth: 1,
+    padding: 16,
+    minHeight: 100,
+    justifyContent: "space-between",
+  },
+  randomCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    minHeight: 72,
+    paddingVertical: 18,
+    paddingHorizontal: 20,
+  },
+  cardIconCircle: {
+    width: 42,
+    height: 42,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 12,
+  },
+  cardName: {
+    fontSize: 14,
+    fontWeight: "700",
+    lineHeight: 18,
+  },
+  randomCardName: {
+    fontSize: 17,
+    fontWeight: "800",
+    marginLeft: 14,
+    flex: 1,
+  },
+  randomSubtext: {
+    fontSize: 12,
+    marginLeft: 14,
+    flex: 1,
+    marginTop: 2,
+  },
+  cardChevron: {
+    position: "absolute",
+    right: 12,
+    top: 12,
+  },
+  letsBeginText: {
+    fontSize: 36,
+    fontWeight: "900",
+    textAlign: "center",
+    letterSpacing: -0.5,
+  },
+  letsBeginCategory: {
+    fontSize: 18,
+    fontWeight: "600",
+    textAlign: "center",
+    marginTop: 8,
+  },
+  completeCard: {
+    borderRadius: 24,
+    borderWidth: 1,
+    padding: 32,
+    alignItems: "center",
+    width: "100%",
+    maxWidth: 340,
+  },
+  completeIconCircle: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 20,
+  },
+  completeTitle: {
+    fontSize: 24,
+    fontWeight: "800",
+    textAlign: "center",
+    marginBottom: 8,
+  },
+  completeSubtitle: {
+    fontSize: 15,
+    textAlign: "center",
+    lineHeight: 22,
+    marginBottom: 24,
+  },
+  completeBtn: {
+    borderRadius: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 32,
+  },
+  completeBtnText: {
+    fontSize: 15,
     fontWeight: "700",
   },
-  emptyWrap: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingTop: 60,
-    gap: 12,
+  errorText: {
+    fontSize: 15,
+    textAlign: "center",
+    marginTop: 12,
+    marginBottom: 20,
+    lineHeight: 22,
   },
-  emptyText: {
-    fontSize: 16,
+  retryBtn: {
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 28,
+  },
+  retryText: {
+    fontSize: 15,
+    fontWeight: "700",
   },
 });
