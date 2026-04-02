@@ -58,7 +58,7 @@ export default function LearnScreen() {
         style={[
           styles.segment,
           {
-            backgroundColor: colors.segmentedBackground || colors.surface,
+            backgroundColor: colors.segmentedBackground,
             borderColor: colors.border,
           },
         ]}
@@ -68,6 +68,11 @@ export default function LearnScreen() {
             styles.segmentItem,
             track === "data-structures" && {
               backgroundColor: colors.surface,
+              shadowColor: "#000",
+              shadowOpacity: 0.06,
+              shadowRadius: 6,
+              shadowOffset: { width: 0, height: 2 },
+              elevation: 2,
             },
           ]}
           onPress={() => setTrack("data-structures")}
@@ -78,8 +83,9 @@ export default function LearnScreen() {
               {
                 color:
                   track === "data-structures"
-                    ? colors.text
+                    ? colors.accent
                     : colors.textSecondary,
+                fontWeight: track === "data-structures" ? "700" : "500",
               },
             ]}
           >
@@ -91,6 +97,11 @@ export default function LearnScreen() {
             styles.segmentItem,
             track === "algorithms" && {
               backgroundColor: colors.surface,
+              shadowColor: "#000",
+              shadowOpacity: 0.06,
+              shadowRadius: 6,
+              shadowOffset: { width: 0, height: 2 },
+              elevation: 2,
             },
           ]}
           onPress={() => setTrack("algorithms")}
@@ -100,7 +111,8 @@ export default function LearnScreen() {
               styles.segmentLabel,
               {
                 color:
-                  track === "algorithms" ? colors.text : colors.textSecondary,
+                  track === "algorithms" ? colors.accent : colors.textSecondary,
+                fontWeight: track === "algorithms" ? "700" : "500",
               },
             ]}
           >

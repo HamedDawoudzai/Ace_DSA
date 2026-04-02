@@ -9,8 +9,9 @@
 ## Quick start
 
 ```bash
-# Backend
-docker compose up -d
+# Backend (needs PostgreSQL — see docs/GETTING_STARTED.md)
+cp backend/.env.example backend/.env   # set DB_URL and JWT_SECRET
+make backend-run
 curl http://localhost:8080/health   # ok
 
 # Mobile
@@ -29,9 +30,9 @@ See [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md) for full setup.
 |------|--------------|
 | **Mobile** | React Native, Expo (SDK 54), TypeScript |
 | **Backend** | Go 1.26, standard library HTTP |
-| **Database** | PostgreSQL (pgx driver) |
+| **Database** | PostgreSQL (pgx driver); [Supabase](https://supabase.com) compatible |
 | **Auth** | JWT (access + refresh tokens) |
-| **Dev / ops** | Docker, Docker Compose, GitHub Actions |
+| **Dev / ops** | Make, GitHub Actions |
 | **Infra (later)** | AWS, Terraform |
 | **In-app tutor (later)** | LLM API, prompt-engineered DSA tutor |
 
@@ -74,7 +75,7 @@ ace-dsa/
 |------|------|
 | Backend API (health, auth, drills, attempts, stats) | Seed drills data |
 | Postgres + migrations (users, drills, attempts) | LLM tutor integration |
-| Docker (backend + Postgres) | AWS / Terraform deployment |
+| Local Postgres + `go run` | AWS / Terraform deployment |
 | CI (test, gofmt, go vet) | |
 | Auth (signup, login, refresh, JWT) | |
 | React Native app (Expo SDK 54) | |
@@ -86,40 +87,26 @@ ace-dsa/
 ## Prerequisites
 
 - **Node.js** 20.19.4 or newer (required by Expo SDK 54)
-- **Docker** (easiest for backend): Docker Desktop or Docker Engine + Compose
-- **Or** Go 1.26+ if you want to run the backend without Docker
+- **Go** 1.26+ and **PostgreSQL** (local install or managed host e.g. Supabase)
 - **Expo Go** app on your phone (iOS App Store or Android Play Store) for mobile testing
 
 ---
 
 ## Local run
 
-### Backend (Docker)
+### Backend
 
-From repo root:
-
-```bash
-docker compose up -d
-```
-
-- API: **http://localhost:8080** (health: `GET /health`, info: `GET /`)
-- Postgres: **localhost:5432**, user `acedsa`, password `acedsa`, database `acedsa`
-
-Stop:
-
-```bash
-docker compose down
-```
-
-### Backend (no Docker)
+Use **[Supabase](https://supabase.com)** (hosted Postgres) or a **local Postgres** — see [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md). Set `DB_URL` to the Supabase **URI** from the dashboard (with `sslmode=require`), or to a local connection string.
 
 ```bash
 cp backend/.env.example backend/.env
-# Edit backend/.env with your DB_URL, JWT_SECRET, PORT
+# Edit backend/.env: DB_URL, JWT_SECRET, PORT
 
 make backend-run
 # or: cd backend && go run ./cmd/api
 ```
+
+- API: **http://localhost:8080** (health: `GET /health`, info: `GET /`)
 
 ### Mobile app
 
@@ -172,7 +159,7 @@ On push and PRs to `main`, GitHub Actions runs Go tests, go vet, and gofmt in `b
 
 - **Node.js:** [nodejs.org/en/download](https://nodejs.org/en/download/) - version 20.19.4 or newer required
 - **Go:** [go.dev/dl](https://go.dev/dl/) - add to PATH; restart your terminal or IDE after installing
-- **Docker:** [Docker Desktop](https://www.docker.com/products/docker-desktop/) - start the engine before `docker compose up`
+- **PostgreSQL:** [postgresql.org/download](https://www.postgresql.org/download/) — or use a hosted DB URL in `DB_URL`
 - **Expo Go:** Install from the App Store (iOS) or Play Store (Android) for on-device testing
 - **Secrets:** Don't commit `.env`. Use `backend/.env.example` as a template
 

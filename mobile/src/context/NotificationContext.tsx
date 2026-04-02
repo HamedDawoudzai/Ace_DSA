@@ -66,6 +66,11 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
   const notify = useCallback(
     (opts: NoticeOptions) => {
+      if (hideTimer.current) {
+        clearTimeout(hideTimer.current);
+        hideTimer.current = null;
+      }
+
       const notice: Notice = {
         id: `n_${Date.now()}_${Math.random().toString(16).slice(2)}`,
         title: opts.title,
@@ -74,7 +79,8 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         durationMs: opts.durationMs ?? 3200,
       };
 
-      setQueue((q) => [...q, notice]);
+      // Show only the latest toast (e.g. repeated failed logins should not queue up).
+      setQueue([notice]);
     },
     []
   );

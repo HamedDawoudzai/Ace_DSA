@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "WebFetch(domain:www.graphiceagle.com)",
+      "WebFetch(domain:blog.logrocket.com)",
+      "WebFetch(domain:linear.app)",
+      "WebFetch(domain:www.thedroidsonroids.com)",
+      "WebFetch(domain:bricxlabs.com)",
+      "WebFetch(domain:www.learnui.design)",
+      "WebFetch(domain:decode.agency)",
+      "WebFetch(domain:spec.fm)",
+      "WebFetch(domain:www.authgear.com)",
+      "WebFetch(domain:medium.com)",
+      "WebFetch(domain:elements.envato.com)",
+      "WebFetch(domain:www.joshwcomeau.com)",
+      "WebFetch(domain:gist.github.com)",
+      "WebFetch(domain:sarunw.com)",
+      "WebFetch(domain:docs.swmansion.com)",
+      "WebFetch(domain:brainsandbeards.com)",
+      "Bash(find C:UsersHamedAce_DSA/mobile/src -type f \\\\\\(-name *.tsx -o -name *.ts \\\\\\))",
+      "Bash(openssl rand:*)"
+    ]
+  }
+}

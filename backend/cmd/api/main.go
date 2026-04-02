@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"database/sql"
 	"encoding/json"
@@ -8,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -19,7 +21,40 @@ import (
 	"github.com/HamedDawoudzai/ace-dsa/backend/internal/stats"
 )
 
+// loadDotEnv reads backend/.env and sets any unset environment variables.
+// Real environment variables always take precedence. Silently skips if no file.
+func loadDotEnv() {
+	f, err := os.Open(".env")
+	if err != nil {
+		return
+	}
+	defer f.Close()
+
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+		parts := strings.SplitN(line, "=", 2)
+		if len(parts) != 2 {
+			continue
+		}
+		key := strings.TrimSpace(parts[0])
+		val := strings.TrimSpace(parts[1])
+		if key == "" {
+			continue
+		}
+		// Only set if the variable isn't already set in the environment.
+		if os.Getenv(key) == "" {
+			os.Setenv(key, val)
+		}
+	}
+}
+
 func main() {
+	loadDotEnv()
+
 	database, err := db.Open()
 	if err != nil {
 		log.Fatalf("database: %v", err)

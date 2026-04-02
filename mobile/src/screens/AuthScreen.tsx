@@ -17,6 +17,7 @@ import { useTheme } from "../context/ThemeContext";
 import { useNotify } from "../context/NotificationContext";
 import SpinningLogo, { SpinningLogoHandle } from "../components/SpinningLogo";
 import ThemeToggle from "../components/ThemeToggle";
+import { getAuthErrorMessage } from "../services/httpError";
 
 type Mode = "login" | "signup";
 
@@ -34,12 +35,20 @@ function checkPassword(pw: string): PasswordChecks {
     upper: /[A-Z]/.test(pw),
     lower: /[a-z]/.test(pw),
     digit: /[0-9]/.test(pw),
-    special: /[^A-Za-z0-9]/.test(pw),
+    special: /[^a-zA-Z0-9\s]/.test(pw),
   };
 }
 
 function allPassed(checks: PasswordChecks): boolean {
   return checks.length && checks.upper && checks.lower && checks.digit && checks.special;
+}
+
+function normalizeIdentifier(identifier: string): string {
+  const trimmed = identifier.trim();
+  if (trimmed.includes("@")) {
+    return trimmed.toLowerCase();
+  }
+  return trimmed;
 }
 
 export default function AuthScreen() {
@@ -56,6 +65,8 @@ export default function AuthScreen() {
   const [username, setUsername] = useState("");
   const [signupEmail, setSignupEmail] = useState("");
   const [signupPassword, setSignupPassword] = useState("");
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [showSignupPassword, setShowSignupPassword] = useState(false);
 
   const [loading, setLoading] = useState(false);
 
@@ -69,11 +80,11 @@ export default function AuthScreen() {
   const accentGlow = isDark
     ? "rgba(45, 212, 191, 0.15)"
     : "rgba(245, 200, 66, 0.25)";
-
   const pwChecks = checkPassword(signupPassword);
   const pwValid = allPassed(pwChecks);
 
   const handleModeSwitch = (next: Mode) => {
+    if (loading) return;
     setMode(next);
     logoRef.current?.spin();
   };
@@ -95,6 +106,7 @@ export default function AuthScreen() {
   }, [btnScale]);
 
   const handleLogin = async () => {
+    if (loading) return;
     if (!identifier.trim() || !password) {
       notify({
         type: "error",
@@ -106,17 +118,16 @@ export default function AuthScreen() {
     logoRef.current?.spin();
     setLoading(true);
     try {
-      await signIn(identifier.trim().toLowerCase(), password);
-    } catch (err: any) {
-      const status = err?.response?.status;
-      const msg =
-        status === 401
-          ? "Username or password is incorrect."
-          : err?.response?.data || err?.message || "We couldn’t sign you in. Please try again.";
+      await signIn(normalizeIdentifier(identifier), password);
+    } catch (error: unknown) {
+      const message = getAuthErrorMessage(
+        error,
+        "We couldn’t sign you in. Please try again."
+      );
       notify({
         type: "error",
         title: "Login failed",
-        message: typeof msg === "string" ? msg : JSON.stringify(msg),
+        message,
       });
     } finally {
       setLoading(false);
@@ -124,6 +135,7 @@ export default function AuthScreen() {
   };
 
   const handleSignup = async () => {
+    if (loading) return;
     if (!firstName.trim() || !lastName.trim()) {
       notify({
         type: "error",
@@ -162,15 +174,15 @@ export default function AuthScreen() {
         email: signupEmail.trim().toLowerCase(),
         password: signupPassword,
       });
-    } catch (err: any) {
-      const msg =
-        err?.response?.data ||
-        err?.message ||
-        "We couldn’t create your account. Please try again.";
+    } catch (error: unknown) {
+      const message = getAuthErrorMessage(
+        error,
+        "We couldn’t create your account. Please try again."
+      );
       notify({
         type: "error",
         title: "Sign up failed",
-        message: typeof msg === "string" ? msg : JSON.stringify(msg),
+        message,
       });
     } finally {
       setLoading(false);
@@ -197,9 +209,20 @@ export default function AuthScreen() {
     </View>
   );
 
+  // Web: tame autofill / focus chrome on inputs (password uses same full field as email).
+  const webFieldChrome =
+    Platform.OS === "web"
+      ? ({
+          outlineStyle: "none" as const,
+          outlineWidth: 0,
+          boxShadow: `0 0 0 1000px ${inputBg} inset`,
+        } as const)
+      : null;
+
   const inputStyle = [
     styles.input,
     { backgroundColor: inputBg, borderColor: inputBorder, color: colors.inputText },
+    webFieldChrome,
   ];
 
   return (
@@ -226,7 +249,6 @@ export default function AuthScreen() {
               ? "Log in to practice DSA drills\nand ace your interviews"
               : "Create your account to get started"}
           </Text>
-
           <View style={styles.form}>
             {mode === "signup" && (
               <>
@@ -258,8 +280,10 @@ export default function AuthScreen() {
                   placeholder="USERNAME"
                   placeholderTextColor={colors.placeholderText}
                   autoCapitalize="none"
+                  autoCorrect={false}
                   value={username}
                   onChangeText={setUsername}
+                  returnKeyType="next"
                 />
               </>
             )}
@@ -269,19 +293,52 @@ export default function AuthScreen() {
               placeholder={mode === "login" ? "EMAIL OR USERNAME" : "EMAIL"}
               placeholderTextColor={colors.placeholderText}
               autoCapitalize="none"
+              autoCorrect={false}
               keyboardType="email-address"
+              textContentType="username"
               value={mode === "login" ? identifier : signupEmail}
               onChangeText={mode === "login" ? setIdentifier : setSignupEmail}
+              returnKeyType="next"
             />
 
-            <TextInput
-              style={inputStyle}
-              placeholder="PASSWORD"
-              placeholderTextColor={colors.placeholderText}
-              secureTextEntry
-              value={mode === "login" ? password : signupPassword}
-              onChangeText={mode === "login" ? setPassword : setSignupPassword}
-            />
+            {/* Same layout as email field: one full-height input + overlay icon (avoids broken autofill strip on web). */}
+            <View style={styles.passwordFieldWrap}>
+              <TextInput
+                style={[inputStyle, styles.passwordInputFull]}
+                placeholder="PASSWORD"
+                placeholderTextColor={colors.placeholderText}
+                secureTextEntry={mode === "login" ? !showLoginPassword : !showSignupPassword}
+                value={mode === "login" ? password : signupPassword}
+                onChangeText={mode === "login" ? setPassword : setSignupPassword}
+                textContentType={mode === "signup" ? "newPassword" : "password"}
+                autoComplete={mode === "signup" ? "password-new" : "current-password"}
+                returnKeyType={mode === "login" ? "go" : "done"}
+                onSubmitEditing={handleSubmit}
+              />
+              <Pressable
+                style={styles.passwordIconBtn}
+                onPress={() =>
+                  mode === "login"
+                    ? setShowLoginPassword((cur) => !cur)
+                    : setShowSignupPassword((cur) => !cur)
+                }
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <Ionicons
+                  name={
+                    mode === "login"
+                      ? showLoginPassword
+                        ? "eye-off-outline"
+                        : "eye-outline"
+                      : showSignupPassword
+                        ? "eye-off-outline"
+                        : "eye-outline"
+                  }
+                  size={18}
+                  color={colors.textMuted}
+                />
+              </Pressable>
+            </View>
 
             {mode === "signup" && signupPassword.length > 0 && (
               <View style={styles.checksContainer}>
@@ -298,11 +355,9 @@ export default function AuthScreen() {
                 style={({ pressed }) => [
                   styles.submitBtn,
                   {
-                    borderColor: colors.accent,
-                    backgroundColor:
-                      pressed ? accentGlow : "transparent",
+                    backgroundColor: colors.accent,
+                    opacity: pressed ? 0.88 : loading ? 0.65 : 1,
                   },
-                  loading && { opacity: 0.6 },
                 ]}
                 onPress={handleSubmit}
                 onPressIn={animateBtnIn}
@@ -310,9 +365,9 @@ export default function AuthScreen() {
                 disabled={loading}
               >
                 {loading ? (
-                  <ActivityIndicator color={colors.accent} />
+                  <ActivityIndicator color={colors.accentText} />
                 ) : (
-                  <Text style={[styles.submitText, { color: colors.accent }]}>
+                  <Text style={[styles.submitText, { color: colors.accentText }]}>
                     {mode === "login" ? "LOG IN" : "SIGN UP"}
                   </Text>
                 )}
@@ -343,6 +398,7 @@ export default function AuthScreen() {
             onPress={() =>
               handleModeSwitch(mode === "login" ? "signup" : "login")
             }
+            disabled={loading}
           >
             <Text style={[styles.switchText, { color: colors.accent }]}>
               {mode === "login"
@@ -370,6 +426,7 @@ export default function AuthScreen() {
           onPress={() =>
             handleModeSwitch(mode === "login" ? "signup" : "login")
           }
+          disabled={loading}
           hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
         >
           <Text style={[styles.bottomLink, { color: colors.accent }]}>
@@ -409,7 +466,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     lineHeight: 21,
     marginTop: 2,
-    marginBottom: 24,
+    marginBottom: 8,
   },
   form: {
     gap: 10,
@@ -422,13 +479,31 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   input: {
-    height: 50,
-    borderRadius: 6,
+    height: 52,
+    borderRadius: 14,
     borderWidth: 1,
     paddingHorizontal: 16,
-    fontSize: 13,
-    letterSpacing: 1,
+    fontSize: 14,
+    letterSpacing: 0.5,
     fontWeight: "500",
+  },
+  passwordFieldWrap: {
+    position: "relative",
+    width: "100%",
+  },
+  passwordInputFull: {
+    paddingRight: 48,
+    letterSpacing: 0.5,
+  },
+  passwordIconBtn: {
+    position: "absolute",
+    right: 4,
+    top: 0,
+    bottom: 0,
+    width: 44,
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 2,
   },
   checksContainer: {
     gap: 4,
@@ -445,16 +520,16 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   submitBtn: {
-    height: 50,
-    borderRadius: 6,
-    borderWidth: 1.5,
+    height: 54,
+    borderRadius: 16,
     justifyContent: "center",
     alignItems: "center",
+    overflow: "hidden",
   },
   submitText: {
-    fontSize: 14,
-    fontWeight: "700",
-    letterSpacing: 1.5,
+    fontSize: 15,
+    fontWeight: "800",
+    letterSpacing: 1.2,
   },
   dividerRow: {
     flexDirection: "row",

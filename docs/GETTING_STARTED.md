@@ -5,7 +5,8 @@ This guide gets the backend, database, and mobile app running locally.
 ## Prerequisites
 
 - **Node.js** 20.19.4 or newer ([download](https://nodejs.org/en/download/))
-- **Docker Desktop** ([download](https://www.docker.com/products/docker-desktop/)) or Go 1.26+ with a local Postgres
+- **Go** 1.26+ ([download](https://go.dev/dl/))
+- **PostgreSQL** ([download](https://www.postgresql.org/download/)) or any Postgres-compatible URL (e.g. Supabase)
 - **Expo Go** app on your phone (optional, for on-device testing)
 
 Check your Node version:
@@ -24,38 +25,40 @@ cd Ace_DSA
 
 ## 2. Start the backend and database
 
-You need the API and Postgres running. Two options:
+Copy the env template and set secrets:
 
-### A. Using Docker (simplest)
+```bash
+cp backend/.env.example backend/.env
+```
 
-1. Install [Docker Desktop](https://www.docker.com/products/docker-desktop/) and start it.
-2. From the repo root:
+Edit `backend/.env` with at least `DB_URL`, `JWT_SECRET`, and optionally `PORT`.
 
-   ```bash
-   docker compose up -d
-   ```
+### Option A — Supabase (hosted Postgres)
 
-3. Wait until both containers are up (about 10-15 seconds). The backend connects to Postgres and runs migrations automatically.
+1. Create a project at [supabase.com](https://supabase.com) and wait until the database is ready.
 
-**Result:** API at http://localhost:8080, Postgres at localhost:5432 (user `acedsa`, password `acedsa`, database `acedsa`).
+2. Open **Project Settings → Database** and find **Connection string** → **URI** (sometimes labeled “Direct connection” or “Session mode”).
 
-### B. Using Go and a local Postgres
+3. Copy the URI, insert your **database password** where indicated, and set it as `DB_URL` in `backend/.env`.
 
-1. Install [Go 1.26+](https://go.dev/dl/) and [PostgreSQL](https://www.postgresql.org/download/).
-2. Create the database and user (in `psql` or any client):
+   - Use a connection that supports **normal Postgres sessions** and **DDL** (this API runs SQL migrations when it starts). **Direct connection** or **Session pooler** is appropriate; **Transaction mode** (PgBouncer on port 6543) can interfere with migrations—if you only use transaction mode, run migrations against the DB another way or use direct/session for dev.
+
+   - The URI must use **TLS**: include `sslmode=require` (Supabase’s copied string usually already does).
+
+4. Run the API **on your machine** (`make backend-run`), not inside a container, so you avoid common **IPv6** routing issues to `db.*.supabase.co` from Docker on Windows.
+
+### Option B — Local PostgreSQL
+
+1. Install PostgreSQL and ensure the server is running.
+
+2. Create a user and database (in `psql` or any client):
 
    ```sql
    CREATE USER acedsa WITH PASSWORD 'acedsa';
    CREATE DATABASE acedsa OWNER acedsa;
    ```
 
-3. Copy the env template and set your values:
-
-   ```bash
-   cp backend/.env.example backend/.env
-   ```
-
-   Edit `backend/.env`:
+3. In `backend/.env`:
 
    ```env
    DB_URL=postgres://acedsa:acedsa@localhost:5432/acedsa?sslmode=disable
@@ -63,12 +66,12 @@ You need the API and Postgres running. Two options:
    PORT=8080
    ```
 
-4. Start the API:
+### Start the API
 
-   ```bash
-   make backend-run
-   # or: cd backend && go run ./cmd/api
-   ```
+```bash
+make backend-run
+# or: cd backend && go run ./cmd/api
+```
 
 **Result:** API at http://localhost:8080. Migrations run on startup.
 
@@ -118,17 +121,12 @@ Then choose how to view it:
 - **Android emulator:** Press **a** (requires Android Studio with an AVD configured)
 - **iOS simulator:** Press **i** (requires macOS with Xcode)
 
-**Important for phone/emulator testing:** Update `BASE_URL` in `mobile/src/services/api.ts` from `http://localhost:8080` to your machine's LAN IP (e.g. `http://192.168.1.x:8080`). `localhost` only works in a web browser on the same machine.
+**Important for phone/emulator testing:** set `EXPO_PUBLIC_API_BASE_URL` (or `expo.extra.apiBaseUrl` in `mobile/app.json`) to your machine LAN IP, e.g. `http://192.168.1.x:8080`. `localhost` only works on the same machine.
 
 ## 5. Stop everything
 
-```bash
-# Stop Docker containers
-docker compose down
-
-# Stop Expo dev server
-# Press Ctrl+C in the terminal running npx expo start
-```
+- **API:** Press `Ctrl+C` in the terminal running `make backend-run`.
+- **Expo:** Press `Ctrl+C` in the terminal running `npx expo start`.
 
 ## Troubleshooting
 
@@ -138,11 +136,11 @@ docker compose down
 - **"go: command not found"**
   Install Go and add it to your PATH, then close and reopen your terminal.
 
-- **"cannot connect to Docker"**
-  Start Docker Desktop and wait until it is fully running.
-
 - **Backend exits with "database: ..."**
-  If using Docker, ensure `docker compose up -d` finished and Postgres is healthy. If running locally, check that Postgres is running and `DB_URL` in `backend/.env` is correct.
+  Check `DB_URL` in `backend/.env`: correct password, and for **Supabase** use `sslmode=require`. For **“network is unreachable”** to Supabase, run the API on the host (not in Docker) or switch to a connection string that resolves over IPv4 (e.g. **Session** pooler vs direct host, per Supabase docs).
+
+- **Migrations fail against Supabase**
+  Prefer **Direct** or **Session** connection strings for this API. **Transaction** pooler (port 6543) can block some DDL; use a non-transaction URI for dev, or apply migrations with `psql` / Supabase SQL editor using files under `backend/internal/db/migrations/`.
 
 - **Port 8080 or 8081 already in use**
   Find and kill the process: `netstat -ano | findstr :8080` then `taskkill /PID <pid> /F`. Or change the port in your config.

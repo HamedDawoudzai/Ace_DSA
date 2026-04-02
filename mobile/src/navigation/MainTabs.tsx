@@ -1,13 +1,14 @@
 import React from "react";
-import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { createBottomTabNavigator, BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 import {
-  TouchableOpacity,
+  Pressable,
   Text,
   View,
   StyleSheet,
   SafeAreaView,
+  Platform,
 } from "react-native";
 
 import HomeScreen from "../screens/HomeScreen";
@@ -40,8 +41,9 @@ function HomeStack() {
     <Stack.Navigator
       screenOptions={{
         headerStyle: { backgroundColor: colors.headerBackground },
-        headerTintColor: colors.headerText,
+        headerTintColor: colors.accent,
         headerShadowVisible: false,
+        headerTitleStyle: { fontWeight: "700", fontSize: 17 },
         animation: "slide_from_right",
       }}
     >
@@ -83,6 +85,8 @@ export type TabParamList = {
 
 const Tab = createBottomTabNavigator<TabParamList>();
 
+// ─── Profile Tab ──────────────────────────────────────────────────────────────
+
 function ProfileTab() {
   const { signOut } = useAuth();
   const { colors, isDark, toggle } = useTheme();
@@ -92,52 +96,60 @@ function ProfileTab() {
       style={[profileStyles.container, { backgroundColor: colors.background }]}
     >
       <View style={profileStyles.inner}>
+        {/* Logo */}
         <View style={profileStyles.logoArea}>
-          <SpinningLogo size={100} />
+          <SpinningLogo size={90} />
           <Text style={[profileStyles.title, { color: colors.accent }]}>
             Ace DSA
           </Text>
+          <Text style={[profileStyles.tagline, { color: colors.textMuted }]}>
+            Sharpen your skills daily
+          </Text>
         </View>
 
+        {/* Appearance section */}
         <Text style={[profileStyles.sectionLabel, { color: colors.textMuted }]}>
           APPEARANCE
         </Text>
-        <TouchableOpacity
+        <Pressable
           style={[
-            profileStyles.themeToggleRow,
+            profileStyles.row,
             {
               backgroundColor: colors.surface,
-              borderColor: isDark
-                ? "rgba(45,212,191,0.12)"
-                : "rgba(0,0,0,0.06)",
+              borderColor: colors.border,
             },
           ]}
           onPress={toggle}
-          activeOpacity={0.7}
         >
-          <Ionicons
-            name={isDark ? "moon" : "sunny"}
-            size={22}
-            color={colors.accent}
-          />
-          <Text
-            style={[profileStyles.themeToggleText, { color: colors.text }]}
-          >
-            {isDark ? "Dark Mode" : "Light Mode"}
-          </Text>
           <View
             style={[
-              profileStyles.toggleTrack,
+              profileStyles.rowIcon,
+              { backgroundColor: colors.accentSubtle },
+            ]}
+          >
+            <Ionicons
+              name={isDark ? "moon" : "sunny"}
+              size={20}
+              color={colors.accent}
+            />
+          </View>
+          <Text style={[profileStyles.rowLabel, { color: colors.text }]}>
+            {isDark ? "Dark Mode" : "Light Mode"}
+          </Text>
+          {/* Toggle track */}
+          <View
+            style={[
+              profileStyles.track,
               {
                 backgroundColor: isDark
-                  ? "rgba(45, 212, 191, 0.25)"
-                  : "rgba(245, 200, 66, 0.35)",
+                  ? colors.accentMedium
+                  : colors.accentSubtle,
               },
             ]}
           >
             <View
               style={[
-                profileStyles.toggleThumb,
+                profileStyles.thumb,
                 {
                   backgroundColor: colors.accent,
                   alignSelf: isDark ? "flex-end" : "flex-start",
@@ -145,155 +157,217 @@ function ProfileTab() {
               ]}
             />
           </View>
-        </TouchableOpacity>
+        </Pressable>
 
         <View style={profileStyles.spacer} />
 
-        <TouchableOpacity
+        {/* Sign out */}
+        <Pressable
           style={[
             profileStyles.signOutBtn,
             {
               backgroundColor: isDark
-                ? "rgba(239, 68, 68, 0.1)"
-                : "rgba(244, 67, 54, 0.08)",
+                ? "rgba(248,113,113,0.08)"
+                : "rgba(239,68,68,0.07)",
               borderColor: isDark
-                ? "rgba(239, 68, 68, 0.2)"
-                : "rgba(244, 67, 54, 0.15)",
+                ? "rgba(248,113,113,0.18)"
+                : "rgba(239,68,68,0.15)",
             },
           ]}
           onPress={signOut}
-          activeOpacity={0.7}
         >
-          <Ionicons name="log-out-outline" size={22} color={colors.error} />
+          <Ionicons name="log-out-outline" size={20} color={colors.error} />
           <Text style={[profileStyles.signOutText, { color: colors.error }]}>
             Sign Out
           </Text>
-        </TouchableOpacity>
+        </Pressable>
       </View>
     </SafeAreaView>
   );
 }
 
 const profileStyles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  inner: {
-    flex: 1,
-    paddingHorizontal: 24,
-    paddingTop: 24,
-  },
-  logoArea: {
-    alignItems: "center",
-    marginBottom: 32,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: "900",
-    marginTop: 4,
-    letterSpacing: 0.5,
-  },
+  container: { flex: 1 },
+  inner: { flex: 1, paddingHorizontal: 24, paddingTop: 16 },
+  logoArea: { alignItems: "center", marginBottom: 36 },
+  title: { fontSize: 26, fontWeight: "900", marginTop: 6, letterSpacing: -0.4 },
+  tagline: { fontSize: 13, marginTop: 4, fontWeight: "500" },
   sectionLabel: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: "700",
-    letterSpacing: 1.2,
+    letterSpacing: 1.4,
     marginBottom: 10,
-    marginLeft: 4,
+    marginLeft: 2,
   },
-  themeToggleRow: {
+  row: {
     flexDirection: "row",
     alignItems: "center",
-    borderRadius: 16,
-    padding: 16,
+    borderRadius: 18,
+    padding: 14,
     borderWidth: 1,
     gap: 12,
   },
-  themeToggleText: {
-    flex: 1,
-    fontSize: 16,
-    fontWeight: "600",
+  rowIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  toggleTrack: {
-    width: 48,
-    height: 28,
-    borderRadius: 14,
+  rowLabel: { flex: 1, fontSize: 16, fontWeight: "600" },
+  track: {
+    width: 46,
+    height: 26,
+    borderRadius: 13,
     padding: 3,
     justifyContent: "center",
   },
-  toggleThumb: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-  },
-  spacer: {
-    flex: 1,
-  },
+  thumb: { width: 20, height: 20, borderRadius: 10 },
+  spacer: { flex: 1 },
   signOutBtn: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 14,
+    borderRadius: 16,
     padding: 16,
     gap: 10,
     borderWidth: 1,
     marginBottom: 32,
   },
-  signOutText: {
-    fontSize: 16,
-    fontWeight: "700",
+  signOutText: { fontSize: 16, fontWeight: "700" },
+});
+
+// ─── Custom Tab Bar ────────────────────────────────────────────────────────────
+
+const TAB_CONFIG: Record<
+  string,
+  {
+    label: string;
+    active: keyof typeof Ionicons.glyphMap;
+    inactive: keyof typeof Ionicons.glyphMap;
+  }
+> = {
+  HomeTab: { label: "Home", active: "home", inactive: "home-outline" },
+  StatsTab: {
+    label: "Stats",
+    active: "stats-chart",
+    inactive: "stats-chart-outline",
+  },
+  ProfileTab: { label: "Profile", active: "person", inactive: "person-outline" },
+};
+
+function CustomTabBar({ state, navigation }: BottomTabBarProps) {
+  const { colors } = useTheme();
+
+  return (
+    <View
+      style={[
+        tabStyles.bar,
+        {
+          backgroundColor: colors.tabBar,
+          borderTopColor: colors.tabBarBorder,
+        },
+      ]}
+    >
+      {state.routes.map((route, index) => {
+        const isFocused = state.index === index;
+        const cfg = TAB_CONFIG[route.name];
+
+        const onPress = () => {
+          if (!isFocused) {
+            navigation.navigate(route.name as never);
+          }
+        };
+
+        return (
+          <Pressable
+            key={route.key}
+            onPress={onPress}
+            style={tabStyles.item}
+            android_ripple={{ color: "transparent" }}
+          >
+            <View
+              style={[
+                tabStyles.pill,
+                isFocused && { backgroundColor: colors.accentSubtle },
+              ]}
+            >
+              <Ionicons
+                name={isFocused ? cfg.active : cfg.inactive}
+                size={22}
+                color={isFocused ? colors.accent : colors.textMuted}
+              />
+            </View>
+            <Text
+              style={[
+                tabStyles.label,
+                {
+                  color: isFocused ? colors.accent : colors.textMuted,
+                  fontWeight: isFocused ? "700" : "500",
+                },
+              ]}
+            >
+              {cfg.label}
+            </Text>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
+const tabStyles = StyleSheet.create({
+  bar: {
+    flexDirection: "row",
+    borderTopWidth: StyleSheet.hairlineWidth,
+    paddingTop: 8,
+    paddingBottom: Platform.OS === "ios" ? 24 : 10,
+    paddingHorizontal: 8,
+  },
+  item: {
+    flex: 1,
+    alignItems: "center",
+    gap: 4,
+  },
+  pill: {
+    width: 52,
+    height: 34,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  label: {
+    fontSize: 11,
+    letterSpacing: 0.1,
   },
 });
+
+// ─── Main Tabs ─────────────────────────────────────────────────────────────────
 
 export default function MainTabs() {
   const { colors } = useTheme();
 
   return (
     <Tab.Navigator
+      tabBar={(props) => <CustomTabBar {...props} />}
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: colors.accent,
-        tabBarInactiveTintColor: colors.textMuted,
-        tabBarStyle: {
-          backgroundColor: colors.tabBar,
-          borderTopColor: colors.tabBarBorder,
-        },
       }}
     >
-      <Tab.Screen
-        name="HomeTab"
-        component={HomeStack}
-        options={{
-          tabBarLabel: "Home",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="home" size={size} color={color} />
-          ),
-        }}
-      />
+      <Tab.Screen name="HomeTab" component={HomeStack} />
       <Tab.Screen
         name="StatsTab"
         component={StatsScreen}
         options={{
-          tabBarLabel: "Stats",
           headerShown: true,
           headerTitle: "My Stats",
           headerStyle: { backgroundColor: colors.headerBackground },
-          headerTintColor: colors.headerText,
+          headerTintColor: colors.accent,
+          headerTitleStyle: { fontWeight: "700", fontSize: 17 },
           headerShadowVisible: false,
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="stats-chart" size={size} color={color} />
-          ),
         }}
       />
-      <Tab.Screen
-        name="ProfileTab"
-        component={ProfileTab}
-        options={{
-          tabBarLabel: "Profile",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person" size={size} color={color} />
-          ),
-        }}
-      />
+      <Tab.Screen name="ProfileTab" component={ProfileTab} />
     </Tab.Navigator>
   );
 }
