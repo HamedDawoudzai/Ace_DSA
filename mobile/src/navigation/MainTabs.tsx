@@ -7,7 +7,6 @@ import {
   Text,
   View,
   StyleSheet,
-  SafeAreaView,
   Platform,
 } from "react-native";
 
@@ -18,17 +17,16 @@ import LearnScreen from "../screens/LearnScreen";
 import LearnDetailScreen from "../screens/LearnDetailScreen";
 import PracticeScreen from "../screens/PracticeScreen";
 import StatsScreen from "../screens/StatsScreen";
-import { useAuth } from "../context/AuthContext";
+import ProfileScreen from "../screens/ProfileScreen";
 import { useTheme } from "../context/ThemeContext";
-import SpinningLogo from "../components/SpinningLogo";
 import { Drill } from "../types";
 
 export type MainStackParamList = {
   Home: undefined;
   Learn: undefined;
   LearnDetail: { id: string; track: "data-structures" | "algorithms" };
-  Drills: undefined;
-  DrillDetail: { drill: Drill };
+  Drills: { advance?: boolean } | undefined;
+  DrillDetail: { drill: Drill; fromQueue?: boolean };
   Practice: undefined;
 };
 
@@ -85,157 +83,7 @@ export type TabParamList = {
 
 const Tab = createBottomTabNavigator<TabParamList>();
 
-// ─── Profile Tab ──────────────────────────────────────────────────────────────
-
-function ProfileTab() {
-  const { signOut } = useAuth();
-  const { colors, isDark, toggle } = useTheme();
-
-  return (
-    <SafeAreaView
-      style={[profileStyles.container, { backgroundColor: colors.background }]}
-    >
-      <View style={profileStyles.inner}>
-        {/* Logo */}
-        <View style={profileStyles.logoArea}>
-          <SpinningLogo size={90} />
-          <Text style={[profileStyles.title, { color: colors.accent }]}>
-            Ace DSA
-          </Text>
-          <Text style={[profileStyles.tagline, { color: colors.textMuted }]}>
-            Sharpen your skills daily
-          </Text>
-        </View>
-
-        {/* Appearance section */}
-        <Text style={[profileStyles.sectionLabel, { color: colors.textMuted }]}>
-          APPEARANCE
-        </Text>
-        <Pressable
-          style={[
-            profileStyles.row,
-            {
-              backgroundColor: colors.surface,
-              borderColor: colors.border,
-            },
-          ]}
-          onPress={toggle}
-        >
-          <View
-            style={[
-              profileStyles.rowIcon,
-              { backgroundColor: colors.accentSubtle },
-            ]}
-          >
-            <Ionicons
-              name={isDark ? "moon" : "sunny"}
-              size={20}
-              color={colors.accent}
-            />
-          </View>
-          <Text style={[profileStyles.rowLabel, { color: colors.text }]}>
-            {isDark ? "Dark Mode" : "Light Mode"}
-          </Text>
-          {/* Toggle track */}
-          <View
-            style={[
-              profileStyles.track,
-              {
-                backgroundColor: isDark
-                  ? colors.accentMedium
-                  : colors.accentSubtle,
-              },
-            ]}
-          >
-            <View
-              style={[
-                profileStyles.thumb,
-                {
-                  backgroundColor: colors.accent,
-                  alignSelf: isDark ? "flex-end" : "flex-start",
-                },
-              ]}
-            />
-          </View>
-        </Pressable>
-
-        <View style={profileStyles.spacer} />
-
-        {/* Sign out */}
-        <Pressable
-          style={[
-            profileStyles.signOutBtn,
-            {
-              backgroundColor: isDark
-                ? "rgba(248,113,113,0.08)"
-                : "rgba(239,68,68,0.07)",
-              borderColor: isDark
-                ? "rgba(248,113,113,0.18)"
-                : "rgba(239,68,68,0.15)",
-            },
-          ]}
-          onPress={signOut}
-        >
-          <Ionicons name="log-out-outline" size={20} color={colors.error} />
-          <Text style={[profileStyles.signOutText, { color: colors.error }]}>
-            Sign Out
-          </Text>
-        </Pressable>
-      </View>
-    </SafeAreaView>
-  );
-}
-
-const profileStyles = StyleSheet.create({
-  container: { flex: 1 },
-  inner: { flex: 1, paddingHorizontal: 24, paddingTop: 16 },
-  logoArea: { alignItems: "center", marginBottom: 36 },
-  title: { fontSize: 26, fontWeight: "900", marginTop: 6, letterSpacing: -0.4 },
-  tagline: { fontSize: 13, marginTop: 4, fontWeight: "500" },
-  sectionLabel: {
-    fontSize: 11,
-    fontWeight: "700",
-    letterSpacing: 1.4,
-    marginBottom: 10,
-    marginLeft: 2,
-  },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderRadius: 18,
-    padding: 14,
-    borderWidth: 1,
-    gap: 12,
-  },
-  rowIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  rowLabel: { flex: 1, fontSize: 16, fontWeight: "600" },
-  track: {
-    width: 46,
-    height: 26,
-    borderRadius: 13,
-    padding: 3,
-    justifyContent: "center",
-  },
-  thumb: { width: 20, height: 20, borderRadius: 10 },
-  spacer: { flex: 1 },
-  signOutBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 16,
-    padding: 16,
-    gap: 10,
-    borderWidth: 1,
-    marginBottom: 32,
-  },
-  signOutText: { fontSize: 16, fontWeight: "700" },
-});
+// ProfileTab uses the dedicated ProfileScreen
 
 // ─── Custom Tab Bar ────────────────────────────────────────────────────────────
 
@@ -367,7 +215,7 @@ export default function MainTabs() {
           headerShadowVisible: false,
         }}
       />
-      <Tab.Screen name="ProfileTab" component={ProfileTab} />
+      <Tab.Screen name="ProfileTab" component={ProfileScreen} />
     </Tab.Navigator>
   );
 }

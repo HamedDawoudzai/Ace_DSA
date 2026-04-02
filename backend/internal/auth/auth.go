@@ -1,7 +1,9 @@
 package auth
 
 import (
+	"crypto/rand"
 	"database/sql"
+	"encoding/hex"
 	"encoding/json"
 	"net/http"
 	"os"
@@ -33,6 +35,15 @@ type loginReq struct {
 
 type refreshReq struct {
 	RefreshToken string `json:"refresh_token"`
+}
+
+type forgotPasswordReq struct {
+	Email string `json:"email"`
+}
+
+type resetPasswordReq struct {
+	Token       string `json:"token"`
+	NewPassword string `json:"new_password"`
 }
 
 type tokenResp struct {
@@ -292,4 +303,105 @@ func (h *Handler) Refresh(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(tokens)
+}
+
+func (h *Handler) ForgotPassword(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	var req forgotPasswordReq
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "invalid json", http.StatusBadRequest)
+		return
+	}
+	req.Email = strings.TrimSpace(strings.ToLower(req.Email))
+	if req.Email == "" {
+		http.Error(w, "email required", http.StatusBadRequest)
+		return
+	}
+	if h.DB == nil {
+		http.Error(w, "database unavailable", http.StatusServiceUnavailable)
+		return
+	}
+
+	tokenBytes := make([]byte, 32)
+	rand.Read(tokenBytes)
+	token := hex.EncodeToString(tokenBytes)
+	expires := time.Now().Add(1 * time.Hour)
+
+	res, err := h.DB.Exec(
+		`UPDATE users SET password_reset_token = $1, password_reset_expires = $2 WHERE email = $3`,
+		token, expires, req.Email,
+	)
+	if err != nil {
+		http.Error(w, "internal error", http.StatusInternalServerError)
+		return
+	}
+	n, _ := res.RowsAffected()
+	if n == 0 {
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]string{
+			"status": "if that email exists, a reset token has been generated",
+		})
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{
+		"status": "reset token generated",
+		"token":  token,
+	})
+}
+
+func (h *Handler) ResetPassword(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	var req resetPasswordReq
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "invalid json", http.StatusBadRequest)
+		return
+	}
+	if req.Token == "" || req.NewPassword == "" {
+		http.Error(w, "token and new_password required", http.StatusBadRequest)
+		return
+	}
+	if msg := validatePassword(req.NewPassword); msg != "" {
+		http.Error(w, msg, http.StatusBadRequest)
+		return
+	}
+	if h.DB == nil {
+		http.Error(w, "database unavailable", http.StatusServiceUnavailable)
+		return
+	}
+
+	var uid string
+	err := h.DB.QueryRow(
+		`SELECT id FROM users WHERE password_reset_token = $1 AND password_reset_expires > NOW()`,
+		req.Token,
+	).Scan(&uid)
+	if err == sql.ErrNoRows {
+		http.Error(w, "invalid or expired reset token", http.StatusBadRequest)
+		return
+	}
+	if err != nil {
+		http.Error(w, "internal error", http.StatusInternalServerError)
+		return
+	}
+
+	hash, err := bcrypt.GenerateFromPassword([]byte(req.NewPassword), bcrypt.DefaultCost)
+	if err != nil {
+		http.Error(w, "internal error", http.StatusInternalServerError)
+		return
+	}
+
+	h.DB.Exec(
+		`UPDATE users SET password_hash = $1, password_reset_token = NULL, password_reset_expires = NULL, updated_at = NOW() WHERE id = $2`,
+		string(hash), uid,
+	)
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"status": "password reset successful"})
 }

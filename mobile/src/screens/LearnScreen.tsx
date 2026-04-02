@@ -44,7 +44,6 @@ export default function LearnScreen() {
     }),
     []
   );
-
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.header}>
@@ -173,13 +172,15 @@ export default function LearnScreen() {
               <View
                 style={[
                   styles.imageWrap,
-                  {
-                    backgroundColor: imageBackdrop,
-                    borderColor: colors.border,
-                  },
+                  { backgroundColor: "transparent", borderColor: "transparent" },
                 ]}
               >
-                <View style={[styles.imageInner, { backgroundColor: imageBackdrop }]}>
+                <View
+                  style={[
+                    styles.imageInner,
+                    { backgroundColor: "transparent" },
+                  ]}
+                >
                   <Image
                     source={cardImage}
                     style={[

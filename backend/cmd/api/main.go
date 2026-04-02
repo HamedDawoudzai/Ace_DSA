@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"context"
 	"database/sql"
 	"encoding/json"
@@ -9,7 +8,6 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"strings"
 	"syscall"
 	"time"
 
@@ -18,42 +16,12 @@ import (
 	"github.com/HamedDawoudzai/ace-dsa/backend/internal/db"
 	"github.com/HamedDawoudzai/ace-dsa/backend/internal/drills"
 	"github.com/HamedDawoudzai/ace-dsa/backend/internal/middleware"
+	"github.com/HamedDawoudzai/ace-dsa/backend/internal/profile"
 	"github.com/HamedDawoudzai/ace-dsa/backend/internal/stats"
 )
 
-// loadDotEnv reads backend/.env and sets any unset environment variables.
-// Real environment variables always take precedence. Silently skips if no file.
-func loadDotEnv() {
-	f, err := os.Open(".env")
-	if err != nil {
-		return
-	}
-	defer f.Close()
-
-	scanner := bufio.NewScanner(f)
-	for scanner.Scan() {
-		line := strings.TrimSpace(scanner.Text())
-		if line == "" || strings.HasPrefix(line, "#") {
-			continue
-		}
-		parts := strings.SplitN(line, "=", 2)
-		if len(parts) != 2 {
-			continue
-		}
-		key := strings.TrimSpace(parts[0])
-		val := strings.TrimSpace(parts[1])
-		if key == "" {
-			continue
-		}
-		// Only set if the variable isn't already set in the environment.
-		if os.Getenv(key) == "" {
-			os.Setenv(key, val)
-		}
-	}
-}
-
 func main() {
-	loadDotEnv()
+	db.LoadDotEnv()
 
 	database, err := db.Open()
 	if err != nil {
@@ -70,6 +38,7 @@ func main() {
 	drillsHandler := &drills.Handler{DB: database}
 	attemptsHandler := &attempts.Handler{DB: database}
 	statsHandler := &stats.Handler{DB: database}
+	profileHandler := &profile.Handler{DB: database}
 
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -84,11 +53,28 @@ func main() {
 	mux.HandleFunc("/auth/signup", authHandler.Signup)
 	mux.HandleFunc("/auth/login", authHandler.Login)
 	mux.HandleFunc("/auth/refresh", authHandler.Refresh)
+	mux.HandleFunc("/auth/forgot-password", authHandler.ForgotPassword)
+	mux.HandleFunc("/auth/reset-password", authHandler.ResetPassword)
 	mux.HandleFunc("/drills", drillsHandler.List)
 	mux.HandleFunc("/drills/", drillsHandler.GetByID)
+	mux.Handle("/drills/categories", middleware.OptionalJWT(http.HandlerFunc(drillsHandler.Categories)))
 	mux.Handle("/attempts", middleware.JWT(http.HandlerFunc(attemptsHandler.Create)))
 	mux.Handle("/me/attempts", middleware.JWT(http.HandlerFunc(attemptsHandler.List)))
 	mux.Handle("/me/stats", middleware.JWT(http.HandlerFunc(statsHandler.Get)))
+	mux.Handle("/me/stats/reset", middleware.JWT(http.HandlerFunc(statsHandler.Reset)))
+	mux.Handle("/me/progress", middleware.JWT(http.HandlerFunc(profileHandler.Progress)))
+	mux.Handle("/me/profile", middleware.JWT(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			profileHandler.Get(w, r)
+		case http.MethodPut:
+			profileHandler.Update(w, r)
+		default:
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		}
+	})))
+	mux.Handle("/me/password", middleware.JWT(http.HandlerFunc(profileHandler.ChangePassword)))
+	mux.Handle("/me/account", middleware.JWT(http.HandlerFunc(profileHandler.Delete)))
 
 	server := &http.Server{
 		Addr:         addr,
