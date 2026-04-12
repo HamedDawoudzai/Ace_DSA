@@ -6,7 +6,8 @@ import (
 	"os"
 	"time"
 
-	_ "github.com/jackc/pgx/v5/stdlib"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/stdlib"
 )
 
 // Open connects to Postgres using DB_URL and pings to verify. Returns nil if DB_URL is empty.
@@ -17,10 +18,15 @@ func Open() (*sql.DB, error) {
 		return nil, nil
 	}
 
-	db, err := sql.Open("pgx", url)
+	cfg, err := pgx.ParseConfig(url)
 	if err != nil {
 		return nil, err
 	}
+	// PgBouncer in transaction mode (e.g. Supabase pooler :6543) cannot share prepared statements
+	// across pooled backend sessions; pgx's default stmt cache triggers SQLSTATE 42P05 ("already exists").
+	cfg.DefaultQueryExecMode = pgx.QueryExecModeSimpleProtocol
+
+	db := stdlib.OpenDB(*cfg)
 
 	db.SetMaxOpenConns(25)
 	db.SetMaxIdleConns(5)

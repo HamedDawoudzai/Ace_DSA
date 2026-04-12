@@ -254,6 +254,13 @@ export default function DrillDetailScreen() {
 
             <Text style={[styles.prompt, { color: colors.text }]}>{drill.prompt}</Text>
 
+            <ExampleIOBlock
+              exampleInput={drill.example_input ?? ""}
+              exampleOutput={drill.example_output ?? ""}
+              colors={colors}
+              isDark={isDark}
+            />
+
             <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>
               Choose the optimal approach
             </Text>
@@ -316,6 +323,12 @@ export default function DrillDetailScreen() {
 
         {step === "complexity" && (
           <View>
+            <ExampleIOBlock
+              exampleInput={drill.example_input ?? ""}
+              exampleOutput={drill.example_output ?? ""}
+              colors={colors}
+              isDark={isDark}
+            />
             <View
               style={[
                 styles.referenceCard,
@@ -761,6 +774,74 @@ function FormattedText({ text, colors }: { text: string; colors: any }) {
   return <>{elements}</>;
 }
 
+function ExampleIOBlock({
+  exampleInput,
+  exampleOutput,
+  colors,
+  isDark,
+}: {
+  exampleInput: string;
+  exampleOutput: string;
+  colors: {
+    text: string;
+    textMuted: string;
+    textSecondary: string;
+    border: string;
+    surface: string;
+  };
+  isDark: boolean;
+}) {
+  const inText = exampleInput.trim();
+  const outText = exampleOutput.trim();
+  if (!inText && !outText) return null;
+
+  const monoBg = isDark ? "rgba(0,0,0,0.28)" : "rgba(0,0,0,0.045)";
+
+  return (
+    <View
+      style={[
+        styles.exampleWrap,
+        {
+          borderColor: colors.border,
+          backgroundColor: colors.surface,
+        },
+      ]}
+    >
+      <Text style={[styles.exampleHeading, { color: colors.textSecondary }]}>Example</Text>
+      {inText ? (
+        <>
+          <Text style={[styles.exampleSubLabel, { color: colors.textMuted }]}>Input</Text>
+          <Text
+            selectable
+            style={[
+              styles.exampleMono,
+              { color: colors.text, backgroundColor: monoBg },
+            ]}
+          >
+            {inText}
+          </Text>
+        </>
+      ) : null}
+      {outText ? (
+        <>
+          <Text style={[styles.exampleSubLabel, { color: colors.textMuted, marginTop: inText ? 10 : 0 }]}>
+            Output
+          </Text>
+          <Text
+            selectable
+            style={[
+              styles.exampleMono,
+              { color: colors.text, backgroundColor: monoBg },
+            ]}
+          >
+            {outText}
+          </Text>
+        </>
+      ) : null}
+    </View>
+  );
+}
+
 function HintCard({ text, isDark }: { text: string; isDark: boolean }) {
   return (
     <View
@@ -786,7 +867,36 @@ const styles = StyleSheet.create({
   categoryText: { fontSize: 11, fontWeight: "700", textTransform: "uppercase", letterSpacing: 0.8 },
   difficultyBadge: { borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4 },
   difficultyText: { fontSize: 11, fontWeight: "700", textTransform: "capitalize" },
-  prompt: { fontSize: 20, fontWeight: "700", lineHeight: 28, marginBottom: 20 },
+  prompt: { fontSize: 20, fontWeight: "700", lineHeight: 28, marginBottom: 14 },
+  exampleWrap: {
+    borderRadius: 14,
+    borderWidth: 1,
+    padding: 14,
+    marginBottom: 18,
+  },
+  exampleHeading: {
+    fontSize: 12,
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 0.6,
+    marginBottom: 10,
+  },
+  exampleSubLabel: {
+    fontSize: 11,
+    fontWeight: "600",
+    textTransform: "uppercase",
+    letterSpacing: 0.4,
+    marginBottom: 6,
+  },
+  exampleMono: {
+    fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
+    fontSize: 13,
+    lineHeight: 20,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    overflow: "hidden",
+  },
   sectionLabel: { fontSize: 13, fontWeight: "600", marginBottom: 14 },
   choice: {
     borderRadius: 14,

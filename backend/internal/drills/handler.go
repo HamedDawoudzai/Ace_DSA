@@ -29,6 +29,8 @@ type Drill struct {
 	ComplexityHint       string   `json:"complexity_hint"`
 	ProblemNumber        int      `json:"problem_number"`
 	Explanation          string   `json:"explanation"`
+	ExampleInput         string   `json:"example_input"`
+	ExampleOutput        string   `json:"example_output"`
 }
 
 type Category struct {
@@ -57,7 +59,7 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 			`SELECT id, pattern_category, prompt, choices, correct_option,
 			        hint, difficulty, time_complexity, space_complexity,
 			        complexity_choices, correct_complexity_option, complexity_hint,
-			        problem_number, explanation
+			        problem_number, explanation, example_input, example_output
 			 FROM drills WHERE pattern_category = $1
 			 ORDER BY problem_number, created_at`, category)
 	} else {
@@ -65,7 +67,7 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 			`SELECT id, pattern_category, prompt, choices, correct_option,
 			        hint, difficulty, time_complexity, space_complexity,
 			        complexity_choices, correct_complexity_option, complexity_hint,
-			        problem_number, explanation
+			        problem_number, explanation, example_input, example_output
 			 FROM drills ORDER BY problem_number, created_at`)
 	}
 	if err != nil {
@@ -81,7 +83,7 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 		if err := rows.Scan(&d.ID, &d.PatternCategory, &d.Prompt, &choicesJSON, &d.CorrectOption,
 			&d.Hint, &d.Difficulty, &d.TimeComplexity, &d.SpaceComplexity,
 			&complexJSON, &d.CorrectComplexOption, &d.ComplexityHint,
-			&d.ProblemNumber, &d.Explanation); err != nil {
+			&d.ProblemNumber, &d.Explanation, &d.ExampleInput, &d.ExampleOutput); err != nil {
 			http.Error(w, "internal error", http.StatusInternalServerError)
 			return
 		}
@@ -184,12 +186,12 @@ func (h *Handler) GetByID(w http.ResponseWriter, r *http.Request) {
 		`SELECT id, pattern_category, prompt, choices, correct_option,
 		        hint, difficulty, time_complexity, space_complexity,
 		        complexity_choices, correct_complexity_option, complexity_hint,
-		        problem_number, explanation
+		        problem_number, explanation, example_input, example_output
 		 FROM drills WHERE id = $1`, id,
 	).Scan(&d.ID, &d.PatternCategory, &d.Prompt, &choicesJSON, &d.CorrectOption,
 		&d.Hint, &d.Difficulty, &d.TimeComplexity, &d.SpaceComplexity,
 		&complexJSON, &d.CorrectComplexOption, &d.ComplexityHint,
-		&d.ProblemNumber, &d.Explanation)
+		&d.ProblemNumber, &d.Explanation, &d.ExampleInput, &d.ExampleOutput)
 	if err == sql.ErrNoRows {
 		http.Error(w, "drill not found", http.StatusNotFound)
 		return

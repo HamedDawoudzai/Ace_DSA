@@ -28,6 +28,18 @@ type Problem struct {
 	ComplexityHint       string   `json:"complexity_hint"`
 	ProblemNumber        int      `json:"problem_number"`
 	Explanation          string   `json:"explanation"`
+	ExampleInput         string   `json:"example_input"`
+	ExampleOutput        string   `json:"example_output"`
+}
+
+// jsonStr marshals v to JSON text for JSONB columns. Using string avoids pgx/database/sql
+// sending []byte as BYTEA, which triggers "invalid input syntax for type json" (22P02).
+func jsonStr(v any) string {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return "null"
+	}
+	return string(b)
 }
 
 func main() {
@@ -65,8 +77,8 @@ func main() {
 
 	inserted, skipped := 0, 0
 	for _, p := range problems {
-		choicesJSON, _ := json.Marshal(p.Choices)
-		complexJSON, _ := json.Marshal(p.ComplexityChoices)
+		choicesS := jsonStr(p.Choices)
+		complexS := jsonStr(p.ComplexityChoices)
 
 		var exists bool
 		err := database.QueryRow(
@@ -87,12 +99,12 @@ func main() {
 				(pattern_category, prompt, choices, correct_option, hint,
 				 difficulty, time_complexity, space_complexity,
 				 complexity_choices, correct_complexity_option, complexity_hint,
-				 problem_number, explanation)
-			 VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)`,
-			p.PatternCategory, p.Prompt, choicesJSON, p.CorrectOption, p.Hint,
+				 problem_number, explanation, example_input, example_output)
+			 VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)`,
+			p.PatternCategory, p.Prompt, choicesS, p.CorrectOption, p.Hint,
 			p.Difficulty, p.TimeComplexity, p.SpaceComplexity,
-			complexJSON, p.CorrectComplexOption, p.ComplexityHint,
-			p.ProblemNumber, p.Explanation,
+			complexS, p.CorrectComplexOption, p.ComplexityHint,
+			p.ProblemNumber, p.Explanation, p.ExampleInput, p.ExampleOutput,
 		)
 		if err != nil {
 			log.Printf("insert #%d (%s): %v", p.ProblemNumber, p.Prompt[:min(40, len(p.Prompt))], err)
@@ -112,8 +124,8 @@ func updateAllFields(database *sql.DB, problems []Problem) {
 	log.Printf("updating drills fields for %d problems...", len(problems))
 	updated := 0
 	for _, p := range problems {
-		choicesJSON, _ := json.Marshal(p.Choices)
-		complexJSON, _ := json.Marshal(p.ComplexityChoices)
+		choicesS := jsonStr(p.Choices)
+		complexS := jsonStr(p.ComplexityChoices)
 
 		res, err := database.Exec(
 			`UPDATE drills
@@ -127,12 +139,14 @@ func updateAllFields(database *sql.DB, problems []Problem) {
 			     complexity_choices = $8,
 			     correct_complexity_option = $9,
 			     complexity_hint = $10,
-			     explanation = $11
-			 WHERE pattern_category = $12 AND problem_number = $13`,
-			p.Prompt, choicesJSON, p.CorrectOption, p.Hint,
+			     explanation = $11,
+			     example_input = $12,
+			     example_output = $13
+			 WHERE pattern_category = $14 AND problem_number = $15`,
+			p.Prompt, choicesS, p.CorrectOption, p.Hint,
 			p.Difficulty, p.TimeComplexity, p.SpaceComplexity,
-			complexJSON, p.CorrectComplexOption, p.ComplexityHint,
-			p.Explanation,
+			complexS, p.CorrectComplexOption, p.ComplexityHint,
+			p.Explanation, p.ExampleInput, p.ExampleOutput,
 			p.PatternCategory, p.ProblemNumber,
 		)
 		if err != nil {
@@ -153,19 +167,19 @@ func clearAndReseed(database *sql.DB, problems []Problem) {
 	database.Exec(`DELETE FROM drills`)
 
 	for _, p := range problems {
-		choicesJSON, _ := json.Marshal(p.Choices)
-		complexJSON, _ := json.Marshal(p.ComplexityChoices)
+		choicesS := jsonStr(p.Choices)
+		complexS := jsonStr(p.ComplexityChoices)
 		database.Exec(
 			`INSERT INTO drills
 				(pattern_category, prompt, choices, correct_option, hint,
 				 difficulty, time_complexity, space_complexity,
 				 complexity_choices, correct_complexity_option, complexity_hint,
-				 problem_number, explanation)
-			 VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)`,
-			p.PatternCategory, p.Prompt, choicesJSON, p.CorrectOption, p.Hint,
+				 problem_number, explanation, example_input, example_output)
+			 VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)`,
+			p.PatternCategory, p.Prompt, choicesS, p.CorrectOption, p.Hint,
 			p.Difficulty, p.TimeComplexity, p.SpaceComplexity,
-			complexJSON, p.CorrectComplexOption, p.ComplexityHint,
-			p.ProblemNumber, p.Explanation,
+			complexS, p.CorrectComplexOption, p.ComplexityHint,
+			p.ProblemNumber, p.Explanation, p.ExampleInput, p.ExampleOutput,
 		)
 	}
 }

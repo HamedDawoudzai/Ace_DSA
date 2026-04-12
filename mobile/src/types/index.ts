@@ -36,6 +36,8 @@ export interface Drill {
   complexity_hint: string;
   problem_number: number;
   explanation: string;
+  example_input: string;
+  example_output: string;
 }
 
 export interface DrillCategory {
