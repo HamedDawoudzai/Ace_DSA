@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
+import { useFocusEffect } from "@react-navigation/native";
 import {
   View,
   Text,
@@ -9,12 +10,15 @@ import {
   TouchableOpacity,
   Alert,
   Pressable,
+  ScrollView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import Svg, { Circle } from "react-native-svg";
 import api from "../services/api";
 import { StatsResponse, CategoryStats } from "../types";
 import { useTheme } from "../context/ThemeContext";
+import { DATA_STRUCTURE_TOPICS, ALGO_TOPICS } from "../data/learnTopics";
+import { getVisitedIds } from "../services/learnProgress";
 
 const RING_SIZE = 160;
 const STROKE_WIDTH = 14;
@@ -59,6 +63,231 @@ function ProgressRing({
   );
 }
 
+// ─── DS / Algo Progression Timeline ──────────────────────────────────────────
+
+const DS_TOPICS = DATA_STRUCTURE_TOPICS.slice().sort((a, b) => a.level - b.level);
+const ALGO_TOPICS_SORTED = ALGO_TOPICS.slice().sort((a, b) => a.level - b.level);
+
+function ProgressionTimeline({
+  topics,
+  visitedIds,
+  label,
+}: {
+  topics: typeof DS_TOPICS;
+  visitedIds: Set<string>;
+  label: string;
+}) {
+  const { colors, isDark } = useTheme();
+  const [expanded, setExpanded] = useState(false);
+  const visited = topics.filter((t) => visitedIds.has(t.id)).length;
+
+  return (
+    <View
+      style={[
+        timelineStyles.card,
+        {
+          backgroundColor: colors.surface,
+          borderColor: colors.border,
+          shadowColor: isDark ? colors.accent : "#000",
+          shadowOpacity: isDark ? 0.08 : 0.05,
+          shadowRadius: 10,
+          shadowOffset: { width: 0, height: 3 },
+          elevation: 3,
+        },
+      ]}
+    >
+      <Pressable
+        onPress={() => setExpanded((v) => !v)}
+        style={timelineStyles.header}
+      >
+        <View style={timelineStyles.headerLeft}>
+          <View
+            style={[
+              timelineStyles.iconBox,
+              { backgroundColor: colors.accentSubtle },
+            ]}
+          >
+            <Ionicons
+              name={label === "Data Structures" ? "layers-outline" : "git-branch-outline"}
+              size={16}
+              color={colors.accent}
+            />
+          </View>
+          <View>
+            <Text style={[timelineStyles.cardTitle, { color: colors.text }]}>
+              {label}
+            </Text>
+            <Text style={[timelineStyles.cardSub, { color: colors.textMuted }]}>
+              {visited}/{topics.length} visited
+            </Text>
+          </View>
+        </View>
+        <View style={[timelineStyles.progressPill, { backgroundColor: colors.accentSubtle, borderColor: colors.accent }]}>
+          <Text style={[timelineStyles.progressPillText, { color: colors.accent }]}>
+            {Math.round((visited / topics.length) * 100)}%
+          </Text>
+        </View>
+        <Ionicons
+          name={expanded ? "chevron-up" : "chevron-down"}
+          size={18}
+          color={colors.textMuted}
+          style={{ marginLeft: 8 }}
+        />
+      </Pressable>
+
+      {expanded && (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={timelineStyles.dotScroll}
+        >
+          {topics.map((topic, i) => {
+            const isVisited = visitedIds.has(topic.id);
+            const prevVisited = i > 0 && visitedIds.has(topics[i - 1].id);
+            return (
+              <View key={topic.id} style={timelineStyles.dotItem}>
+                {/* Connector line */}
+                {i > 0 && (
+                  <View
+                    style={[
+                      timelineStyles.connectorLine,
+                      {
+                        backgroundColor:
+                          isVisited && prevVisited
+                            ? colors.accent
+                            : colors.border,
+                        opacity: isVisited && prevVisited ? 0.7 : 0.4,
+                      },
+                    ]}
+                  />
+                )}
+                {/* Dot */}
+                <View style={timelineStyles.dotCol}>
+                  <View
+                    style={[
+                      timelineStyles.dot,
+                      {
+                        backgroundColor: isVisited ? colors.accent : "transparent",
+                        borderColor: isVisited ? colors.accent : colors.border,
+                        shadowColor: colors.accent,
+                        shadowOpacity: isVisited ? 0.6 : 0,
+                        shadowRadius: 5,
+                        shadowOffset: { width: 0, height: 0 },
+                      },
+                    ]}
+                  >
+                    {isVisited && (
+                      <Ionicons name="checkmark" size={9} color={colors.accentText} />
+                    )}
+                  </View>
+                  <Text
+                    style={[timelineStyles.dotLabel, { color: isVisited ? colors.accent : colors.textMuted }]}
+                    numberOfLines={2}
+                  >
+                    {topic.title}
+                  </Text>
+                  <Text style={[timelineStyles.dotStep, { color: colors.border }]}>
+                    {topic.level}
+                  </Text>
+                </View>
+              </View>
+            );
+          })}
+        </ScrollView>
+      )}
+    </View>
+  );
+}
+
+const timelineStyles = StyleSheet.create({
+  card: {
+    marginHorizontal: 16,
+    marginBottom: 12,
+    borderRadius: 16,
+    borderWidth: 1,
+    overflow: "hidden",
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 14,
+    gap: 10,
+  },
+  headerLeft: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  iconBox: {
+    width: 32,
+    height: 32,
+    borderRadius: 9,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  cardTitle: {
+    fontSize: 14,
+    fontWeight: "700",
+  },
+  cardSub: {
+    fontSize: 12,
+    marginTop: 1,
+  },
+  progressPill: {
+    borderRadius: 999,
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+  },
+  progressPillText: {
+    fontSize: 12,
+    fontWeight: "800",
+  },
+  dotScroll: {
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+    alignItems: "flex-start",
+  },
+  dotItem: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  connectorLine: {
+    width: 24,
+    height: 2,
+    borderRadius: 1,
+    marginTop: -28,
+  },
+  dotCol: {
+    alignItems: "center",
+    width: 60,
+  },
+  dot: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 1.5,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 6,
+  },
+  dotLabel: {
+    fontSize: 9,
+    fontWeight: "600",
+    textAlign: "center",
+    letterSpacing: 0.1,
+    lineHeight: 12,
+  },
+  dotStep: {
+    fontSize: 9,
+    fontWeight: "700",
+    marginTop: 3,
+  },
+});
+
+// ─── Main Screen ──────────────────────────────────────────────────────────────
+
 export default function StatsScreen() {
   const { colors, isDark } = useTheme();
   const [stats, setStats] = useState<StatsResponse | null>(null);
@@ -66,6 +295,7 @@ export default function StatsScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [resetting, setResetting] = useState(false);
+  const [visitedIds, setVisitedIds] = useState<Set<string>>(new Set());
 
   const handleResetProgress = useCallback(() => {
     Alert.alert(
@@ -115,9 +345,17 @@ export default function StatsScreen() {
     fetchStats();
   }, [fetchStats]);
 
+  // Reload visited IDs every time this tab comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      getVisitedIds().then(setVisitedIds);
+    }, [])
+  );
+
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     fetchStats();
+    getVisitedIds().then(setVisitedIds);
   }, [fetchStats]);
 
   if (loading) {
@@ -278,6 +516,23 @@ export default function StatsScreen() {
           </Text>
         </View>
       </View>
+
+      <View style={styles.sectionHeader}>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>
+          Learning Progression
+        </Text>
+      </View>
+
+      <ProgressionTimeline
+        topics={DS_TOPICS}
+        visitedIds={visitedIds}
+        label="Data Structures"
+      />
+      <ProgressionTimeline
+        topics={ALGO_TOPICS_SORTED}
+        visitedIds={visitedIds}
+        label="Algorithms"
+      />
 
       <View style={styles.sectionHeader}>
         <Text style={[styles.sectionTitle, { color: colors.text }]}>

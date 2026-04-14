@@ -1,5 +1,8 @@
-import React from "react";
-import { createBottomTabNavigator, BottomTabBarProps } from "@react-navigation/bottom-tabs";
+import React, { useRef, useEffect } from "react";
+import {
+  createBottomTabNavigator,
+  BottomTabBarProps,
+} from "@react-navigation/bottom-tabs";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 import {
@@ -8,6 +11,7 @@ import {
   View,
   StyleSheet,
   Platform,
+  Animated,
 } from "react-native";
 
 import HomeScreen from "../screens/HomeScreen";
@@ -83,8 +87,6 @@ export type TabParamList = {
 
 const Tab = createBottomTabNavigator<TabParamList>();
 
-// ProfileTab uses the dedicated ProfileScreen
-
 // ─── Custom Tab Bar ────────────────────────────────────────────────────────────
 
 const TAB_CONFIG: Record<
@@ -101,18 +103,61 @@ const TAB_CONFIG: Record<
     active: "stats-chart",
     inactive: "stats-chart-outline",
   },
-  ProfileTab: { label: "Profile", active: "person", inactive: "person-outline" },
+  ProfileTab: {
+    label: "Profile",
+    active: "person",
+    inactive: "person-outline",
+  },
 };
 
+const TAB_COUNT = Object.keys(TAB_CONFIG).length;
+
 function CustomTabBar({ state, navigation }: BottomTabBarProps) {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
+
+  // Per-tab spring scale for the active pill indicator
+  const pillScales = useRef(
+    Array.from({ length: TAB_COUNT }, (_, i) =>
+      new Animated.Value(state.index === i ? 1.1 : 1.0)
+    )
+  ).current;
+
+  // Per-tab icon opacity for cross-fade feel
+  const iconOpacities = useRef(
+    Array.from({ length: TAB_COUNT }, (_, i) =>
+      new Animated.Value(state.index === i ? 1.0 : 0.55)
+    )
+  ).current;
+
+  useEffect(() => {
+    pillScales.forEach((anim, index) => {
+      Animated.spring(anim, {
+        toValue: state.index === index ? 1.1 : 1.0,
+        friction: 5,
+        tension: 160,
+        useNativeDriver: true,
+      }).start();
+    });
+    iconOpacities.forEach((anim, index) => {
+      Animated.timing(anim, {
+        toValue: state.index === index ? 1.0 : 0.55,
+        duration: 180,
+        useNativeDriver: true,
+      }).start();
+    });
+  }, [state.index]);
+
+  // Semi-transparent frosted-glass style background
+  const tabBarBg = isDark
+    ? "rgba(10, 10, 10, 0.95)"
+    : "rgba(255, 255, 255, 0.93)";
 
   return (
     <View
       style={[
         tabStyles.bar,
         {
-          backgroundColor: colors.tabBar,
+          backgroundColor: tabBarBg,
           borderTopColor: colors.tabBarBorder,
         },
       ]}
@@ -120,6 +165,8 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
       {state.routes.map((route, index) => {
         const isFocused = state.index === index;
         const cfg = TAB_CONFIG[route.name];
+        const pillScale = pillScales[index];
+        const iconOpacity = iconOpacities[index];
 
         const onPress = () => {
           if (!isFocused) {
@@ -134,18 +181,30 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
             style={tabStyles.item}
             android_ripple={{ color: "transparent" }}
           >
-            <View
+            <Animated.View
               style={[
                 tabStyles.pill,
-                isFocused && { backgroundColor: colors.accentSubtle },
+                isFocused && {
+                  backgroundColor: colors.accentSubtle,
+                  // Accent glow on active pill in dark mode
+                  ...(isDark && {
+                    shadowColor: colors.accent,
+                    shadowOpacity: 0.3,
+                    shadowRadius: 8,
+                    shadowOffset: { width: 0, height: 0 },
+                  }),
+                },
+                { transform: [{ scale: pillScale }] },
               ]}
             >
-              <Ionicons
-                name={isFocused ? cfg.active : cfg.inactive}
-                size={22}
-                color={isFocused ? colors.accent : colors.textMuted}
-              />
-            </View>
+              <Animated.View style={{ opacity: iconOpacity }}>
+                <Ionicons
+                  name={isFocused ? cfg.active : cfg.inactive}
+                  size={22}
+                  color={isFocused ? colors.accent : colors.textMuted}
+                />
+              </Animated.View>
+            </Animated.View>
             <Text
               style={[
                 tabStyles.label,
@@ -178,7 +237,7 @@ const tabStyles = StyleSheet.create({
     gap: 4,
   },
   pill: {
-    width: 52,
+    width: 54,
     height: 34,
     borderRadius: 12,
     alignItems: "center",

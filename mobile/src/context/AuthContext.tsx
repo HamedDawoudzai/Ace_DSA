@@ -1,7 +1,10 @@
 import React, { createContext, useContext, useEffect, useReducer } from "react";
+import axios from "axios";
 import * as storage from "../services/storage";
 import api from "../services/api";
-import { TokenResponse, SignupRequest, LoginRequest } from "../types";
+import { getApiBaseUrl } from "../config";
+import { accessTokenNeedsRefresh } from "../utils/jwt";
+import { TokenResponse, SignupRequest, LoginRequest, RefreshRequest } from "../types";
 
 interface AuthState {
   isLoading: boolean;
@@ -82,8 +85,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     (async () => {
       try {
-        const token = await storage.getItem("access_token");
-        dispatch({ type: "RESTORE_TOKEN", token });
+        const access = await storage.getItem("access_token");
+        const refresh = await storage.getItem("refresh_token");
+        const base = getApiBaseUrl();
+
+        if (!access && !refresh) {
+          dispatch({ type: "RESTORE_TOKEN", token: null });
+          return;
+        }
+
+        if (refresh && accessTokenNeedsRefresh(access)) {
+          try {
+            const body: RefreshRequest = { refresh_token: refresh };
+            const { data } = await axios.post<TokenResponse>(`${base}/auth/refresh`, body, {
+              headers: { "Content-Type": "application/json" },
+              timeout: 15000,
+            });
+            await storeTokens(data);
+            dispatch({ type: "RESTORE_TOKEN", token: data.access_token });
+            return;
+          } catch {
+            await storage.deleteItem("access_token");
+            await storage.deleteItem("refresh_token");
+            dispatch({ type: "RESTORE_TOKEN", token: null });
+            return;
+          }
+        }
+
+        if (!refresh && accessTokenNeedsRefresh(access)) {
+          await storage.deleteItem("access_token");
+          dispatch({ type: "RESTORE_TOKEN", token: null });
+          return;
+        }
+
+        dispatch({ type: "RESTORE_TOKEN", token: access });
       } catch {
         await storage.deleteItem("access_token");
         await storage.deleteItem("refresh_token");

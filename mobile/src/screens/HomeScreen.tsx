@@ -1,5 +1,5 @@
-import React from "react";
-import { View, Text, StyleSheet, SafeAreaView } from "react-native";
+import React, { useEffect, useRef } from "react";
+import { View, Text, StyleSheet, SafeAreaView, Animated } from "react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
@@ -19,8 +19,28 @@ function getGreeting(): { text: string; icon: keyof typeof Ionicons.glyphMap } {
 export default function HomeScreen() {
   const navigation =
     useNavigation<NativeStackNavigationProp<MainStackParamList>>();
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const { text: greetingText, icon: greetingIcon } = getGreeting();
+
+  // Greeting fade-in + slide-up on mount
+  const greetingOpacity = useRef(new Animated.Value(0)).current;
+  const greetingTranslateY = useRef(new Animated.Value(16)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(greetingOpacity, {
+        toValue: 1,
+        duration: 700,
+        useNativeDriver: true,
+      }),
+      Animated.spring(greetingTranslateY, {
+        toValue: 0,
+        friction: 7,
+        tension: 50,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
 
   return (
     <SafeAreaView
@@ -28,24 +48,59 @@ export default function HomeScreen() {
     >
       {/* Header */}
       <View style={styles.header}>
-        <View style={styles.greetingBlock}>
+        <Animated.View
+          style={[
+            styles.greetingBlock,
+            {
+              opacity: greetingOpacity,
+              transform: [{ translateY: greetingTranslateY }],
+            },
+          ]}
+        >
           <View style={styles.greetingRow}>
-            <Text style={[styles.greeting, { color: colors.text }]}>
+            <Text
+              style={[
+                styles.greeting,
+                { color: colors.text },
+                isDark && {
+                  textShadowColor: "rgba(13,217,196,0.25)",
+                  textShadowOffset: { width: 0, height: 0 },
+                  textShadowRadius: 10,
+                },
+              ]}
+            >
               {greetingText}
             </Text>
-            <Ionicons name={greetingIcon} size={20} color={colors.accent} />
+            <Ionicons name={greetingIcon} size={22} color={colors.accent} />
           </View>
-          <Text style={[styles.headerSub, { color: colors.textMuted }]}>
+          <Text
+            style={[
+              styles.headerSub,
+              { color: colors.textMuted, letterSpacing: 0.15 },
+            ]}
+          >
             Let's practice some DSA today
           </Text>
-        </View>
+        </Animated.View>
         <ThemeToggle />
       </View>
 
       {/* Hero */}
       <View style={styles.hero}>
         <SpinningLogo size={176} />
-        <Text style={[styles.appName, { color: colors.accent }]}>Ace DSA</Text>
+        <Text
+          style={[
+            styles.appName,
+            { color: colors.accent },
+            isDark && {
+              textShadowColor: "rgba(13,217,196,0.35)",
+              textShadowOffset: { width: 0, height: 0 },
+              textShadowRadius: 16,
+            },
+          ]}
+        >
+          Ace DSA
+        </Text>
       </View>
 
       {/* Cards */}
@@ -76,7 +131,7 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     justifyContent: "space-between",
     paddingHorizontal: 24,
-    paddingTop: 16,
+    paddingTop: 18,
     paddingBottom: 4,
   },
   greetingBlock: {
@@ -85,17 +140,17 @@ const styles = StyleSheet.create({
   greetingRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
+    gap: 7,
   },
   greeting: {
-    fontSize: 22,
+    fontSize: 26,
     fontWeight: "800",
-    letterSpacing: -0.4,
+    letterSpacing: -0.5,
   },
   headerSub: {
     fontSize: 13,
     fontWeight: "500",
-    marginTop: 3,
+    marginTop: 5,
   },
   hero: {
     flex: 1,
@@ -104,14 +159,14 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
   },
   appName: {
-    fontSize: 38,
+    fontSize: 40,
     fontWeight: "900",
-    letterSpacing: -0.8,
-    marginTop: 6,
+    letterSpacing: -1,
+    marginTop: 10,
   },
   cards: {
     paddingHorizontal: 24,
-    paddingBottom: 32,
-    gap: 12,
+    paddingBottom: 36,
+    gap: 14,
   },
 });

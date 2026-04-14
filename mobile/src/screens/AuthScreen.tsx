@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -10,7 +10,6 @@ import {
   Platform,
   ScrollView,
   Animated,
-  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../context/AuthContext";
@@ -42,7 +41,13 @@ function checkPassword(pw: string): PasswordChecks {
 }
 
 function allPassed(checks: PasswordChecks): boolean {
-  return checks.length && checks.upper && checks.lower && checks.digit && checks.special;
+  return (
+    checks.length &&
+    checks.upper &&
+    checks.lower &&
+    checks.digit &&
+    checks.special
+  );
 }
 
 function normalizeIdentifier(identifier: string): string {
@@ -80,13 +85,56 @@ export default function AuthScreen() {
 
   const logoRef = useRef<SpinningLogoHandle>(null);
   const btnScale = useRef(new Animated.Value(1)).current;
+  const shimmerX = useRef(new Animated.Value(-150)).current;
 
-  const inputBg = isDark ? "rgba(21, 27, 46, 0.6)" : "rgba(0, 0, 0, 0.04)";
+  // Tagline fade-in on mount
+  const taglineOpacity = useRef(new Animated.Value(0)).current;
+  const taglineTranslateY = useRef(new Animated.Value(10)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(taglineOpacity, {
+        toValue: 1,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+      Animated.spring(taglineTranslateY, {
+        toValue: 0,
+        friction: 7,
+        tension: 50,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
+
+  // Shimmer sweep loop on the login button
+  useEffect(() => {
+    shimmerX.setValue(-150);
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.delay(2800),
+        Animated.timing(shimmerX, {
+          toValue: 500,
+          duration: 950,
+          useNativeDriver: true,
+        }),
+        Animated.timing(shimmerX, {
+          toValue: -150,
+          duration: 0,
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, []);
+
+  const inputBg = isDark ? "rgba(17, 17, 17, 0.95)" : "rgba(0, 0, 0, 0.04)";
   const inputBorder = isDark
-    ? "rgba(45, 212, 191, 0.18)"
+    ? "rgba(13, 217, 196, 0.20)"
     : "rgba(0, 0, 0, 0.1)";
   const accentGlow = isDark
-    ? "rgba(45, 212, 191, 0.15)"
+    ? "rgba(13, 217, 196, 0.15)"
     : "rgba(245, 200, 66, 0.25)";
   const pwChecks = checkPassword(signupPassword);
   const pwValid = allPassed(pwChecks);
@@ -130,7 +178,7 @@ export default function AuthScreen() {
     } catch (error: unknown) {
       const message = getAuthErrorMessage(
         error,
-        "We couldn’t sign you in. Please try again."
+        "We couldn't sign you in. Please try again."
       );
       notify({
         type: "error",
@@ -161,14 +209,18 @@ export default function AuthScreen() {
       return;
     }
     if (!signupEmail.trim()) {
-      notify({ type: "error", title: "Missing details", message: "Email is required." });
+      notify({
+        type: "error",
+        title: "Missing details",
+        message: "Email is required.",
+      });
       return;
     }
     if (!pwValid) {
       notify({
         type: "error",
         title: "Weak password",
-        message: "Your password doesn’t meet the requirements.",
+        message: "Your password doesn't meet the requirements.",
       });
       return;
     }
@@ -185,7 +237,7 @@ export default function AuthScreen() {
     } catch (error: unknown) {
       const message = getAuthErrorMessage(
         error,
-        "We couldn’t create your account. Please try again."
+        "We couldn't create your account. Please try again."
       );
       notify({
         type: "error",
@@ -201,34 +253,62 @@ export default function AuthScreen() {
     if (loading) return;
     if (forgotStep === "email") {
       if (!forgotEmail.trim()) {
-        notify({ type: "error", title: "Missing email", message: "Enter your email address." });
+        notify({
+          type: "error",
+          title: "Missing email",
+          message: "Enter your email address.",
+        });
         return;
       }
       setLoading(true);
       try {
-        const { data } = await api.post("/auth/forgot-password", { email: forgotEmail.trim().toLowerCase() });
+        const { data } = await api.post("/auth/forgot-password", {
+          email: forgotEmail.trim().toLowerCase(),
+        });
         if (data.token) {
           setResetToken(data.token);
           setForgotStep("reset");
-          notify({ type: "success", title: "Token generated", message: "Enter the token and your new password." });
+          notify({
+            type: "success",
+            title: "Token generated",
+            message: "Enter the token and your new password.",
+          });
         } else {
-          notify({ type: "info", title: "Check your email", message: data.status || "If that email exists, a reset was sent." });
+          notify({
+            type: "info",
+            title: "Check your email",
+            message: data.status || "If that email exists, a reset was sent.",
+          });
         }
       } catch (error: unknown) {
-        const message = getAuthErrorMessage(error, "Could not process reset request.");
+        const message = getAuthErrorMessage(
+          error,
+          "Could not process reset request."
+        );
         notify({ type: "error", title: "Error", message });
       } finally {
         setLoading(false);
       }
     } else {
       if (!resetToken.trim() || !newPassword) {
-        notify({ type: "error", title: "Missing fields", message: "Token and new password are required." });
+        notify({
+          type: "error",
+          title: "Missing fields",
+          message: "Token and new password are required.",
+        });
         return;
       }
       setLoading(true);
       try {
-        await api.post("/auth/reset-password", { token: resetToken.trim(), new_password: newPassword });
-        notify({ type: "success", title: "Password reset!", message: "You can now log in with your new password." });
+        await api.post("/auth/reset-password", {
+          token: resetToken.trim(),
+          new_password: newPassword,
+        });
+        notify({
+          type: "success",
+          title: "Password reset!",
+          message: "You can now log in with your new password.",
+        });
         setMode("login");
         setForgotStep("email");
         setForgotEmail("");
@@ -243,7 +323,12 @@ export default function AuthScreen() {
     }
   };
 
-  const handleSubmit = mode === "login" ? handleLogin : mode === "signup" ? handleSignup : handleForgotPassword;
+  const handleSubmit =
+    mode === "login"
+      ? handleLogin
+      : mode === "signup"
+      ? handleSignup
+      : handleForgotPassword;
 
   const renderCheck = (label: string, passed: boolean) => (
     <View style={styles.checkRow} key={label}>
@@ -263,7 +348,6 @@ export default function AuthScreen() {
     </View>
   );
 
-  // Web: tame autofill / focus chrome on inputs (password uses same full field as email).
   const webFieldChrome =
     Platform.OS === "web"
       ? ({
@@ -275,9 +359,27 @@ export default function AuthScreen() {
 
   const inputStyle = [
     styles.input,
-    { backgroundColor: inputBg, borderColor: inputBorder, color: colors.inputText },
+    {
+      backgroundColor: inputBg,
+      borderColor: inputBorder,
+      color: colors.inputText,
+    },
     webFieldChrome,
   ];
+
+  const buttonLabel =
+    mode === "login"
+      ? "LOG IN"
+      : mode === "signup"
+      ? "SIGN UP"
+      : forgotStep === "email"
+      ? "SEND RESET TOKEN"
+      : "RESET PASSWORD";
+
+  // Shimmer tint: white in both modes, just slightly more transparent in light
+  const shimmerColor = isDark
+    ? "rgba(255,255,255,0.22)"
+    : "rgba(255,255,255,0.38)";
 
   return (
     <KeyboardAvoidingView
@@ -298,13 +400,24 @@ export default function AuthScreen() {
             <SpinningLogo ref={logoRef} size={260} />
           </View>
 
-          <Text style={[styles.tagline, { color: colors.textSecondary }]}>
+          {/* Tagline with fade-in */}
+          <Animated.Text
+            style={[
+              styles.tagline,
+              {
+                color: colors.textSecondary,
+                opacity: taglineOpacity,
+                transform: [{ translateY: taglineTranslateY }],
+              },
+            ]}
+          >
             {mode === "login"
               ? "Log in to practice DSA drills\nand ace your interviews"
               : mode === "signup"
               ? "Create your account to get started"
               : "Reset your password"}
-          </Text>
+          </Animated.Text>
+
           <View style={styles.form}>
             {mode === "forgot" && (
               <>
@@ -349,7 +462,9 @@ export default function AuthScreen() {
                         hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                       >
                         <Ionicons
-                          name={showNewPassword ? "eye-off-outline" : "eye-outline"}
+                          name={
+                            showNewPassword ? "eye-off-outline" : "eye-outline"
+                          }
                           size={18}
                           color={colors.textMuted}
                         />
@@ -408,7 +523,9 @@ export default function AuthScreen() {
                   keyboardType="email-address"
                   textContentType="username"
                   value={mode === "login" ? identifier : signupEmail}
-                  onChangeText={mode === "login" ? setIdentifier : setSignupEmail}
+                  onChangeText={
+                    mode === "login" ? setIdentifier : setSignupEmail
+                  }
                   returnKeyType="next"
                 />
 
@@ -417,11 +534,19 @@ export default function AuthScreen() {
                     style={[inputStyle, styles.passwordInputFull]}
                     placeholder="PASSWORD"
                     placeholderTextColor={colors.placeholderText}
-                    secureTextEntry={mode === "login" ? !showLoginPassword : !showSignupPassword}
+                    secureTextEntry={
+                      mode === "login" ? !showLoginPassword : !showSignupPassword
+                    }
                     value={mode === "login" ? password : signupPassword}
-                    onChangeText={mode === "login" ? setPassword : setSignupPassword}
-                    textContentType={mode === "signup" ? "newPassword" : "password"}
-                    autoComplete={mode === "signup" ? "password-new" : "current-password"}
+                    onChangeText={
+                      mode === "login" ? setPassword : setSignupPassword
+                    }
+                    textContentType={
+                      mode === "signup" ? "newPassword" : "password"
+                    }
+                    autoComplete={
+                      mode === "signup" ? "password-new" : "current-password"
+                    }
                     returnKeyType={mode === "login" ? "go" : "done"}
                     onSubmitEditing={handleSubmit}
                   />
@@ -441,8 +566,8 @@ export default function AuthScreen() {
                             ? "eye-off-outline"
                             : "eye-outline"
                           : showSignupPassword
-                            ? "eye-off-outline"
-                            : "eye-outline"
+                          ? "eye-off-outline"
+                          : "eye-outline"
                       }
                       size={18}
                       color={colors.textMuted}
@@ -477,6 +602,7 @@ export default function AuthScreen() {
               </Pressable>
             )}
 
+            {/* Submit button with shimmer */}
             <Animated.View style={{ transform: [{ scale: btnScale }] }}>
               <Pressable
                 style={({ pressed }) => [
@@ -484,6 +610,11 @@ export default function AuthScreen() {
                   {
                     backgroundColor: colors.accent,
                     opacity: pressed ? 0.88 : loading ? 0.65 : 1,
+                    shadowColor: colors.accent,
+                    shadowOpacity: isDark ? 0.4 : 0.25,
+                    shadowRadius: isDark ? 14 : 6,
+                    shadowOffset: { width: 0, height: 4 },
+                    elevation: 6,
                   },
                 ]}
                 onPress={handleSubmit}
@@ -494,9 +625,32 @@ export default function AuthScreen() {
                 {loading ? (
                   <ActivityIndicator color={colors.accentText} />
                 ) : (
-                  <Text style={[styles.submitText, { color: colors.accentText }]}>
-                    {mode === "login" ? "LOG IN" : mode === "signup" ? "SIGN UP" : forgotStep === "email" ? "SEND RESET TOKEN" : "RESET PASSWORD"}
-                  </Text>
+                  <>
+                    <Text
+                      style={[
+                        styles.submitText,
+                        { color: colors.accentText },
+                      ]}
+                    >
+                      {buttonLabel}
+                    </Text>
+                    {/* Shimmer sweep — only on login button */}
+                    {mode === "login" && (
+                      <Animated.View
+                        style={[
+                          styles.shimmerStrip,
+                          {
+                            backgroundColor: shimmerColor,
+                            transform: [
+                              { translateX: shimmerX },
+                              { rotate: "18deg" },
+                            ],
+                          },
+                        ]}
+                        pointerEvents="none"
+                      />
+                    )}
+                  </>
                 )}
               </Pressable>
             </Animated.View>
@@ -518,8 +672,7 @@ export default function AuthScreen() {
             style={({ pressed }) => [
               styles.switchBtn,
               {
-                backgroundColor:
-                  pressed ? accentGlow : "transparent",
+                backgroundColor: pressed ? accentGlow : "transparent",
               },
             ]}
             onPress={() => {
@@ -554,8 +707,7 @@ export default function AuthScreen() {
           style={({ pressed }) => [
             styles.bottomLinkWrap,
             {
-              backgroundColor:
-                pressed ? accentGlow : "transparent",
+              backgroundColor: pressed ? accentGlow : "transparent",
             },
           ]}
           onPress={() => {
@@ -603,9 +755,10 @@ const styles = StyleSheet.create({
   tagline: {
     fontSize: 14,
     textAlign: "center",
-    lineHeight: 21,
-    marginTop: 2,
-    marginBottom: 8,
+    lineHeight: 22,
+    marginTop: 4,
+    marginBottom: 10,
+    letterSpacing: 0.1,
   },
   form: {
     gap: 10,
@@ -678,6 +831,13 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "800",
     letterSpacing: 1.2,
+  },
+  shimmerStrip: {
+    position: "absolute",
+    top: -20,
+    bottom: -20,
+    width: 56,
+    borderRadius: 8,
   },
   dividerRow: {
     flexDirection: "row",

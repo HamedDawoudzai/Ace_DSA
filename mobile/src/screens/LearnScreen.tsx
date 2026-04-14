@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useRef, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   FlatList,
   Image,
   ImageStyle,
+  Animated,
 } from "react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useNavigation } from "@react-navigation/native";
@@ -24,18 +25,114 @@ import { MainStackParamList } from "../navigation/MainTabs";
 
 type Nav = NativeStackNavigationProp<MainStackParamList, "Learn">;
 
+// ─── Pulsing chevron for "Tap to open guide" ─────────────────────────────────
+function PulsingArrow({ color }: { color: string }) {
+  const pulseX = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseX, {
+          toValue: 4,
+          duration: 550,
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseX, {
+          toValue: 0,
+          duration: 550,
+          useNativeDriver: true,
+        }),
+        Animated.delay(900),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, []);
+
+  return (
+    <Animated.View style={{ transform: [{ translateX: pulseX }] }}>
+      <Ionicons name="chevron-forward-circle" size={20} color={color} />
+    </Animated.View>
+  );
+}
+
+// ─── Staggered entrance wrapper ───────────────────────────────────────────────
+function AnimatedLearnCard({
+  index,
+  itemId,
+  children,
+}: {
+  index: number;
+  itemId: string;
+  children: React.ReactNode;
+}) {
+  const opacity = useRef(new Animated.Value(0)).current;
+  const translateY = useRef(new Animated.Value(28)).current;
+
+  useEffect(() => {
+    opacity.setValue(0);
+    translateY.setValue(28);
+
+    const anim = Animated.sequence([
+      Animated.delay(index * 80),
+      Animated.parallel([
+        Animated.timing(opacity, {
+          toValue: 1,
+          duration: 420,
+          useNativeDriver: true,
+        }),
+        Animated.spring(translateY, {
+          toValue: 0,
+          friction: 8,
+          tension: 55,
+          useNativeDriver: true,
+        }),
+      ]),
+    ]);
+    anim.start();
+    return () => anim.stop();
+  }, [itemId]);
+
+  return (
+    <Animated.View style={{ opacity, transform: [{ translateY }] }}>
+      {children}
+    </Animated.View>
+  );
+}
+
+// ─── Main Screen ──────────────────────────────────────────────────────────────
 export default function LearnScreen() {
   const { colors, isDark } = useTheme();
   const navigation = useNavigation<Nav>();
   const [track, setTrack] = useState<LearnTrack>("data-structures");
   const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const [segmentWidth, setSegmentWidth] = useState(0);
+
+  const pillX = useRef(new Animated.Value(0)).current;
+
+  const handleTrackChange = useCallback(
+    (newTrack: LearnTrack) => {
+      if (newTrack === track) return;
+      setTrack(newTrack);
+      if (segmentWidth > 0) {
+        const pillWidth = (segmentWidth - 8) / 2;
+        Animated.spring(pillX, {
+          toValue: newTrack === "data-structures" ? 0 : pillWidth,
+          friction: 7,
+          tension: 120,
+          useNativeDriver: true,
+        }).start();
+      }
+    },
+    [track, segmentWidth, pillX]
+  );
 
   const topics = useMemo<LearnTopic[]>(() => {
     const src =
       track === "data-structures" ? DATA_STRUCTURE_TOPICS : ALGO_TOPICS;
     return [...src].sort((a, b) => a.level - b.level);
   }, [track]);
-  const imageBackdrop = isDark ? "#060B16" : "#F7F2E8";
+
   const dsImageStyleById: Record<string, ImageStyle> = useMemo(
     () => ({
       "ds-stacks": styles.stackImageFit,
@@ -44,8 +141,10 @@ export default function LearnScreen() {
     }),
     []
   );
+
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
+      {/* Header */}
       <View style={styles.header}>
         <Ionicons name="book-outline" size={24} color={colors.accent} />
         <Text style={[styles.headerTitle, { color: colors.text }]}>
@@ -53,6 +152,7 @@ export default function LearnScreen() {
         </Text>
       </View>
 
+      {/* Segmented control with animated sliding pill */}
       <View
         style={[
           styles.segment,
@@ -61,20 +161,32 @@ export default function LearnScreen() {
             borderColor: colors.border,
           },
         ]}
+        onLayout={(e) => {
+          const w = e.nativeEvent.layout.width;
+          if (w !== segmentWidth) setSegmentWidth(w);
+        }}
       >
+        {segmentWidth > 0 && (
+          <Animated.View
+            style={[
+              styles.segmentPill,
+              {
+                width: (segmentWidth - 8) / 2,
+                backgroundColor: colors.surface,
+                shadowColor: colors.accent,
+                shadowOpacity: 0.15,
+                shadowRadius: 6,
+                shadowOffset: { width: 0, height: 2 },
+                elevation: 3,
+                transform: [{ translateX: pillX }],
+              },
+            ]}
+            pointerEvents="none"
+          />
+        )}
         <Pressable
-          style={[
-            styles.segmentItem,
-            track === "data-structures" && {
-              backgroundColor: colors.surface,
-              shadowColor: "#000",
-              shadowOpacity: 0.06,
-              shadowRadius: 6,
-              shadowOffset: { width: 0, height: 2 },
-              elevation: 2,
-            },
-          ]}
-          onPress={() => setTrack("data-structures")}
+          style={styles.segmentItem}
+          onPress={() => handleTrackChange("data-structures")}
         >
           <Text
             style={[
@@ -92,18 +204,8 @@ export default function LearnScreen() {
           </Text>
         </Pressable>
         <Pressable
-          style={[
-            styles.segmentItem,
-            track === "algorithms" && {
-              backgroundColor: colors.surface,
-              shadowColor: "#000",
-              shadowOpacity: 0.06,
-              shadowRadius: 6,
-              shadowOffset: { width: 0, height: 2 },
-              elevation: 2,
-            },
-          ]}
-          onPress={() => setTrack("algorithms")}
+          style={styles.segmentItem}
+          onPress={() => handleTrackChange("algorithms")}
         >
           <Text
             style={[
@@ -124,151 +226,196 @@ export default function LearnScreen() {
         data={topics}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
-        renderItem={({ item }) => {
+        renderItem={({ item, index }) => {
           const cardImage = getTopicImage(item, isDark);
           return (
-          <Pressable
-            onPress={() =>
-              navigation.navigate("LearnDetail", {
-                id: item.id,
-                track: item.track,
-              })
-            }
-            onHoverIn={() => setHoveredId(item.id)}
-            onHoverOut={() => setHoveredId((cur) => (cur === item.id ? null : cur))}
-            style={({ pressed }) => {
-              const isHovered = hoveredId === item.id;
-              return [
-                styles.card,
-                {
-                  backgroundColor: colors.surface,
-                  borderColor: isHovered ? colors.accent : colors.border,
-                  // Avoid scaling on hover (can cause overlapping on web).
-                  transform: [{ scale: pressed ? 0.996 : 1 }],
-                  zIndex: isHovered ? 10 : 1,
-                },
-                isHovered && {
-                  shadowColor: colors.accent,
-                  shadowOffset: { width: 0, height: 10 },
-                  shadowOpacity: 0.18,
-                  shadowRadius: 18,
-                  elevation: 10,
-                },
-              ];
-            }}
-          >
-            <View
-              style={[
-                styles.accentBar,
-                {
-                  backgroundColor:
-                    item.track === "data-structures"
-                      ? colors.accent
-                      : colors.textSecondary,
-                },
-              ]}
-            />
-            {cardImage ? (
-              <View
-                style={[
-                  styles.imageWrap,
-                  { backgroundColor: "transparent", borderColor: "transparent" },
-                ]}
+            <AnimatedLearnCard index={index} itemId={item.id}>
+              <Pressable
+                onPress={() =>
+                  navigation.navigate("LearnDetail", {
+                    id: item.id,
+                    track: item.track,
+                  })
+                }
+                onHoverIn={() => setHoveredId(item.id)}
+                onHoverOut={() =>
+                  setHoveredId((cur) => (cur === item.id ? null : cur))
+                }
+                style={({ pressed }) => {
+                  const isHovered = hoveredId === item.id;
+                  const cardBg = isDark ? "#141414" : "#FFFEFB";
+                  return [
+                    styles.card,
+                    {
+                      backgroundColor: cardBg,
+                      borderColor: isHovered
+                        ? colors.accent
+                        : "rgba(13,217,196,0.18)",
+                      transform: [{ scale: pressed ? 0.996 : 1 }],
+                      zIndex: isHovered ? 10 : 1,
+                      shadowColor: colors.accent,
+                      shadowOpacity: isHovered ? 0.25 : 0.10,
+                      shadowRadius: isHovered ? 20 : 16,
+                      shadowOffset: { width: 0, height: isHovered ? 8 : 4 },
+                      elevation: isHovered ? 10 : 4,
+                    },
+                  ];
+                }}
               >
+                {/* Top accent bar */}
                 <View
                   style={[
-                    styles.imageInner,
-                    { backgroundColor: "transparent" },
+                    styles.accentBar,
+                    { backgroundColor: colors.accent },
                   ]}
-                >
-                  <Image
-                    source={cardImage}
-                    style={[
-                      styles.image,
-                      item.track === "data-structures"
-                        ? dsImageStyleById[item.id] ?? styles.dataStructureImage
-                        : styles.algorithmImage,
-                    ]}
-                    resizeMode="contain"
-                  />
-                </View>
+                />
+
+                {/* Glowing Step badge — top-right of card, above image */}
                 <View
                   style={[
-                    styles.imageBadge,
-                    { backgroundColor: colors.surface, borderColor: colors.border },
+                    styles.stepBadge,
+                    {
+                      backgroundColor: colors.accentSubtle,
+                      borderColor: colors.accent,
+                      shadowColor: colors.accent,
+                      shadowOpacity: 0.8,
+                      shadowRadius: 12,
+                      shadowOffset: { width: 0, height: 0 },
+                      elevation: 6,
+                    },
                   ]}
                 >
-                  <Text style={[styles.imageBadgeText, { color: colors.text }]}>
+                  <Text
+                    style={[styles.stepBadgeText, { color: colors.accent }]}
+                  >
                     Step {item.level}
                   </Text>
                 </View>
-              </View>
-            ) : null}
-            <View style={styles.cardHeader}>
-              <Text style={[styles.step, { color: colors.textMuted }]}>
-                {item.track === "data-structures"
-                  ? "Data Structure"
-                  : "Algorithm"}
-              </Text>
-              <Text
-                style={[
-                  styles.badge,
-                  {
-                    color: colors.accentText,
-                    backgroundColor: colors.accent,
-                    borderColor: colors.accent,
-                  },
-                ]}
-              >
-                {item.track === "data-structures" ? "DS" : "Algo"}
-              </Text>
-            </View>
-            <Text style={[styles.cardTitle, { color: colors.text }]}>
-              {item.title}
-            </Text>
-            <Text
-              style={[styles.cardSubtitle, { color: colors.textSecondary }]}
-              numberOfLines={2}
-            >
-              {item.subtitle}
-            </Text>
-            <Text style={[styles.summaryText, { color: colors.textSecondary }]} numberOfLines={2}>
-              {item.summary}
-            </Text>
-            {item.track === "data-structures" &&
-            item.relatedAlgorithmIds &&
-            item.relatedAlgorithmIds.length > 0 ? (
-              <View style={styles.relatedPreviewWrap}>
-                {item.relatedAlgorithmIds.slice(0, 3).map((algoId) => {
-                  const algo = getAlgorithmTopic(algoId);
-                  if (!algo) return null;
-                  return (
-                    <Text
-                      key={`${item.id}-${algoId}`}
+
+                {cardImage ? (
+                  <View
+                    style={[
+                      styles.imageWrap,
+                      {
+                        backgroundColor: "transparent",
+                        borderColor: "transparent",
+                      },
+                    ]}
+                  >
+                    <View
                       style={[
-                        styles.relatedPreviewChip,
-                        {
-                          color: colors.text,
-                          backgroundColor: colors.surfaceAlt,
-                          borderColor: colors.border,
-                        },
+                        styles.imageInner,
+                        { backgroundColor: "transparent" },
                       ]}
-                      numberOfLines={1}
                     >
-                      {algo.title}
-                    </Text>
-                  );
-                })}
-              </View>
-            ) : null}
-            <View style={styles.footerRow}>
-              <Text style={[styles.footerText, { color: colors.textMuted }]}>
-                Tap to open guide
-              </Text>
-              <Ionicons name="arrow-forward-circle" size={18} color={colors.accent} />
-            </View>
-          </Pressable>
-        );
+                      <Image
+                        source={cardImage}
+                        style={[
+                          styles.image,
+                          item.track === "data-structures"
+                            ? dsImageStyleById[item.id] ??
+                              styles.dataStructureImage
+                            : styles.algorithmImage,
+                        ]}
+                        resizeMode="contain"
+                      />
+                    </View>
+                  </View>
+                ) : null}
+
+                {/* Card header: category label + DS/Algo badge */}
+                <View style={styles.cardHeader}>
+                  <Text style={[styles.step, { color: colors.accent }]}>
+                    {item.track === "data-structures"
+                      ? "Data Structure"
+                      : "Algorithm"}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.badge,
+                      {
+                        color: colors.accentText,
+                        backgroundColor: colors.accent,
+                        borderColor: colors.accent,
+                        shadowColor: colors.accent,
+                        shadowOpacity: isDark ? 0.5 : 0.2,
+                        shadowRadius: isDark ? 8 : 3,
+                        shadowOffset: { width: 0, height: 0 },
+                      },
+                    ]}
+                  >
+                    {item.track === "data-structures" ? "DS" : "Algo"}
+                  </Text>
+                </View>
+
+                <Text style={[styles.cardTitle, { color: colors.text }]}>
+                  {item.title}
+                </Text>
+                <Text
+                  style={[
+                    styles.cardSubtitle,
+                    { color: colors.textSecondary },
+                  ]}
+                  numberOfLines={2}
+                >
+                  {item.subtitle}
+                </Text>
+                <Text
+                  style={[styles.summaryText, { color: colors.textSecondary }]}
+                  numberOfLines={2}
+                >
+                  {item.summary}
+                </Text>
+
+                {/* Pattern/related algorithm tags */}
+                {item.track === "data-structures" &&
+                item.relatedAlgorithmIds &&
+                item.relatedAlgorithmIds.length > 0 ? (
+                  <View style={styles.relatedPreviewWrap}>
+                    {item.relatedAlgorithmIds.slice(0, 3).map((algoId) => {
+                      const algo = getAlgorithmTopic(algoId);
+                      if (!algo) return null;
+                      return (
+                        <Text
+                          key={`${item.id}-${algoId}`}
+                          style={[
+                            styles.relatedPreviewChip,
+                            {
+                              color: colors.accent,
+                              backgroundColor: colors.accentSubtle,
+                              borderColor: colors.accent,
+                            },
+                          ]}
+                          numberOfLines={1}
+                        >
+                          {algo.title}
+                        </Text>
+                      );
+                    })}
+                  </View>
+                ) : null}
+
+                {/* Tap to open guide footer */}
+                <View
+                  style={[
+                    styles.footerRow,
+                    {
+                      borderTopColor: isDark
+                        ? "rgba(13,217,196,0.20)"
+                        : "rgba(240,165,0,0.22)",
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[styles.footerText, { color: colors.accent }]}
+                  >
+                    Tap to open guide
+                  </Text>
+                  <PulsingArrow color={colors.accent} />
+                </View>
+              </Pressable>
+            </AnimatedLearnCard>
+          );
         }}
       />
     </View>
@@ -290,6 +437,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: "800",
+    letterSpacing: -0.2,
   },
   segment: {
     flexDirection: "row",
@@ -298,6 +446,14 @@ const styles = StyleSheet.create({
     padding: 4,
     marginBottom: 8,
     borderWidth: 1,
+    position: "relative",
+  },
+  segmentPill: {
+    position: "absolute",
+    top: 4,
+    left: 4,
+    bottom: 4,
+    borderRadius: 999,
   },
   segmentItem: {
     flex: 1,
@@ -305,6 +461,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 9,
+    zIndex: 1,
   },
   segmentLabel: {
     fontSize: 13,
@@ -316,8 +473,9 @@ const styles = StyleSheet.create({
     paddingBottom: 32,
   },
   card: {
-    borderRadius: 22,
+    borderRadius: 20,
     padding: 16,
+    paddingTop: 18,
     marginBottom: 16,
     borderWidth: 1,
     overflow: "hidden",
@@ -329,12 +487,28 @@ const styles = StyleSheet.create({
     right: 0,
     height: 3,
   },
+  // Glowing Step badge — sits in top-right of card
+  stepBadge: {
+    position: "absolute",
+    top: 10,
+    right: 12,
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderWidth: 1.5,
+    zIndex: 10,
+  },
+  stepBadgeText: {
+    fontSize: 11,
+    fontWeight: "800",
+    letterSpacing: 0.4,
+  },
   imageWrap: {
-    borderRadius: 18,
+    borderRadius: 14,
     overflow: "hidden",
     borderWidth: 1,
-    marginBottom: 12,
-    height: 196,
+    marginBottom: 14,
+    height: 186,
     justifyContent: "center",
     alignItems: "center",
     position: "relative",
@@ -343,7 +517,7 @@ const styles = StyleSheet.create({
   imageInner: {
     width: "100%",
     height: "100%",
-    borderRadius: 14,
+    borderRadius: 10,
     overflow: "hidden",
     backgroundColor: "transparent",
   },
@@ -366,34 +540,21 @@ const styles = StyleSheet.create({
   algorithmImage: {
     transform: [{ scale: 1 }, { scaleX: 1.06 }],
   } as ImageStyle,
-  imageBadge: {
-    position: "absolute",
-    top: 10,
-    right: 10,
-    borderRadius: 999,
-    paddingHorizontal: 11,
-    paddingVertical: 5,
-    borderWidth: 1,
-  },
-  imageBadgeText: {
-    fontSize: 12,
-    fontWeight: "700",
-    letterSpacing: 0.1,
-  },
   cardHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 5,
+    marginBottom: 6,
     alignItems: "center",
   },
   step: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: "700",
     textTransform: "uppercase",
-    letterSpacing: 0.9,
+    letterSpacing: 2,
+    opacity: 0.85,
   },
   badge: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: "700",
     paddingHorizontal: 10,
     paddingVertical: 4,
@@ -402,46 +563,49 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   cardTitle: {
-    fontSize: 20,
-    fontWeight: "800",
-    marginBottom: 5,
+    fontSize: 26,
+    fontWeight: "700",
+    marginBottom: 6,
+    letterSpacing: -0.3,
   },
   cardSubtitle: {
     fontSize: 14,
-    lineHeight: 20,
-    marginBottom: 4,
+    fontWeight: "500",
+    lineHeight: 22,
+    marginBottom: 8,
   },
   summaryText: {
     fontSize: 13,
-    lineHeight: 19,
+    lineHeight: 22,
+    fontWeight: "400",
   },
   relatedPreviewWrap: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 8,
-    marginTop: 12,
+    marginTop: 14,
   },
   relatedPreviewChip: {
     borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: 10,
+    borderRadius: 20,
+    paddingHorizontal: 12,
     paddingVertical: 6,
     fontSize: 12,
-    fontWeight: "700",
+    fontWeight: "600",
     overflow: "hidden",
     maxWidth: 240,
   },
   footerRow: {
-    marginTop: 12,
+    marginTop: 14,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingTop: 10,
+    paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: "rgba(148,163,184,0.25)",
   },
   footerText: {
     fontSize: 13,
     fontWeight: "700",
+    letterSpacing: 0.2,
   },
 });

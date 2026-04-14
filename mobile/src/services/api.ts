@@ -36,12 +36,31 @@ api.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
   return config;
 });
 
+function isAuthEndpointNoRefresh(config: InternalAxiosRequestConfig): boolean {
+  const url = config.url ?? "";
+  return (
+    url.includes("/auth/login") ||
+    url.includes("/auth/signup") ||
+    url.includes("/auth/forgot-password") ||
+    url.includes("/auth/reset-password")
+  );
+}
+
 api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & {
       _retry?: boolean;
     };
+
+    if (!originalRequest) {
+      return Promise.reject(error);
+    }
+
+    // Wrong password / duplicate signup etc. must not trigger refresh.
+    if (error.response?.status === 401 && isAuthEndpointNoRefresh(originalRequest)) {
+      return Promise.reject(error);
+    }
 
     if (error.response?.status !== 401 || originalRequest._retry) {
       return Promise.reject(error);

@@ -496,7 +496,7 @@ export const ALGO_TOPICS: LearnTopic[] = [
     title: "Breadth-First Search (BFS)",
     subtitle: "Layer-by-layer graph exploration",
     level: 8,
-    summary: "Ideal for shortest path in unweighted graphs and level-order tree traversal.",
+    summary: "Ideal for shortest path in unweighted graphs and level-order tree traversal.\n\nIn the image above the node values show the order they are explored — BFS fans out level by level, visiting every child of the current node before going any deeper, so nodes closer to the root are always discovered first.",
     details:
       "BFS explores a graph level by level: first all nodes one hop from the start, then all nodes two hops away, and so on. This wave-by-wave expansion is what makes BFS uniquely suited for shortest-path problems in unweighted graphs.\n\n" +
       "The tool: a queue (FIFO). Seed it with the start node, mark it visited, then repeatedly dequeue a node, process it, and enqueue all unvisited neighbours.\n\n" +
@@ -518,7 +518,7 @@ export const ALGO_TOPICS: LearnTopic[] = [
     title: "Depth-First Search (DFS)",
     subtitle: "Backtracking through all paths",
     level: 9,
-    summary: "Explore as far as possible along each branch before backtracking.",
+    summary: "Explore as far as possible along each branch before backtracking.\n\nIn the image above the node values show the order they are explored — DFS commits to one child's full path before backing up to try the next branch, so it dives as deep as possible down the first route before exploring siblings.",
     details:
       "DFS plunges as deep as possible along one path before backing up to try the next branch. Implemented with recursion (implicit stack) or an explicit stack.\n\n" +
       "The pattern: visit a node, mark it visited, recurse into each unvisited neighbour, return when there are no more unvisited neighbours.\n\n" +
