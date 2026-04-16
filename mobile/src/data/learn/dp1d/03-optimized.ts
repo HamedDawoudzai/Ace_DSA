@@ -1,8 +1,10 @@
 import type { LearnDetailSection } from "../../learnSectionTypes";
+import { VISUAL_ANCHOR } from "../imageAnchor";
 
 export const dp1dOptimizedSection: LearnDetailSection = {
   title: "1D DP: turn it into O(n)",
   body:
+    VISUAL_ANCHOR +
     "Build a DP table where dp[i] = number of ways to reach step i.\n\n" +
     "Fill bottom-up: dp[1] = 1, dp[2] = 2, then for i from 3 to n: dp[i] = dp[i−1] + dp[i−2].\n\n" +
     "Each sub-problem is computed exactly once → O(n) time, O(n) space for the table.\n\n" +

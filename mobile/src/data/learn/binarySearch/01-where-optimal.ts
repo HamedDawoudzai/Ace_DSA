@@ -1,8 +1,11 @@
 import type { LearnDetailSection } from "../../learnSectionTypes";
+import { VISUAL_ANCHOR } from "../imageAnchor";
 
 export const whereBinarySearchOptimal: LearnDetailSection = {
   title: "Where binary search would be optimal",
   body:
+    "The sorted bar with a shrinking active region above is binary search in picture form: each probe at the middle throws away half of the remaining positions.\n\n" +
+    VISUAL_ANCHOR +
     "Running example (find a target value in a sorted array):\n\n" +
     "You are given an integer array sorted in ascending order and a target T. " +
     "Return the index of T, or -1 if it does not exist.\n\n" +

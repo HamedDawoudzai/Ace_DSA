@@ -1,8 +1,10 @@
 import type { LearnDetailSection } from "../../learnSectionTypes";
+import { VISUAL_ANCHOR } from "../imageAnchor";
 
 export const bruteForceSection: LearnDetailSection = {
   title: "Brute force: try every pair",
   body:
+    VISUAL_ANCHOR +
     "The straightforward idea is to check all pairs (i, j) with i < j. Two nested loops enumerate every combination; no sorting required.\n\n" +
     "Time is O(n²) because there are Θ(n²) pairs. Extra space is O(1) beyond the input. " +
     "This is the baseline you compare every trick against.",

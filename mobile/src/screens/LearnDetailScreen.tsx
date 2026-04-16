@@ -17,6 +17,7 @@ import {
   LearnTrack,
   DATA_STRUCTURE_TOPICS,
   ALGO_TOPICS,
+  COMPLEXITY_TOPICS,
 } from "../data/learnTopics";
 import { useTheme } from "../context/ThemeContext";
 import LearnCodeBlock from "../components/LearnCodeBlock";
@@ -47,7 +48,12 @@ export default function LearnDetailScreen() {
   // Track visited progress
   const allTopics = React.useMemo(
     () =>
-      (track === "data-structures" ? DATA_STRUCTURE_TOPICS : ALGO_TOPICS)
+      (track === "data-structures"
+        ? DATA_STRUCTURE_TOPICS
+        : track === "algorithms"
+        ? ALGO_TOPICS
+        : COMPLEXITY_TOPICS
+      )
         .slice()
         .sort((a, b) => a.level - b.level),
     [track]
@@ -57,6 +63,12 @@ export default function LearnDetailScreen() {
     if (!topic) return;
     markVisited(topic.id).then(setVisitedIds);
   }, [topic?.id]);
+
+  // Count only topics belonging to the current track
+  const trackVisitedCount = React.useMemo(
+    () => allTopics.filter((t) => visitedIds.has(t.id)).length,
+    [allTopics, visitedIds]
+  );
 
   const handleImageLoad = React.useCallback((e: any) => {
     const src = e?.nativeEvent?.source;
@@ -78,7 +90,11 @@ export default function LearnDetailScreen() {
   }
 
   const trackLabel =
-    topic.track === "data-structures" ? "Data Structures" : "Algorithms";
+    topic.track === "data-structures"
+      ? "Data Structures"
+      : topic.track === "algorithms"
+      ? "Algorithms"
+      : "Complexity";
   const topicImage = topicImageRaw;
 
   const renderParagraphs = (text: string) => {
@@ -134,7 +150,7 @@ export default function LearnDetailScreen() {
       shadowOffset: { width: 0, height: 4 },
       elevation: 3,
     },
-  ] as const;
+  ];
 
   return (
     <ScrollView
@@ -161,10 +177,15 @@ export default function LearnDetailScreen() {
       {/* Progression bar */}
       <View style={styles.progressionWrap}>
         <Text style={[styles.progressionLabel, { color: colors.textMuted }]}>
-          {track === "data-structures" ? "Data Structures" : "Algorithms"} Progress
+          {track === "data-structures"
+            ? "Data Structures"
+            : track === "algorithms"
+            ? "Algorithms"
+            : "Complexity"}{" "}
+          Progress
           {"  "}
           <Text style={{ color: colors.accent, fontWeight: "800" }}>
-            {visitedIds.size}/{allTopics.length}
+            {trackVisitedCount}/{allTopics.length}
           </Text>
         </Text>
         <View style={styles.progressionDotRow}>
@@ -219,7 +240,7 @@ export default function LearnDetailScreen() {
               styles.progressionBarFill,
               {
                 backgroundColor: colors.accent,
-                width: `${Math.round((visitedIds.size / allTopics.length) * 100)}%`,
+                width: `${Math.round((trackVisitedCount / allTopics.length) * 100)}%`,
                 shadowColor: colors.accent,
                 shadowOpacity: 0.5,
                 shadowRadius: 4,

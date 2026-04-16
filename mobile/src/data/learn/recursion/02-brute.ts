@@ -1,8 +1,10 @@
 import type { LearnDetailSection } from "../../learnSectionTypes";
+import { VISUAL_ANCHOR } from "../imageAnchor";
 
 export const recursionBruteSection: LearnDetailSection = {
   title: "Naive recursion: elegant but exponential",
   body:
+    VISUAL_ANCHOR +
     "Translate the definition directly: F(n) = F(n−1) + F(n−2), with base cases F(0) = 0 and F(1) = 1.\n\n" +
     "This is correct but expensive. F(5) calls F(4) and F(3). F(4) calls F(3) and F(2). " +
     "F(3) is computed twice, F(2) three times, F(1) five times—the work explodes exponentially.\n\n" +

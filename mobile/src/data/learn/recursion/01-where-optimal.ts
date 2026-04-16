@@ -1,8 +1,11 @@
 import type { LearnDetailSection } from "../../learnSectionTypes";
+import { VISUAL_ANCHOR } from "../imageAnchor";
 
 export const whereRecursionOptimal: LearnDetailSection = {
   title: "Where recursion would be optimal",
   body:
+    "The branching tree above is recursion out loud: a big Fibonacci call fans into smaller calls until the leaves hit base cases F(0) and F(1).\n\n" +
+    VISUAL_ANCHOR +
     "Running example (compute the n-th Fibonacci number):\n\n" +
     "The Fibonacci sequence is defined as F(0) = 0, F(1) = 1, and F(n) = F(n−1) + F(n−2). " +
     "Find F(n) for a given n.\n\n" +

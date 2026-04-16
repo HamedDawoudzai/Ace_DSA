@@ -1,8 +1,10 @@
 import type { LearnDetailSection } from "../../learnSectionTypes";
+import { VISUAL_ANCHOR } from "../imageAnchor";
 
 export const binarySearchBruteSection: LearnDetailSection = {
   title: "Brute force: scan every element",
   body:
+    VISUAL_ANCHOR +
     "Check each index from 0 to n − 1 until you find the target or reach the end. O(n) time, O(1) space.\n\n" +
     "This works on any array—sorted or not—but completely ignores the sorted structure. " +
     "In the worst case (target at the end or missing) you inspect every element. " +

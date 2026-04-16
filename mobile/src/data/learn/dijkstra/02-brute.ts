@@ -1,8 +1,10 @@
 import type { LearnDetailSection } from "../../learnSectionTypes";
+import { VISUAL_ANCHOR } from "../imageAnchor";
 
 export const dijkstraBruteSection: LearnDetailSection = {
   title: "Brute force: try all paths",
   body:
+    VISUAL_ANCHOR +
     "Enumerate every path from source to destination using DFS, tracking the running cost. " +
     "Keep the minimum cost seen across all complete paths.\n\n" +
     "In the worst case (a fully connected graph with n nodes), there are O(n!) possible paths. " +

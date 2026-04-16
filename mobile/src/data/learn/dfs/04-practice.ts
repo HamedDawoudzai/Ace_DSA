@@ -1,8 +1,10 @@
 import type { LearnDetailSection } from "../../learnSectionTypes";
+import { VISUAL_ANCHOR } from "../imageAnchor";
 
 export const dfsPracticeSection: LearnDetailSection = {
   title: "Stretch: DFS on graphs and trees",
   body:
+    VISUAL_ANCHOR +
     "DFS is fundamental across many problem types:\n\n" +
     "• Cycle detection — track the recursion stack; if you visit a node already on the stack, there is a cycle.\n" +
     "• Topological sort — after exploring all outgoing edges, push the node to a result stack.\n" +

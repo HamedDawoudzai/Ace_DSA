@@ -1,52 +1,60 @@
 import type { LearnDetailSection } from "../../learnSectionTypes";
+import { VISUAL_ANCHOR } from "../imageAnchor";
 
 export const DS_GRAPHS_SECTIONS: LearnDetailSection[] = [
   {
     title: "Python: adjacency list and basic traversal",
     body:
-      "Store `node -> list of neighbors`. For weighted edges use a list of `(neighbor, weight)` pairs. BFS uses a deque; DFS uses recursion or an explicit stack.",
+      "The graph illustration above is vertices and edges; the `defaultdict(list)` adjacency list below is that picture stored so each node maps to its neighbors.\n\n" +
+      VISUAL_ANCHOR +
+      "The code snippet below teaches you the basic graph operations you need to know for interview problems.\n\n" +
+      "• add_edge — connect two nodes with a one-way (directed) edge.\n" +
+      "• add_undirected — connect two nodes so you can travel in both directions.\n" +
+      "• dfs_recursive — explore the graph by going as deep as possible down one path before backtracking; uses recursion to remember where it came from.\n" +
+      "• bfs — explore the graph level by level using a queue; visits all direct neighbors before going deeper.",
     code: `from collections import defaultdict, deque
 
-# --- directed graph ---
+# adj stores each node mapped to a list of its neighbors
 adj = defaultdict(list)
 
 
 def add_edge(u, v):
-    adj[u].append(v)
+    adj[u].append(v)       # u -> v (one direction only)
 
 
-# --- undirected: both directions ---
 def add_undirected(u, v):
-    adj[u].append(v)
-    adj[v].append(u)
+    adj[u].append(v)       # u -> v
+    adj[v].append(u)       # v -> u (both directions)
 
 
-def dfs_recursive(start, adj2):
+def dfs_recursive(start, adj):
     seen = set()
     order = []
 
-    def visit(u):
-        seen.add(u)
-        order.append(u)
-        for v in adj2[u]:
-            if v not in seen:
-                visit(v)
+    def visit(node):
+        seen.add(node)
+        order.append(node)
+        for neighbor in adj[node]:
+            if neighbor not in seen:
+                visit(neighbor)    # go deeper before coming back
 
     visit(start)
     return order
 
 
-def bfs(start, adj2):
-    seen = {start}
+def bfs(start, adj):
+    seen = set()
+    seen.add(start)
     order = []
-    q = deque([start])
-    while q:
-        u = q.popleft()
-        order.append(u)
-        for v in adj2[u]:
-            if v not in seen:
-                seen.add(v)
-                q.append(v)
+    queue = deque()
+    queue.append(start)
+    while queue:
+        node = queue.popleft()           # take the next node to visit
+        order.append(node)
+        for neighbor in adj[node]:
+            if neighbor not in seen:
+                seen.add(neighbor)       # mark visited before adding to queue
+                queue.append(neighbor)
     return order
 `,
     codeLanguage: "python",

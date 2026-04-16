@@ -1,8 +1,10 @@
 import type { LearnDetailSection } from "../../learnSectionTypes";
+import { VISUAL_ANCHOR } from "../imageAnchor";
 
 export const sortingPracticeSection: LearnDetailSection = {
   title: "Stretch: sorting as a pre-processing step",
   body:
+    VISUAL_ANCHOR +
     "Sorting is rarely the whole solution—it is the move that makes the next step trivial:\n\n" +
     "• Merge intervals — sort by start; merge greedily in one pass.\n" +
     "• Meeting rooms II — sort starts and ends separately; sweep with two pointers.\n" +

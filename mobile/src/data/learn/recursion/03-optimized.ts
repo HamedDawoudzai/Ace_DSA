@@ -1,8 +1,10 @@
 import type { LearnDetailSection } from "../../learnSectionTypes";
+import { VISUAL_ANCHOR } from "../imageAnchor";
 
 export const recursionOptimizedSection: LearnDetailSection = {
   title: "Memoization: cache results, turn it into O(n)",
   body:
+    VISUAL_ANCHOR +
     "The fix is simple: store results you have already computed in a dictionary (memo). " +
     "Before computing F(k), check if you have seen it before—if yes, return immediately.\n\n" +
     "Now each unique sub-problem (F(0), F(1), …, F(n)) is computed exactly once. " +

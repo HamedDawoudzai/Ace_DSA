@@ -1,8 +1,11 @@
 import type { LearnDetailSection } from "../../learnSectionTypes";
+import { VISUAL_ANCHOR } from "../imageAnchor";
 
 export const whereBfsOptimal: LearnDetailSection = {
   title: "Where BFS would be optimal",
   body:
+    "In the graph at the top, read node numbers as BFS discovery order: every vertex one edge from the start is labeled before any vertex two edges away—those layers are shortest hops in an unweighted world.\n\n" +
+    VISUAL_ANCHOR +
     "Running example (shortest path in a binary grid):\n\n" +
     "You are given an n × m grid where 0 = open cell and 1 = blocked wall. " +
     "Find the length of the shortest path from the top-left corner (0, 0) to the bottom-right corner (n−1, m−1). " +

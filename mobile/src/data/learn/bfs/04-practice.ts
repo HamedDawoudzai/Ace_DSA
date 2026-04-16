@@ -1,8 +1,10 @@
 import type { LearnDetailSection } from "../../learnSectionTypes";
+import { VISUAL_ANCHOR } from "../imageAnchor";
 
 export const bfsPracticeSection: LearnDetailSection = {
   title: "Stretch: more BFS patterns",
   body:
+    VISUAL_ANCHOR +
     "BFS appears whenever 'shortest' or 'minimum steps' matters in an unweighted space:\n\n" +
     "• Level-order tree traversal — process nodes level by level; add left and right children.\n" +
     "• Word ladder — each word is a node; edges connect words that differ by one letter.\n" +

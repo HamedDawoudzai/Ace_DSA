@@ -1,8 +1,10 @@
 import type { LearnDetailSection } from "../../learnSectionTypes";
+import { VISUAL_ANCHOR } from "../imageAnchor";
 
 export const sortingOptimizedSection: LearnDetailSection = {
   title: "Sort then sweep: turn it into O(n log n)",
   body:
+    VISUAL_ANCHOR +
     "Sort meetings by start time. After sorting, any two overlapping meetings must be consecutive in the sorted order—you only need to compare each meeting to its immediate predecessor.\n\n" +
     "Single sweep: for each meeting check if its start is before the previous meeting's end. " +
     "If yes → overlap found. Total: O(n log n) for the sort, O(n) for the sweep.\n\n" +

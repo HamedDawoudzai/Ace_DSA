@@ -1,8 +1,11 @@
 import type { LearnDetailSection } from "../../learnSectionTypes";
+import { VISUAL_ANCHOR } from "../imageAnchor";
 
 export const whereSlidingWindowOptimal: LearnDetailSection = {
   title: "Where sliding window would be optimal",
   body:
+    "In the sliding-window diagram at the top, only k consecutive cells are highlighted—that moving band is the window we shift one step at a time, adding the new right cell and subtracting the old left cell.\n\n" +
+    VISUAL_ANCHOR +
     "Running example (maximum sum of any k consecutive elements):\n\n" +
     "You are given an integer array and a fixed window size k. " +
     "Find the maximum sum of any contiguous subarray of length exactly k.\n\n" +

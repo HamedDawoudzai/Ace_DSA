@@ -1,8 +1,10 @@
 import type { LearnDetailSection } from "../../learnSectionTypes";
+import { VISUAL_ANCHOR } from "../imageAnchor";
 
 export const arrayScanBruteSection: LearnDetailSection = {
   title: "Brute force: sum the range every time",
   body:
+    VISUAL_ANCHOR +
     "The obvious approach re-sums the slice for every query. Two nested loops—outer over queries, inner over elements—give O(n) work per query.\n\n" +
     "With Q queries on an array of length n, total time is O(Q × n). " +
     "For 10 000 queries on a 10 000-element array that is 100 million operations. " +

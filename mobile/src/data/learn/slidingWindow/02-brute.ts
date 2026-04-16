@@ -1,8 +1,10 @@
 import type { LearnDetailSection } from "../../learnSectionTypes";
+import { VISUAL_ANCHOR } from "../imageAnchor";
 
 export const slidingWindowBruteSection: LearnDetailSection = {
   title: "Brute force: sum every window from scratch",
   body:
+    VISUAL_ANCHOR +
     "For each valid starting position i (from 0 to n − k), sum the k elements arr[i..i+k−1] using an inner loop.\n\n" +
     "There are n − k + 1 windows, each takes O(k) to sum. Total time is O(n × k).\n\n" +
     "For n = 100 000 and k = 50 000, that is 5 billion operations. " +

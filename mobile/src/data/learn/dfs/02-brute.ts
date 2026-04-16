@@ -1,8 +1,10 @@
 import type { LearnDetailSection } from "../../learnSectionTypes";
+import { VISUAL_ANCHOR } from "../imageAnchor";
 
 export const dfsBruteSection: LearnDetailSection = {
   title: "Brute force: count without merging components",
   body:
+    VISUAL_ANCHOR +
     "A naive approach counts every '1' cell and then tries to subtract duplicates by checking all neighbours—but keeping track of which cells belong to the same island requires extra bookkeeping and multiple passes.\n\n" +
     "Alternatively, a union-find built naively (without path compression or union by rank) works but takes O(n²) per operation in the worst case—still correct but slower than needed.\n\n" +
     "The real issue is that without a systematic flood-fill, you end up revisiting cells or using a complex separate data structure just to group connected components.",

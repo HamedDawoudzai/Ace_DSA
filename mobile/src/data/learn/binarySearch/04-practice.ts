@@ -1,8 +1,10 @@
 import type { LearnDetailSection } from "../../learnSectionTypes";
+import { VISUAL_ANCHOR } from "../imageAnchor";
 
 export const binarySearchPracticeSection: LearnDetailSection = {
   title: "Stretch: binary search on the answer space",
   body:
+    VISUAL_ANCHOR +
     "Binary search is not just for arrays—it works on any monotonic predicate (false…false true…true):\n\n" +
     "• First bad version — binary search over version IDs; stop at the earliest failing check.\n" +
     "• Koko eating bananas — binary search the eating speed; check if feasible in H hours.\n" +

@@ -1,8 +1,11 @@
 import type { LearnDetailSection } from "../../learnSectionTypes";
+import { VISUAL_ANCHOR } from "../imageAnchor";
 
 export const whereBacktrackingOptimal: LearnDetailSection = {
   title: "Where backtracking would be optimal",
   body:
+    "The include/skip tree above draws every subset choice; walking every path is exactly the brute-force space backtracking will prune intelligently later.\n\n" +
+    VISUAL_ANCHOR +
     "Running example (generate all subsets of a set):\n\n" +
     "Given an integer array with distinct values, return all possible subsets (the power set).\n\n" +
     "Examples:\n" +

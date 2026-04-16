@@ -1,8 +1,10 @@
 import type { LearnDetailSection } from "../../learnSectionTypes";
+import { VISUAL_ANCHOR } from "../imageAnchor";
 
 export const greedyOptimizedSection: LearnDetailSection = {
   title: "Greedy: turn it into O(n log n)",
   body:
+    VISUAL_ANCHOR +
     "Sort meetings by end time. Greedily pick each meeting whose start is ≥ the end of the last selected meeting.\n\n" +
     "Why the earliest-end choice is safe: suppose you picked a meeting M that does not end earliest. " +
     "Swapping M for the one that ends earliest cannot reduce the count—it can only free up more time for later meetings. " +

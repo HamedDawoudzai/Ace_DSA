@@ -1,8 +1,10 @@
 import type { LearnDetailSection } from "../../learnSectionTypes";
+import { VISUAL_ANCHOR } from "../imageAnchor";
 
 export const dp1dBruteSection: LearnDetailSection = {
   title: "Naive recursion: correct but exponential",
   body:
+    VISUAL_ANCHOR +
     "Translate the recurrence directly: ways(n) = ways(n−1) + ways(n−2), with ways(1) = 1 and ways(2) = 2.\n\n" +
     "This forms a binary call tree of depth n. Sub-problems are solved over and over: " +
     "ways(n−2) is computed by both the ways(n−1) branch and directly. " +

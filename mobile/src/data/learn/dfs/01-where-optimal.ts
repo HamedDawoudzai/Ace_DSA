@@ -1,8 +1,11 @@
 import type { LearnDetailSection } from "../../learnSectionTypes";
+import { VISUAL_ANCHOR } from "../imageAnchor";
 
 export const whereDfsOptimal: LearnDetailSection = {
   title: "Where DFS would be optimal",
   body:
+    "The grid above mixes land (`1`) and water (`0`); one DFS flood from any land tile paints an entire island, which is why the outer loop only counts a new island when it finds an unseen `1`.\n\n" +
+    VISUAL_ANCHOR +
     "Running example (count islands in a grid):\n\n" +
     "You are given a 2D grid of '1's (land) and '0's (water). " +
     "An island is a group of adjacent land cells connected horizontally or vertically. " +

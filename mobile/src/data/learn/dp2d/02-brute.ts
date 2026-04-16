@@ -1,8 +1,10 @@
 import type { LearnDetailSection } from "../../learnSectionTypes";
+import { VISUAL_ANCHOR } from "../imageAnchor";
 
 export const dp2dBruteSection: LearnDetailSection = {
   title: "Naive recursion: exponential overlapping calls",
   body:
+    VISUAL_ANCHOR +
     "Define lcs(i, j) = LCS length for s[0..i-1] and t[0..j-1].\n\n" +
     "If s[i−1] == t[j−1]: lcs(i, j) = 1 + lcs(i−1, j−1).\n" +
     "Otherwise: lcs(i, j) = max(lcs(i−1, j), lcs(i, j−1)).\n\n" +

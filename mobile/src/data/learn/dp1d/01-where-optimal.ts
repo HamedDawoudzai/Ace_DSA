@@ -1,8 +1,11 @@
 import type { LearnDetailSection } from "../../learnSectionTypes";
+import { VISUAL_ANCHOR } from "../imageAnchor";
 
 export const whereDp1dOptimal: LearnDetailSection = {
   title: "Where 1D DP would be optimal",
   body:
+    "The staircase figure above is one index of state per step—exactly the 1D DP idea: dp[i] only looks at dp[i−1] and dp[i−2].\n\n" +
+    VISUAL_ANCHOR +
     "Running example (climbing stairs):\n\n" +
     "You are climbing a staircase with n steps. Each time you can climb either 1 or 2 steps. " +
     "In how many distinct ways can you reach the top?\n\n" +

@@ -1,8 +1,10 @@
 import type { LearnDetailSection } from "../../learnSectionTypes";
+import { VISUAL_ANCHOR } from "../imageAnchor";
 
 export const slidingWindowOptimizedSection: LearnDetailSection = {
   title: "Sliding window: turn it into O(n)",
   body:
+    VISUAL_ANCHOR +
     "Build the sum for the first window of size k upfront. Then slide right: add arr[i + k] (new right element), subtract arr[i] (old left element), update the best.\n\n" +
     "Only two operations per step → O(n) total, O(1) extra space.\n\n" +
     "Why it is safe: you never recount the k − 1 elements shared between adjacent windows. " +

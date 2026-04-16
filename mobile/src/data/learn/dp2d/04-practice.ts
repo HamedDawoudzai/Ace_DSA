@@ -1,8 +1,10 @@
 import type { LearnDetailSection } from "../../learnSectionTypes";
+import { VISUAL_ANCHOR } from "../imageAnchor";
 
 export const dp2dPracticeSection: LearnDetailSection = {
   title: "Stretch: other 2D DP classics",
   body:
+    VISUAL_ANCHOR +
     "The same 'fill a table of (i, j) states' idea powers many problems:\n\n" +
     "• Edit Distance — dp[i][j] = min insertions/deletions/substitutions to turn s[0..i] into t[0..j].\n" +
     "• Unique Paths — dp[i][j] = paths to reach cell (i, j) in a grid from (0, 0). dp[i][j] = dp[i−1][j] + dp[i][j−1].\n" +

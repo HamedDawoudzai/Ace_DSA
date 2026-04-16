@@ -1,8 +1,10 @@
 import type { LearnDetailSection } from "../../learnSectionTypes";
+import { VISUAL_ANCHOR } from "../imageAnchor";
 
 export const twoPointerOptimizedSection: LearnDetailSection = {
   title: "Two pointers: turn it into O(n)",
   body:
+    VISUAL_ANCHOR +
     "Assume arr is sorted ascending. Place left at 0 and right at n − 1. Let s = arr[left] + arr[right].\n\n" +
     "• If s == target, done.\n" +
     "• If s < target, the sum is too small—move left forward to try a larger left value.\n" +

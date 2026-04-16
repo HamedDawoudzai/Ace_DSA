@@ -10,6 +10,7 @@ import {
   Platform,
   ScrollView,
   Animated,
+  type TextStyle,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../context/AuthContext";
@@ -348,13 +349,14 @@ export default function AuthScreen() {
     </View>
   );
 
-  const webFieldChrome =
+  /** Web-only autofill / focus ring overrides (valid on web; RN typings omit `outlineStyle: "none"`). */
+  const webFieldChrome: TextStyle | null =
     Platform.OS === "web"
       ? ({
-          outlineStyle: "none" as const,
+          outlineStyle: "none",
           outlineWidth: 0,
           boxShadow: `0 0 0 1000px ${inputBg} inset`,
-        } as const)
+        } as unknown as TextStyle)
       : null;
 
   const inputStyle = [

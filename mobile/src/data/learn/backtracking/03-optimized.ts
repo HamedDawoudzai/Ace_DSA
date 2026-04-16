@@ -1,8 +1,10 @@
 import type { LearnDetailSection } from "../../learnSectionTypes";
+import { VISUAL_ANCHOR } from "../imageAnchor";
 
 export const backtrackingOptimizedSection: LearnDetailSection = {
   title: "Backtracking: systematic search with clean undo",
   body:
+    VISUAL_ANCHOR +
     "Define a recursive helper that takes the current starting index and the subset being built.\n\n" +
     "At each call:\n" +
     "1. Record the current subset as a valid answer.\n" +

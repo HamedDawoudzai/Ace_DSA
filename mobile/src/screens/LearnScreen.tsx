@@ -8,6 +8,7 @@ import {
   Image,
   ImageStyle,
   Animated,
+  TextInput,
 } from "react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useNavigation } from "@react-navigation/native";
@@ -15,6 +16,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../context/ThemeContext";
 import {
   ALGO_TOPICS,
+  COMPLEXITY_TOPICS,
   DATA_STRUCTURE_TOPICS,
   getAlgorithmTopic,
   getTopicImage,
@@ -24,6 +26,12 @@ import {
 import { MainStackParamList } from "../navigation/MainTabs";
 
 type Nav = NativeStackNavigationProp<MainStackParamList, "Learn">;
+
+const ALL_TOPICS_FOR_SEARCH = [
+  ...DATA_STRUCTURE_TOPICS,
+  ...ALGO_TOPICS,
+  ...COMPLEXITY_TOPICS,
+];
 
 // ─── Pulsing chevron for "Tap to open guide" ─────────────────────────────────
 function PulsingArrow({ color }: { color: string }) {
@@ -107,17 +115,35 @@ export default function LearnScreen() {
   const [track, setTrack] = useState<LearnTrack>("data-structures");
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [segmentWidth, setSegmentWidth] = useState(0);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Complexity=0, DataStructures=1, Algorithms=2
+  const trackToSlot = (t: LearnTrack) =>
+    t === "complexity" ? 0 : t === "data-structures" ? 1 : 2;
 
   const pillX = useRef(new Animated.Value(0)).current;
+
+  // Snap pill to correct slot once we know the container width
+  React.useEffect(() => {
+    if (segmentWidth <= 0) return;
+    const pillWidth = (segmentWidth - 8) / 3;
+    pillX.setValue(trackToSlot(track) * pillWidth);
+  }, [segmentWidth]);
 
   const handleTrackChange = useCallback(
     (newTrack: LearnTrack) => {
       if (newTrack === track) return;
       setTrack(newTrack);
       if (segmentWidth > 0) {
-        const pillWidth = (segmentWidth - 8) / 2;
+        const pillWidth = (segmentWidth - 8) / 3;
+        const targetX =
+          newTrack === "complexity"
+            ? 0
+            : newTrack === "data-structures"
+            ? pillWidth
+            : pillWidth * 2;
         Animated.spring(pillX, {
-          toValue: newTrack === "data-structures" ? 0 : pillWidth,
+          toValue: targetX,
           friction: 7,
           tension: 120,
           useNativeDriver: true,
@@ -127,11 +153,28 @@ export default function LearnScreen() {
     [track, segmentWidth, pillX]
   );
 
-  const topics = useMemo<LearnTopic[]>(() => {
+  const trackTopics = useMemo<LearnTopic[]>(() => {
     const src =
-      track === "data-structures" ? DATA_STRUCTURE_TOPICS : ALGO_TOPICS;
+      track === "data-structures"
+        ? DATA_STRUCTURE_TOPICS
+        : track === "algorithms"
+        ? ALGO_TOPICS
+        : COMPLEXITY_TOPICS;
     return [...src].sort((a, b) => a.level - b.level);
   }, [track]);
+
+  const topics = useMemo<LearnTopic[]>(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return trackTopics;
+    return ALL_TOPICS_FOR_SEARCH.filter(
+      (t) =>
+        t.title.toLowerCase().includes(q) ||
+        t.subtitle.toLowerCase().includes(q) ||
+        t.summary.toLowerCase().includes(q)
+    ).sort((a, b) => a.level - b.level);
+  }, [searchQuery, trackTopics]);
+
+  const isSearching = searchQuery.trim().length > 0;
 
   const dsImageStyleById: Record<string, ImageStyle> = useMemo(
     () => ({
@@ -146,16 +189,75 @@ export default function LearnScreen() {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
       <View style={styles.header}>
-        <Ionicons name="book-outline" size={24} color={colors.accent} />
+        <Ionicons name="book-outline" size={22} color={colors.accent} />
         <Text style={[styles.headerTitle, { color: colors.text }]}>
-          Learn Data Structures & Algorithms
+          Learn DSA
         </Text>
+        <View style={{ flex: 1 }} />
+        <Pressable
+          style={({ pressed }) => [
+            styles.flashcardBtn,
+            {
+              backgroundColor: colors.accentSubtle,
+              borderColor: colors.accent,
+              opacity: pressed ? 0.7 : 1,
+            },
+          ]}
+          onPress={() => navigation.navigate("Flashcard", { track })}
+          hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+        >
+          <Ionicons name="layers-outline" size={15} color={colors.accent} />
+          <Text style={[styles.flashcardBtnText, { color: colors.accent }]}>
+            Cards
+          </Text>
+        </Pressable>
       </View>
 
-      {/* Segmented control with animated sliding pill */}
+      {/* Search bar */}
+      <View
+        style={[
+          styles.searchWrap,
+          {
+            backgroundColor: colors.surface,
+            borderColor: isSearching ? colors.accent : colors.border,
+          },
+        ]}
+      >
+        <Ionicons
+          name="search-outline"
+          size={16}
+          color={isSearching ? colors.accent : colors.textMuted}
+        />
+        <TextInput
+          style={[styles.searchInput, { color: colors.text }]}
+          placeholder="Search topics..."
+          placeholderTextColor={colors.placeholderText}
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          autoCorrect={false}
+          autoCapitalize="none"
+          returnKeyType="search"
+        />
+        {isSearching && (
+          <Pressable
+            onPress={() => setSearchQuery("")}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <Ionicons name="close-circle" size={17} color={colors.textMuted} />
+          </Pressable>
+        )}
+      </View>
+
+      {/* Segmented control — hidden while searching */}
+      {isSearching && (
+        <Text style={[styles.searchResultsLabel, { color: colors.textMuted }]}>
+          {topics.length} result{topics.length !== 1 ? "s" : ""} across all tracks
+        </Text>
+      )}
       <View
         style={[
           styles.segment,
+          { display: isSearching ? "none" : "flex" },
           {
             backgroundColor: colors.segmentedBackground,
             borderColor: colors.border,
@@ -171,7 +273,7 @@ export default function LearnScreen() {
             style={[
               styles.segmentPill,
               {
-                width: (segmentWidth - 8) / 2,
+                width: (segmentWidth - 8) / 3,
                 backgroundColor: colors.surface,
                 shadowColor: colors.accent,
                 shadowOpacity: 0.15,
@@ -184,6 +286,23 @@ export default function LearnScreen() {
             pointerEvents="none"
           />
         )}
+        <Pressable
+          style={styles.segmentItem}
+          onPress={() => handleTrackChange("complexity")}
+        >
+          <Text
+            style={[
+              styles.segmentLabel,
+              {
+                color:
+                  track === "complexity" ? colors.accent : colors.textSecondary,
+                fontWeight: track === "complexity" ? "700" : "500",
+              },
+            ]}
+          >
+            Complexity
+          </Text>
+        </Pressable>
         <Pressable
           style={styles.segmentItem}
           onPress={() => handleTrackChange("data-structures")}
@@ -328,7 +447,9 @@ export default function LearnScreen() {
                   <Text style={[styles.step, { color: colors.accent }]}>
                     {item.track === "data-structures"
                       ? "Data Structure"
-                      : "Algorithm"}
+                      : item.track === "algorithms"
+                      ? "Algorithm"
+                      : "Complexity"}
                   </Text>
                   <Text
                     style={[
@@ -344,7 +465,11 @@ export default function LearnScreen() {
                       },
                     ]}
                   >
-                    {item.track === "data-structures" ? "DS" : "Algo"}
+                    {item.track === "data-structures"
+                      ? "DS"
+                      : item.track === "algorithms"
+                      ? "Algo"
+                      : "Big O"}
                   </Text>
                 </View>
 
@@ -439,6 +564,43 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     letterSpacing: -0.2,
   },
+  flashcardBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    borderRadius: 999,
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  flashcardBtnText: {
+    fontSize: 12,
+    fontWeight: "700",
+  },
+  searchWrap: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginHorizontal: 20,
+    marginBottom: 8,
+    borderRadius: 14,
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    gap: 8,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: "500",
+    paddingVertical: 0,
+  },
+  searchResultsLabel: {
+    fontSize: 12,
+    fontWeight: "600",
+    paddingHorizontal: 20,
+    paddingBottom: 6,
+    letterSpacing: 0.2,
+  },
   segment: {
     flexDirection: "row",
     marginHorizontal: 20,
@@ -464,8 +626,9 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   segmentLabel: {
-    fontSize: 13,
+    fontSize: 11,
     fontWeight: "600",
+    textAlign: "center",
   },
   listContent: {
     paddingHorizontal: 20,

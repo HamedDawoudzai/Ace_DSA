@@ -1,8 +1,10 @@
 import type { LearnDetailSection } from "../../learnSectionTypes";
+import { VISUAL_ANCHOR } from "../imageAnchor";
 
 export const greedyBruteSection: LearnDetailSection = {
   title: "Brute force: try every subset",
   body:
+    VISUAL_ANCHOR +
     "For n meetings, check all 2^n subsets. For each subset, verify that no two meetings overlap. " +
     "Track the largest valid subset size.\n\n" +
     "Time: O(n² × 2^n)—exponential. For n = 30 that is 900 billion subset checks. " +

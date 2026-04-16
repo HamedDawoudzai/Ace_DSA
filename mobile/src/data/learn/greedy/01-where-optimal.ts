@@ -1,8 +1,11 @@
 import type { LearnDetailSection } from "../../learnSectionTypes";
+import { VISUAL_ANCHOR } from "../imageAnchor";
 
 export const whereGreedyOptimal: LearnDetailSection = {
   title: "Where greedy would be optimal",
   body:
+    "The calendar strip above stacks meetings; greedy repeatedly picks the meeting that ends soonest so your resource frees up as fast as possible for the next compatible pick.\n\n" +
+    VISUAL_ANCHOR +
     "Running example (activity selection — maximum non-overlapping meetings):\n\n" +
     "You are given a list of meetings, each as [start, end]. " +
     "Select the maximum number of meetings that can be attended without any two overlapping.\n\n" +

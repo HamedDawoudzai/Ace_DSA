@@ -1,8 +1,11 @@
 import type { LearnDetailSection } from "../../learnSectionTypes";
+import { VISUAL_ANCHOR } from "../imageAnchor";
 
 export const whereSortingOptimal: LearnDetailSection = {
   title: "Where sorting would be optimal",
   body:
+    "The meeting intervals sketched above sit on a timeline—sorting them reveals overlaps because anything that crosses in time becomes adjacent after the right sort key.\n\n" +
+    VISUAL_ANCHOR +
     "Running example (detect if any two meetings overlap):\n\n" +
     "You are given a list of meetings, each as [start, end]. " +
     "Return true if any two meetings overlap (i.e. a room would be double-booked).\n\n" +

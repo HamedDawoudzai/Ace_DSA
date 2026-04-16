@@ -1,8 +1,10 @@
 import type { LearnDetailSection } from "../../learnSectionTypes";
+import { VISUAL_ANCHOR } from "../imageAnchor";
 
 export const bfsBruteSection: LearnDetailSection = {
   title: "Brute force: DFS tries all paths",
   body:
+    VISUAL_ANCHOR +
     "A naive DFS explores every possible path from start to end, tracking the minimum length found. " +
     "Without pruning, the same cells can be revisited on different branches.\n\n" +
     "Worst case: O(4^(n×m)) paths in a fully open grid—the branching factor is 4 (four directions), " +

@@ -1,13 +1,16 @@
-import React, { useEffect, useRef } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { View, Text, StyleSheet, SafeAreaView, Animated } from "react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useNavigation } from "@react-navigation/native";
+import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import HomeCard from "../components/HomeCard";
 import SpinningLogo from "../components/SpinningLogo";
 import ThemeToggle from "../components/ThemeToggle";
 import { MainStackParamList } from "../navigation/MainTabs";
 import { useTheme } from "../context/ThemeContext";
+import api from "../services/api";
+import { StatsResponse } from "../types";
 
 function getGreeting(): { text: string; icon: keyof typeof Ionicons.glyphMap } {
   const h = new Date().getHours();
@@ -21,6 +24,10 @@ export default function HomeScreen() {
     useNavigation<NativeStackNavigationProp<MainStackParamList>>();
   const { colors, isDark } = useTheme();
   const { text: greetingText, icon: greetingIcon } = getGreeting();
+
+  const [streak, setStreak] = useState<number | null>(null);
+  const [completed, setCompleted] = useState<number | null>(null);
+  const [total, setTotal] = useState<number | null>(null);
 
   // Greeting fade-in + slide-up on mount
   const greetingOpacity = useRef(new Animated.Value(0)).current;
@@ -41,6 +48,21 @@ export default function HomeScreen() {
       }),
     ]).start();
   }, []);
+
+  // Refresh stats whenever this screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      api.get<StatsResponse>("/me/stats").then(({ data }) => {
+        setStreak(data.streak);
+        setCompleted(data.total_completed);
+        setTotal(data.total_problems);
+      }).catch(() => {
+        // Silently ignore — stats pills just won't show
+      });
+    }, [])
+  );
+
+  const showStats = streak !== null;
 
   return (
     <SafeAreaView
@@ -81,6 +103,52 @@ export default function HomeScreen() {
           >
             Let's practice some DSA today
           </Text>
+
+          {/* Streak + progress pills */}
+          {showStats && (
+            <View style={styles.pillsRow}>
+              {(streak ?? 0) > 0 && (
+                <View
+                  style={[
+                    styles.pill,
+                    {
+                      backgroundColor: colors.accentSubtle,
+                      borderColor: colors.accent,
+                    },
+                  ]}
+                >
+                  <Ionicons name="flame" size={13} color={colors.accent} />
+                  <Text style={[styles.pillText, { color: colors.accent }]}>
+                    {streak} day streak
+                  </Text>
+                </View>
+              )}
+              {completed !== null && total !== null && total > 0 && (
+                <View
+                  style={[
+                    styles.pill,
+                    {
+                      backgroundColor: isDark
+                        ? "rgba(52,211,153,0.10)"
+                        : "rgba(34,197,94,0.09)",
+                      borderColor: isDark
+                        ? "rgba(52,211,153,0.35)"
+                        : "rgba(34,197,94,0.3)",
+                    },
+                  ]}
+                >
+                  <Ionicons
+                    name="checkmark-circle"
+                    size={13}
+                    color={colors.success}
+                  />
+                  <Text style={[styles.pillText, { color: colors.success }]}>
+                    {completed}/{total} solved
+                  </Text>
+                </View>
+              )}
+            </View>
+          )}
         </Animated.View>
         <ThemeToggle />
       </View>
@@ -151,6 +219,25 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "500",
     marginTop: 5,
+  },
+  pillsRow: {
+    flexDirection: "row",
+    gap: 8,
+    marginTop: 10,
+    flexWrap: "wrap",
+  },
+  pill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    borderRadius: 999,
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  pillText: {
+    fontSize: 12,
+    fontWeight: "700",
   },
   hero: {
     flex: 1,

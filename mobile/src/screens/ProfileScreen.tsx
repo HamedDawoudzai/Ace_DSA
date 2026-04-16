@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
+import { useFocusEffect } from "@react-navigation/native";
 import {
   View,
   Text,
@@ -15,6 +16,8 @@ import { useAuth } from "../context/AuthContext";
 import { useNotify } from "../context/NotificationContext";
 import api from "../services/api";
 import SpinningLogo from "../components/SpinningLogo";
+import { StatsResponse } from "../types";
+import { getVisitedIds } from "../services/learnProgress";
 
 interface UserProfile {
   id: string;
@@ -79,6 +82,12 @@ export default function ProfileScreen() {
 
   const [deleting, setDeleting] = useState(false);
 
+  // Progress stats
+  const [streak, setStreak] = useState<number | null>(null);
+  const [totalCompleted, setTotalCompleted] = useState<number | null>(null);
+  const [totalProblems, setTotalProblems] = useState<number | null>(null);
+  const [learnVisited, setLearnVisited] = useState<number | null>(null);
+
   const fetchProfile = useCallback(async () => {
     try {
       setLoading(true);
@@ -94,6 +103,17 @@ export default function ProfileScreen() {
   useEffect(() => {
     fetchProfile();
   }, [fetchProfile]);
+
+  useFocusEffect(
+    useCallback(() => {
+      api.get<StatsResponse>("/me/stats").then(({ data }) => {
+        setStreak(data.streak);
+        setTotalCompleted(data.total_completed);
+        setTotalProblems(data.total_problems);
+      }).catch(() => {});
+      getVisitedIds().then((ids) => setLearnVisited(ids.size));
+    }, [])
+  );
 
   const openEdit = () => {
     if (!profile) return;
@@ -257,6 +277,100 @@ export default function ProfileScreen() {
           </>
         )}
       </View>
+
+      {/* ── MY PROGRESS ──────────────────────────────────── */}
+      {(streak !== null || totalCompleted !== null) && (
+        <>
+          <Text style={[styles.sectionHeader, { color: colors.textMuted }]}>
+            MY PROGRESS
+          </Text>
+          <View
+            style={[
+              styles.statsCard,
+              { backgroundColor: colors.surface, borderColor: colors.border },
+            ]}
+          >
+            <View style={styles.statsRow}>
+              <View style={styles.statItem}>
+                <View
+                  style={[
+                    styles.statIconCircle,
+                    { backgroundColor: colors.accentSubtle },
+                  ]}
+                >
+                  <Ionicons name="flame" size={20} color={colors.accent} />
+                </View>
+                <Text style={[styles.statValue, { color: colors.accent }]}>
+                  {streak ?? 0}
+                </Text>
+                <Text style={[styles.statLabel, { color: colors.textMuted }]}>
+                  Day Streak
+                </Text>
+              </View>
+
+              <View
+                style={[styles.statDivider, { backgroundColor: colors.border }]}
+              />
+
+              <View style={styles.statItem}>
+                <View
+                  style={[
+                    styles.statIconCircle,
+                    {
+                      backgroundColor: isDark
+                        ? "rgba(52,211,153,0.12)"
+                        : "rgba(34,197,94,0.10)",
+                    },
+                  ]}
+                >
+                  <Ionicons
+                    name="checkmark-circle"
+                    size={20}
+                    color={colors.success}
+                  />
+                </View>
+                <Text style={[styles.statValue, { color: colors.success }]}>
+                  {totalCompleted ?? 0}
+                  {totalProblems ? (
+                    <Text
+                      style={[
+                        styles.statValueSub,
+                        { color: colors.textMuted },
+                      ]}
+                    >
+                      /{totalProblems}
+                    </Text>
+                  ) : null}
+                </Text>
+                <Text style={[styles.statLabel, { color: colors.textMuted }]}>
+                  Drills Done
+                </Text>
+              </View>
+
+              <View
+                style={[styles.statDivider, { backgroundColor: colors.border }]}
+              />
+
+              <View style={styles.statItem}>
+                <View
+                  style={[
+                    styles.statIconCircle,
+                    { backgroundColor: colors.accentSubtle },
+                  ]}
+                >
+                  <Ionicons name="book" size={20} color={colors.accent} />
+                </View>
+                <Text style={[styles.statValue, { color: colors.accent }]}>
+                  {learnVisited ?? 0}
+                </Text>
+                <Text style={[styles.statLabel, { color: colors.textMuted }]}>
+                  Topics Read
+                </Text>
+              </View>
+            </View>
+          </View>
+        </>
+      )}
 
       <Text style={[styles.sectionHeader, { color: colors.textMuted }]}>
         ACCOUNT
@@ -779,5 +893,51 @@ const styles = StyleSheet.create({
   },
   bottomSpacer: {
     height: 24,
+  },
+  statsCard: {
+    borderRadius: 16,
+    borderWidth: 1,
+    marginBottom: 20,
+    paddingVertical: 20,
+    paddingHorizontal: 8,
+  },
+  statsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-around",
+  },
+  statItem: {
+    flex: 1,
+    alignItems: "center",
+    gap: 6,
+  },
+  statIconCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 2,
+  },
+  statValue: {
+    fontSize: 22,
+    fontWeight: "800",
+    letterSpacing: -0.5,
+  },
+  statValueSub: {
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  statLabel: {
+    fontSize: 11,
+    fontWeight: "600",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+    textAlign: "center",
+  },
+  statDivider: {
+    width: 1,
+    height: 56,
+    borderRadius: 1,
   },
 });

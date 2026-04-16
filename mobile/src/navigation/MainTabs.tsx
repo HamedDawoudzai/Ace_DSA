@@ -22,16 +22,19 @@ import LearnDetailScreen from "../screens/LearnDetailScreen";
 import PracticeScreen from "../screens/PracticeScreen";
 import StatsScreen from "../screens/StatsScreen";
 import ProfileScreen from "../screens/ProfileScreen";
+import FlashcardScreen from "../screens/FlashcardScreen";
 import { useTheme } from "../context/ThemeContext";
 import { Drill } from "../types";
+import { LearnTrack } from "../data/learnTopics";
 
 export type MainStackParamList = {
   Home: undefined;
   Learn: undefined;
-  LearnDetail: { id: string; track: "data-structures" | "algorithms" };
+  LearnDetail: { id: string; track: "data-structures" | "algorithms" | "complexity" };
   Drills: { advance?: boolean } | undefined;
-  DrillDetail: { drill: Drill; fromQueue?: boolean };
+  DrillDetail: { drill: Drill; fromQueue?: boolean; drillQueue?: Drill[]; queueIndex?: number; selectedCategory?: string | null };
   Practice: undefined;
+  Flashcard: { track: LearnTrack };
 };
 
 const Stack = createNativeStackNavigator<MainStackParamList>();
@@ -75,6 +78,11 @@ function HomeStack() {
         options={{ title: "Drill" }}
       />
       <Stack.Screen name="Practice" component={PracticeScreen} />
+      <Stack.Screen
+        name="Flashcard"
+        component={FlashcardScreen}
+        options={{ headerShown: false }}
+      />
     </Stack.Navigator>
   );
 }

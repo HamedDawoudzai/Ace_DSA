@@ -1,8 +1,10 @@
 import type { LearnDetailSection } from "../../learnSectionTypes";
+import { VISUAL_ANCHOR } from "../imageAnchor";
 
 export const dp2dOptimizedSection: LearnDetailSection = {
   title: "2D DP table: turn it into O(m × n)",
   body:
+    VISUAL_ANCHOR +
     "Create a (m+1) × (n+1) table initialised to 0. Row indices represent prefixes of s, column indices prefixes of t.\n\n" +
     "Fill row by row:\n" +
     "• If s[i−1] == t[j−1]: dp[i][j] = dp[i−1][j−1] + 1.\n" +

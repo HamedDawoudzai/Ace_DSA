@@ -1,8 +1,10 @@
 import type { LearnDetailSection } from "../../learnSectionTypes";
+import { VISUAL_ANCHOR } from "../imageAnchor";
 
 export const arrayScanPracticeSection: LearnDetailSection = {
   title: "Stretch: more single-pass patterns",
   body:
+    VISUAL_ANCHOR +
     "The same scan-once idea applies everywhere:\n\n" +
     "• Running maximum / minimum — track the best value seen so far.\n" +
     "• Kadane's algorithm — maximum subarray sum in one pass (extend or restart).\n" +

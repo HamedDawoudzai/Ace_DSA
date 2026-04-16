@@ -1,8 +1,10 @@
 import type { LearnDetailSection } from "../../learnSectionTypes";
+import { VISUAL_ANCHOR } from "../imageAnchor";
 
 export const greedyPracticeSection: LearnDetailSection = {
   title: "Stretch: when greedy works (and when it does not)",
   body:
+    VISUAL_ANCHOR +
     "Greedy shines when the problem has the exchange-argument property—you can prove swapping any non-greedy choice for the greedy one never hurts:\n\n" +
     "• Jump Game — can you reach the end? Track the maximum reachable index. O(n).\n" +
     "• Minimum number of arrows to burst balloons — same as activity selection by end coordinate.\n" +

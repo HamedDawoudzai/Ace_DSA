@@ -1,8 +1,11 @@
 import type { LearnDetailSection } from "../../learnSectionTypes";
+import { VISUAL_ANCHOR } from "../imageAnchor";
 
 export const whereDijkstraOptimal: LearnDetailSection = {
   title: "Where Dijkstra's would be optimal",
   body:
+    "The weighted graph above puts costs on edges; Dijkstra always settles the cheapest unknown node next, so the growing cloud in the picture is “best known distance so far.”\n\n" +
+    VISUAL_ANCHOR +
     "Running example (cheapest flight cost between cities):\n\n" +
     "You are given a weighted directed graph where nodes are cities and edge weights are flight costs. " +
     "Find the minimum cost to travel from a source city to a destination city. " +

@@ -1,8 +1,11 @@
 import type { LearnDetailSection } from "../../learnSectionTypes";
+import { VISUAL_ANCHOR } from "../imageAnchor";
 
 export const whereDp2dOptimal: LearnDetailSection = {
   title: "Where 2D DP would be optimal",
   body:
+    "The 2D table above lines up prefixes of two strings—cell (i, j) is the LCS length for the first i letters of one word and the first j letters of the other.\n\n" +
+    VISUAL_ANCHOR +
     "Running example (Longest Common Subsequence):\n\n" +
     "Given two strings s and t, find the length of their longest common subsequence (LCS)—the longest sequence of characters that appears in both strings in the same relative order (not necessarily contiguous).\n\n" +
     "Examples:\n" +

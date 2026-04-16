@@ -1,8 +1,10 @@
 import type { LearnDetailSection } from "../../learnSectionTypes";
+import { VISUAL_ANCHOR } from "../imageAnchor";
 
 export const slidingWindowPracticeSection: LearnDetailSection = {
   title: "Stretch: variable-size windows",
   body:
+    VISUAL_ANCHOR +
     "Fixed-size is just the entry point. Variable windows unlock harder problems:\n\n" +
     "• Longest substring without repeating characters — expand right until duplicate, shrink left until clean.\n" +
     "• Minimum window substring — shrink once the window contains all required characters.\n" +

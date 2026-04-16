@@ -1,8 +1,10 @@
 import type { LearnDetailSection } from "../../learnSectionTypes";
+import { VISUAL_ANCHOR } from "../imageAnchor";
 
 export const dijkstraOptimizedSection: LearnDetailSection = {
   title: "Dijkstra's: turn it into O((V + E) log V)",
   body:
+    VISUAL_ANCHOR +
     "Maintain a dist table initialised to infinity for every node except the source (dist[src] = 0). " +
     "Use a min-heap (priority queue) seeded with (cost=0, node=src).\n\n" +
     "Each iteration:\n" +

@@ -1,9 +1,12 @@
 import type { LearnDetailSection } from "../../learnSectionTypes";
+import { VISUAL_ANCHOR } from "../imageAnchor";
 
 /** Problem statement + when two pointers are the right tool. */
 export const whereTwoPointersOptimal: LearnDetailSection = {
   title: "Where two pointers would be optimal",
   body:
+    "The two-pointer artwork at the top shows two indices on the same sorted line—think of them as left and right hands squeezing inward until the pair sum hits the target.\n\n" +
+    VISUAL_ANCHOR +
     "Running example (pair sum on a sorted array):\n\n" +
     "You are given an integer array sorted in non-decreasing order and a target T. " +
     "Return whether there exist two different indices i and j such that arr[i] + arr[j] == T.\n\n" +

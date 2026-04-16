@@ -1,8 +1,11 @@
 import type { LearnDetailSection } from "../../learnSectionTypes";
+import { VISUAL_ANCHOR } from "../imageAnchor";
 
 export const dfsTreeTraversalsSection: LearnDetailSection = {
   title: "Tree Traversals: In-order, Pre-order, Post-order",
   body:
+    "The annotated tree above prints the same nodes three ways—preorder, inorder, postorder—only the moment you record the value relative to visiting children changes.\n\n" +
+    VISUAL_ANCHOR +
     "DFS on binary trees visits every node exactly once. The three classic orders differ only in *when* you record the current node relative to visiting its children.\n\n" +
     "Pre-order  (Root → Left → Right)\n" +
     "• Record the node first, then recurse left, then recurse right.\n" +

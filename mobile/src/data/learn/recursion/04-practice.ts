@@ -1,8 +1,10 @@
 import type { LearnDetailSection } from "../../learnSectionTypes";
+import { VISUAL_ANCHOR } from "../imageAnchor";
 
 export const recursionPracticeSection: LearnDetailSection = {
   title: "Stretch: thinking recursively",
   body:
+    VISUAL_ANCHOR +
     "Recursion is the foundation for trees, graphs, divide-and-conquer, and backtracking:\n\n" +
     "• Power(x, n) — x^n = x × x^(n−1); halve with x^n = (x^(n/2))^2 for O(log n).\n" +
     "• Tree height — height(node) = 1 + max(height(left), height(right)).\n" +

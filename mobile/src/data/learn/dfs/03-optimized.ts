@@ -1,8 +1,10 @@
 import type { LearnDetailSection } from "../../learnSectionTypes";
+import { VISUAL_ANCHOR } from "../imageAnchor";
 
 export const dfsOptimizedSection: LearnDetailSection = {
   title: "DFS flood-fill: turn it into O(n × m)",
   body:
+    VISUAL_ANCHOR +
     "Scan every cell. When you find a '1' that has not been visited, increment the island count and immediately launch a DFS to mark all connected land cells as visited.\n\n" +
     "The DFS 'sinks' the entire island before the outer loop moves on—no second pass needed.\n\n" +
     "Time: O(n × m)—each cell is visited exactly once.\n" +

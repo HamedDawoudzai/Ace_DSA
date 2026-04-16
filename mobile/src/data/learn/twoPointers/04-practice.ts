@@ -1,8 +1,10 @@
 import type { LearnDetailSection } from "../../learnSectionTypes";
+import { VISUAL_ANCHOR } from "../imageAnchor";
 
 export const practiceSection: LearnDetailSection = {
   title: "Stretch: more two-pointer patterns",
   body:
+    VISUAL_ANCHOR +
     "Same idea, different shapes:\n\n" +
     "• 3Sum / 4Sum — fix one (or more) indices, run two pointers on the rest.\n" +
     "• Container With Most Water, Trapping Rain Water — opposite ends with height logic.\n" +

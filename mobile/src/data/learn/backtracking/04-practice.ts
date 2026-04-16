@@ -1,8 +1,10 @@
 import type { LearnDetailSection } from "../../learnSectionTypes";
+import { VISUAL_ANCHOR } from "../imageAnchor";
 
 export const backtrackingPracticeSection: LearnDetailSection = {
   title: "Stretch: pruning makes backtracking powerful",
   body:
+    VISUAL_ANCHOR +
     "The same template handles many interview problems—the key is the pruning condition:\n\n" +
     "• Permutations — loop over remaining choices (track a visited set instead of a start index).\n" +
     "• Combinations summing to target — prune when running sum exceeds target; skip duplicates after sorting.\n" +

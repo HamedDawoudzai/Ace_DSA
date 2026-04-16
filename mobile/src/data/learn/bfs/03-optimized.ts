@@ -1,8 +1,10 @@
 import type { LearnDetailSection } from "../../learnSectionTypes";
+import { VISUAL_ANCHOR } from "../imageAnchor";
 
 export const bfsOptimizedSection: LearnDetailSection = {
   title: "BFS: turn it into O(n × m)",
   body:
+    VISUAL_ANCHOR +
     "Use a queue (deque). Start with (row=0, col=0, distance=1) and mark it visited. " +
     "Each iteration pops the front cell, tries all four neighbours, and enqueues any that are open and not yet visited.\n\n" +
     "The first time you dequeue the bottom-right cell, its stored distance is the shortest path—because BFS processes cells in non-decreasing distance order.\n\n" +

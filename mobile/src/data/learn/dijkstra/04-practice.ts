@@ -1,8 +1,10 @@
 import type { LearnDetailSection } from "../../learnSectionTypes";
+import { VISUAL_ANCHOR } from "../imageAnchor";
 
 export const dijkstraPracticeSection: LearnDetailSection = {
   title: "Stretch: extensions and alternatives",
   body:
+    VISUAL_ANCHOR +
     "Dijkstra's is the foundation for many shortest-path variants:\n\n" +
     "• Cheapest flights within K stops — add stops as state; use (cost, stops, node) in heap.\n" +
     "• Network delay time — run Dijkstra from the source; answer is max dist across all nodes.\n" +

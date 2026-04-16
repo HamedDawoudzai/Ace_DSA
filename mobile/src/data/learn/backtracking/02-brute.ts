@@ -1,8 +1,10 @@
 import type { LearnDetailSection } from "../../learnSectionTypes";
+import { VISUAL_ANCHOR } from "../imageAnchor";
 
 export const backtrackingBruteSection: LearnDetailSection = {
   title: "Brute force: enumerate with bitmasks",
   body:
+    VISUAL_ANCHOR +
     "For n elements there are 2^n subsets. Each subset maps to a bitmask from 0 to 2^n − 1, " +
     "where bit i being set means element i is included.\n\n" +
     "Loop over every bitmask, decode which elements are in, collect the subset. " +

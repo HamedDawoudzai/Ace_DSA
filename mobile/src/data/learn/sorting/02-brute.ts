@@ -1,8 +1,10 @@
 import type { LearnDetailSection } from "../../learnSectionTypes";
+import { VISUAL_ANCHOR } from "../imageAnchor";
 
 export const sortingBruteSection: LearnDetailSection = {
   title: "Brute force: compare every pair",
   body:
+    VISUAL_ANCHOR +
     "Check all pairs (i, j) with i < j. Two meetings [s1, e1] and [s2, e2] overlap if s2 < e1 (assuming s1 ≤ s2).\n\n" +
     "Two nested loops → O(n²) time. For 10 000 meetings that is 100 million comparisons. " +
     "There is no ordering assumption so every pair must be checked.",

@@ -1,8 +1,10 @@
 import type { LearnDetailSection } from "../../learnSectionTypes";
+import { VISUAL_ANCHOR } from "../imageAnchor";
 
 export const arrayScanOptimizedSection: LearnDetailSection = {
   title: "Prefix sum: one scan, O(1) queries",
   body:
+    VISUAL_ANCHOR +
     "Build a prefix array where prefix[i] = arr[0] + arr[1] + … + arr[i − 1] (with prefix[0] = 0 as a sentinel).\n\n" +
     "Any range sum arr[L..R] is then prefix[R + 1] − prefix[L]. " +
     "One O(n) scan to build the table; every query answers in O(1).\n\n" +

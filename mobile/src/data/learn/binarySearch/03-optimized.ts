@@ -1,8 +1,10 @@
 import type { LearnDetailSection } from "../../learnSectionTypes";
+import { VISUAL_ANCHOR } from "../imageAnchor";
 
 export const binarySearchOptimizedSection: LearnDetailSection = {
   title: "Binary search: turn it into O(log n)",
   body:
+    VISUAL_ANCHOR +
     "Set left = 0 and right = n − 1. Repeatedly check the midpoint mid = (left + right) // 2.\n\n" +
     "• If arr[mid] == target → found, return mid.\n" +
     "• If arr[mid] < target → target must be in the right half; set left = mid + 1.\n" +

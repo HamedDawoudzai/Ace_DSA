@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
+import { useNavigation } from "@react-navigation/native";
 import { useFocusEffect } from "@react-navigation/native";
 import api from "../services/api";
 import { Drill, DrillCategory, UserProgress } from "../types";
@@ -55,7 +55,6 @@ function shuffle<T>(arr: T[]): T[] {
 export default function DrillsScreen() {
   const { colors, isDark } = useTheme();
   const navigation = useNavigation<NativeStackNavigationProp<MainStackParamList>>();
-  const route = useRoute<RouteProp<MainStackParamList, "Drills">>();
 
   const [phase, setPhase] = useState<Phase>("welcome");
   const [categories, setCategories] = useState<DrillCategory[]>([]);
@@ -64,7 +63,6 @@ export default function DrillsScreen() {
   const [error, setError] = useState<string | null>(null);
 
   const [drillQueue, setDrillQueue] = useState<Drill[]>([]);
-  const [currentDrillIndex, setCurrentDrillIndex] = useState(0);
   const [drillLoading, setDrillLoading] = useState(false);
 
   const welcomeAnim = useRef(new Animated.Value(0)).current;
@@ -148,9 +146,14 @@ export default function DrillsScreen() {
 
         const shuffled = shuffle(remaining);
         setDrillQueue(shuffled);
-        setCurrentDrillIndex(0);
         setPhase("drilling");
-        navigation.navigate("DrillDetail", { drill: shuffled[0], fromQueue: true });
+        navigation.navigate("DrillDetail", {
+          drill: shuffled[0],
+          fromQueue: true,
+          drillQueue: shuffled,
+          queueIndex: 0,
+          selectedCategory: category,
+        });
       } catch {
         setError("Could not load drills. Try again.");
         setPhase("welcome");
@@ -184,33 +187,18 @@ export default function DrillsScreen() {
     setPhase("welcome");
     setSelectedCategory(null);
     setDrillQueue([]);
-    setCurrentDrillIndex(0);
     setError(null);
     fetchCategories();
   }, [fetchCategories]);
 
+  // When DrillsScreen regains focus while a session was active (user navigated
+  // back via the header back button), reset to the category selector.
   useFocusEffect(
     useCallback(() => {
-      if (phase !== "drilling" || drillQueue.length === 0) return;
-
-      const shouldAdvance = route.params?.advance === true;
-      if (!shouldAdvance) {
+      if (phase === "drilling") {
         resetToWelcome();
-        return;
       }
-
-      navigation.setParams({ advance: undefined });
-
-      const nextIndex = currentDrillIndex + 1;
-      if (nextIndex < drillQueue.length) {
-        setCurrentDrillIndex(nextIndex);
-        setTimeout(() => {
-          navigation.navigate("DrillDetail", { drill: drillQueue[nextIndex], fromQueue: true });
-        }, 300);
-      } else {
-        fetchDrillsAndStart(selectedCategory);
-      }
-    }, [phase, drillQueue, currentDrillIndex, selectedCategory, navigation, fetchDrillsAndStart, resetToWelcome, route.params])
+    }, [phase, resetToWelcome])
   );
 
   const allCategories = useMemo(() => {

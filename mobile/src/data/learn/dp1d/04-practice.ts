@@ -1,8 +1,10 @@
 import type { LearnDetailSection } from "../../learnSectionTypes";
+import { VISUAL_ANCHOR } from "../imageAnchor";
 
 export const dp1dPracticeSection: LearnDetailSection = {
   title: "Stretch: classic 1D DP problems",
   body:
+    VISUAL_ANCHOR +
     "Climbing stairs is the simplest 1D DP. The same pattern—define state, find recurrence, fill bottom-up—applies everywhere:\n\n" +
     "• House Robber — dp[i] = max(dp[i−2] + nums[i], dp[i−1]). Cannot rob adjacent houses.\n" +
     "• Coin Change — dp[amount] = min coins needed. Inner loop: try each coin.\n" +

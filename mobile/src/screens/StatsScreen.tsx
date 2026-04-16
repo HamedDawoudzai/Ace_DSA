@@ -17,7 +17,7 @@ import Svg, { Circle } from "react-native-svg";
 import api from "../services/api";
 import { StatsResponse, CategoryStats } from "../types";
 import { useTheme } from "../context/ThemeContext";
-import { DATA_STRUCTURE_TOPICS, ALGO_TOPICS } from "../data/learnTopics";
+import { DATA_STRUCTURE_TOPICS, ALGO_TOPICS, COMPLEXITY_TOPICS } from "../data/learnTopics";
 import { getVisitedIds } from "../services/learnProgress";
 
 const RING_SIZE = 160;
@@ -67,6 +67,7 @@ function ProgressRing({
 
 const DS_TOPICS = DATA_STRUCTURE_TOPICS.slice().sort((a, b) => a.level - b.level);
 const ALGO_TOPICS_SORTED = ALGO_TOPICS.slice().sort((a, b) => a.level - b.level);
+const COMPLEXITY_TOPICS_SORTED = COMPLEXITY_TOPICS.slice().sort((a, b) => a.level - b.level);
 
 function ProgressionTimeline({
   topics,
@@ -108,7 +109,13 @@ function ProgressionTimeline({
             ]}
           >
             <Ionicons
-              name={label === "Data Structures" ? "layers-outline" : "git-branch-outline"}
+              name={
+                label === "Data Structures"
+                  ? "layers-outline"
+                  : label === "Algorithms"
+                  ? "git-branch-outline"
+                  : "speedometer-outline"
+              }
               size={16}
               color={colors.accent}
             />
@@ -523,6 +530,11 @@ export default function StatsScreen() {
         </Text>
       </View>
 
+      <ProgressionTimeline
+        topics={COMPLEXITY_TOPICS_SORTED}
+        visitedIds={visitedIds}
+        label="Complexity"
+      />
       <ProgressionTimeline
         topics={DS_TOPICS}
         visitedIds={visitedIds}
