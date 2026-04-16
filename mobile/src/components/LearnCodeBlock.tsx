@@ -14,22 +14,33 @@ type Props = {
   language?: string;
 };
 
-/** Native / fallback: monospace block with accent rail (matches app chrome). */
+/** Native: monospace block with strong text contrast (not muted grey). */
 export default function LearnCodeBlock({ code, language = "python" }: Props) {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const trimmed = compactCodeBlock(code);
+
+  const panelBg = isDark ? "#0D0D0D" : "#FFFFFF";
+  const borderCol = isDark ? colors.accent : colors.border;
 
   return (
     <View
       style={[
         styles.wrapNative,
         {
-          borderColor: colors.border,
-          backgroundColor: colors.surfaceAlt,
+          borderColor: borderCol,
+          backgroundColor: panelBg,
         },
       ]}
     >
-      <View style={[styles.langRow, { borderBottomColor: colors.border }]}>
+      <View
+        style={[
+          styles.langRow,
+          {
+            borderBottomColor: isDark ? "#1E1E1E" : colors.border,
+            backgroundColor: isDark ? "#141414" : colors.accentSubtle,
+          },
+        ]}
+      >
         <View style={[styles.accentRail, { backgroundColor: colors.accent }]} />
         <Text style={[styles.langTextNative, { color: colors.accent }]}>
           {language.toUpperCase()}
@@ -41,7 +52,7 @@ export default function LearnCodeBlock({ code, language = "python" }: Props) {
         contentContainerStyle={styles.nativeScrollContent}
       >
         <Text
-          style={[styles.nativeCode, { color: colors.textSecondary }]}
+          style={[styles.nativeCode, { color: colors.text }]}
           selectable
         >
           {trimmed}
@@ -53,18 +64,18 @@ export default function LearnCodeBlock({ code, language = "python" }: Props) {
 
 const styles = StyleSheet.create({
   wrapNative: {
-    marginTop: 12,
-    borderRadius: 14,
-    borderWidth: 1,
+    marginTop: 14,
+    borderRadius: 12,
+    borderWidth: StyleSheet.hairlineWidth + 0.5,
     overflow: "hidden",
-    maxHeight: 420,
+    maxHeight: 440,
   },
   langRow: {
     flexDirection: "row",
     alignItems: "center",
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    paddingVertical: 8,
-    paddingHorizontal: 10,
+    borderBottomWidth: 1,
+    paddingVertical: 9,
+    paddingHorizontal: 12,
     gap: 8,
   },
   accentRail: {
@@ -78,8 +89,8 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   nativeScrollContent: {
-    paddingHorizontal: 12,
-    paddingVertical: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 14,
   },
   nativeCode: {
     fontFamily: Platform.select({
@@ -87,7 +98,8 @@ const styles = StyleSheet.create({
       android: "monospace",
       default: "monospace",
     }),
-    fontSize: 12,
-    lineHeight: 17,
+    fontSize: 13,
+    lineHeight: 20,
+    letterSpacing: 0.15,
   },
 });

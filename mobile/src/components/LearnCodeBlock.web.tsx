@@ -13,32 +13,37 @@ type Props = {
 };
 
 /**
- * Web: syntax highlighting in a plain `div` wrapper (not RN View) so the
- * browser lays out `<pre>` as normal text, not flex-spaced rows.
+ * Web: syntax highlighting with a high-contrast panel (not washed-out grey).
  */
 export default function LearnCodeBlock({ code, language = "python" }: Props) {
   const { colors, isDark } = useTheme();
   const compact = compactCodeBlock(code);
   const hl = isDark ? oneDark : oneLight;
 
+  const outerBorder = isDark ? colors.accent : colors.border;
+  const codeBg = isDark ? "#0D1117" : "#FFFFFF";
+
   return (
     <div
       style={{
-        marginTop: 12,
-        borderRadius: 14,
-        border: `1px solid ${colors.accentMedium}`,
+        marginTop: 14,
+        borderRadius: 12,
+        border: `1.5px solid ${outerBorder}`,
         overflow: "hidden",
-        backgroundColor: colors.surfaceAlt,
+        backgroundColor: isDark ? "#0A0A0A" : colors.surface,
         display: "block",
         width: "100%",
+        boxShadow: isDark
+          ? "0 0 0 1px rgba(13,217,196,0.12)"
+          : "0 1px 3px rgba(0,0,0,0.06)",
       }}
     >
       <div
         style={{
-          padding: "6px 10px",
-          backgroundColor: colors.accentSubtle,
-          display: "inline-block",
-          borderBottomRightRadius: 10,
+          padding: "8px 12px",
+          backgroundColor: isDark ? "#141414" : colors.accentSubtle,
+          display: "block",
+          borderBottom: `1px solid ${isDark ? "#222" : colors.border}`,
         }}
       >
         <span
@@ -62,11 +67,11 @@ export default function LearnCodeBlock({ code, language = "python" }: Props) {
         wrapLongLines={false}
         customStyle={{
           margin: 0,
-          padding: "12px 14px",
+          padding: "14px 16px",
           borderRadius: 0,
-          background: isDark ? "#0E1827" : "#F2F0EB",
-          fontSize: 12,
-          lineHeight: 1.45,
+          background: codeBg,
+          fontSize: 13,
+          lineHeight: 1.55,
           whiteSpace: "pre",
           display: "block",
           fontFamily:
@@ -76,7 +81,7 @@ export default function LearnCodeBlock({ code, language = "python" }: Props) {
           style: {
             fontFamily:
               'ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace',
-            lineHeight: 1.45,
+            lineHeight: 1.55,
           },
         }}
       >

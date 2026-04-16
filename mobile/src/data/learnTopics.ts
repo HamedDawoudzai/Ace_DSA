@@ -13,6 +13,17 @@ import { DIJKSTRA_SECTIONS } from "./learn/dijkstra";
 import { GREEDY_SECTIONS } from "./learn/greedy";
 import { DP_1D_SECTIONS } from "./learn/dp1d";
 import { DP_2D_SECTIONS } from "./learn/dp2d";
+import { DS_ARRAYS_SECTIONS } from "./learn/dsPython/arrays";
+import { DS_STRINGS_SECTIONS } from "./learn/dsPython/strings";
+import { DS_LINKED_LISTS_SECTIONS } from "./learn/dsPython/linkedLists";
+import { DS_STACKS_SECTIONS } from "./learn/dsPython/stacks";
+import { DS_QUEUES_SECTIONS } from "./learn/dsPython/queues";
+import { DS_HASH_TABLES_SECTIONS } from "./learn/dsPython/hashTables";
+import { DS_TREES_SECTIONS } from "./learn/dsPython/trees";
+import { DS_BSTS_SECTIONS } from "./learn/dsPython/bsts";
+import { DS_HEAPS_SECTIONS } from "./learn/dsPython/heaps";
+import { DS_GRAPHS_SECTIONS } from "./learn/dsPython/graphs";
+import { DS_TRIES_SECTIONS } from "./learn/dsPython/tries";
 
 export type LearnTrack = "data-structures" | "algorithms";
 
@@ -65,6 +76,8 @@ export const DATA_STRUCTURE_TOPICS: LearnTopic[] = [
       "Convert nested loops to one-pass or two-pass scans when possible.",
     ],
     relatedAlgorithmIds: ["algo-array-scan", "algo-two-pointers", "algo-sliding-window", "algo-binary-search"],
+    detailSections: DS_ARRAYS_SECTIONS,
+    lastUpdated: "13 Apr 2026",
   },
   {
     id: "ds-strings",
@@ -92,6 +105,8 @@ export const DATA_STRUCTURE_TOPICS: LearnTopic[] = [
       "Use two pointers for palindrome and substring constraints.",
     ],
     relatedAlgorithmIds: ["algo-array-scan", "algo-sliding-window", "algo-two-pointers", "algo-dp-2d"],
+    detailSections: DS_STRINGS_SECTIONS,
+    lastUpdated: "13 Apr 2026",
   },
   {
     id: "ds-linked-lists",
@@ -119,6 +134,8 @@ export const DATA_STRUCTURE_TOPICS: LearnTopic[] = [
       "Reverse in-place with prev/current/next pointer choreography.",
     ],
     relatedAlgorithmIds: ["algo-two-pointers", "algo-recursion"],
+    detailSections: DS_LINKED_LISTS_SECTIONS,
+    lastUpdated: "13 Apr 2026",
   },
   {
     id: "ds-stacks",
@@ -146,6 +163,8 @@ export const DATA_STRUCTURE_TOPICS: LearnTopic[] = [
       "Push sentinels to reduce empty-stack branching.",
     ],
     relatedAlgorithmIds: ["algo-array-scan", "algo-dfs"],
+    detailSections: DS_STACKS_SECTIONS,
+    lastUpdated: "13 Apr 2026",
   },
   {
     id: "ds-queues",
@@ -173,6 +192,8 @@ export const DATA_STRUCTURE_TOPICS: LearnTopic[] = [
       "Mark visited before enqueueing to avoid duplicate work.",
     ],
     relatedAlgorithmIds: ["algo-bfs", "algo-sliding-window"],
+    detailSections: DS_QUEUES_SECTIONS,
+    lastUpdated: "13 Apr 2026",
   },
   {
     id: "ds-hash-tables",
@@ -200,6 +221,8 @@ export const DATA_STRUCTURE_TOPICS: LearnTopic[] = [
       "Combine hash map with prefix sums for subarray counting.",
     ],
     relatedAlgorithmIds: ["algo-array-scan", "algo-sliding-window", "algo-dp-1d"],
+    detailSections: DS_HASH_TABLES_SECTIONS,
+    lastUpdated: "13 Apr 2026",
   },
   {
     id: "ds-trees",
@@ -227,6 +250,8 @@ export const DATA_STRUCTURE_TOPICS: LearnTopic[] = [
       "Switch to iterative traversal with explicit stack when needed.",
     ],
     relatedAlgorithmIds: ["algo-recursion", "algo-dfs", "algo-bfs"],
+    detailSections: DS_TREES_SECTIONS,
+    lastUpdated: "13 Apr 2026",
   },
   {
     id: "ds-bsts",
@@ -254,6 +279,8 @@ export const DATA_STRUCTURE_TOPICS: LearnTopic[] = [
       "Track subtree sizes or reverse-inorder for kth element problems.",
     ],
     relatedAlgorithmIds: ["algo-binary-search", "algo-dfs", "algo-recursion"],
+    detailSections: DS_BSTS_SECTIONS,
+    lastUpdated: "13 Apr 2026",
   },
   {
     id: "ds-heaps",
@@ -281,6 +308,8 @@ export const DATA_STRUCTURE_TOPICS: LearnTopic[] = [
       "Push updated states and ignore stale entries when popping.",
     ],
     relatedAlgorithmIds: ["algo-dijkstra", "algo-greedy", "algo-sorting"],
+    detailSections: DS_HEAPS_SECTIONS,
+    lastUpdated: "13 Apr 2026",
   },
   {
     id: "ds-graphs",
@@ -308,6 +337,8 @@ export const DATA_STRUCTURE_TOPICS: LearnTopic[] = [
       "Classify problems first: traversal, shortest path, cycle, ordering.",
     ],
     relatedAlgorithmIds: ["algo-bfs", "algo-dfs", "algo-dijkstra"],
+    detailSections: DS_GRAPHS_SECTIONS,
+    lastUpdated: "13 Apr 2026",
   },
   {
     id: "ds-tries",
@@ -335,6 +366,8 @@ export const DATA_STRUCTURE_TOPICS: LearnTopic[] = [
       "Prune traversal early when character path is missing.",
     ],
     relatedAlgorithmIds: ["algo-dfs", "algo-backtracking"],
+    detailSections: DS_TRIES_SECTIONS,
+    lastUpdated: "13 Apr 2026",
   },
 ];
 
