@@ -502,7 +502,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   cardWrapper: {
-    width: (SCREEN_WIDTH - 52) / 2,
+    width: "48%",
     marginBottom: 12,
   },
   randomCardWrapper: {
