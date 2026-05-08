@@ -7,9 +7,10 @@ import {
   ScrollView,
   Animated,
   SafeAreaView,
+  Image,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { RouteProp, useRoute, useNavigation } from "@react-navigation/native";
+import { RouteProp, useRoute, useNavigation, useFocusEffect } from "@react-navigation/native";
 import { useTheme } from "../context/ThemeContext";
 import { MainStackParamList } from "../navigation/MainTabs";
 import {
@@ -17,8 +18,8 @@ import {
   ALGO_TOPICS,
   COMPLEXITY_TOPICS,
   LearnTopic,
+  getTopicImage,
 } from "../data/learnTopics";
-
 export default function FlashcardScreen() {
   const route = useRoute<RouteProp<MainStackParamList, "Flashcard">>();
   const navigation = useNavigation<any>();
@@ -45,12 +46,21 @@ export default function FlashcardScreen() {
   const entranceOpacity = useRef(new Animated.Value(0)).current;
 
   const topic = topics[currentIndex];
+  const topicImage = getTopicImage(topic, isDark);
+
   const trackLabel =
     track === "data-structures"
       ? "Data Structures"
       : track === "algorithms"
       ? "Algorithms"
       : "Complexity";
+
+  // Always start on the question (front) side when the screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      setIsFlipped(false);
+    }, [])
+  );
 
   // Run entrance animation whenever currentIndex changes
   useEffect(() => {
@@ -133,7 +143,7 @@ export default function FlashcardScreen() {
             Flashcards
           </Text>
         </View>
-        <View style={{ width: 64 }} />
+        <View style={{ width: 42 }} />
       </View>
 
       {/* ── Progress bar ── */}
@@ -157,6 +167,17 @@ export default function FlashcardScreen() {
           {currentIndex + 1}/{topics.length}
         </Text>
       </View>
+
+      {/* ── Topic image ── */}
+      {topicImage && (
+        <View style={styles.topicImageWrap}>
+          <Image
+            source={topicImage}
+            style={styles.topicImage}
+            resizeMode="contain"
+          />
+        </View>
+      )}
 
       {/* ── Card ── */}
       <View style={styles.cardArea}>
@@ -356,8 +377,8 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 16,
-    paddingTop: 10,
+    paddingHorizontal: 24,
+    paddingTop: 18,
     paddingBottom: 6,
   },
   backBtn: {
@@ -390,6 +411,20 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     minWidth: 34,
     textAlign: "right",
+  },
+
+  topicImageWrap: {
+    height: 160,
+    marginHorizontal: 20,
+    marginBottom: 8,
+    borderRadius: 16,
+    overflow: "hidden",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  topicImage: {
+    width: "100%",
+    height: "100%",
   },
 
   cardArea: {
