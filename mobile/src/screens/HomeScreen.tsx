@@ -6,7 +6,6 @@ import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import HomeCard from "../components/HomeCard";
 import SpinningLogo from "../components/SpinningLogo";
-import ThemeToggle from "../components/ThemeToggle";
 import { MainStackParamList } from "../navigation/MainTabs";
 import { useTheme } from "../context/ThemeContext";
 import api from "../services/api";
@@ -150,7 +149,6 @@ export default function HomeScreen() {
             </View>
           )}
         </Animated.View>
-        <ThemeToggle />
       </View>
 
       {/* Hero */}

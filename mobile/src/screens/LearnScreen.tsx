@@ -24,6 +24,7 @@ import {
   LearnTrack,
 } from "../data/learnTopics";
 import { MainStackParamList } from "../navigation/MainTabs";
+import ThemeToggle from "../components/ThemeToggle";
 
 type Nav = NativeStackNavigationProp<MainStackParamList, "Learn">;
 
@@ -708,6 +709,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginBottom: 6,
     alignItems: "center",
+    paddingRight: 80,
   },
   step: {
     fontSize: 10,
@@ -723,7 +725,6 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 999,
     borderWidth: 1,
-    overflow: "hidden",
   },
   cardTitle: {
     fontSize: 26,

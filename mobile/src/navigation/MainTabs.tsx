@@ -26,7 +26,6 @@ import FlashcardScreen from "../screens/FlashcardScreen";
 import { useTheme } from "../context/ThemeContext";
 import { Drill } from "../types";
 import { LearnTrack } from "../data/learnTopics";
-
 export type MainStackParamList = {
   Home: undefined;
   Learn: undefined;
