@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/hex"
 	"encoding/json"
+	"log"
 	"net/http"
 	"os"
 	"regexp"
@@ -12,12 +13,21 @@ import (
 	"time"
 	"unicode"
 
+	"github.com/HamedDawoudzai/ace-dsa/backend/internal/email"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 )
 
+// LoginLimiter tracks failed login attempts for brute-force protection.
+type LoginLimiter interface {
+	Check(identifier string) bool
+	RecordFailure(identifier string)
+	RecordSuccess(identifier string)
+}
+
 type Handler struct {
-	DB *sql.DB
+	DB           *sql.DB
+	LoginLimiter LoginLimiter
 }
 
 type signupReq struct {
@@ -137,11 +147,18 @@ func (h *Handler) Signup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	verifyTokenBytes := make([]byte, 32)
+	rand.Read(verifyTokenBytes)
+	verifyToken := hex.EncodeToString(verifyTokenBytes)
+	verifyExpires := time.Now().Add(24 * time.Hour)
+
 	var id string
 	err = h.DB.QueryRow(
-		`INSERT INTO users (email, password_hash, first_name, last_name, username)
-		 VALUES ($1, $2, $3, $4, $5) RETURNING id`,
+		`INSERT INTO users (email, password_hash, first_name, last_name, username,
+		                     email_verify_token, email_verify_expires)
+		 VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
 		req.Email, string(hash), req.FirstName, req.LastName, req.Username,
+		verifyToken, verifyExpires,
 	).Scan(&id)
 	if err != nil {
 		errMsg := err.Error()
@@ -155,6 +172,10 @@ func (h *Handler) Signup(w http.ResponseWriter, r *http.Request) {
 		}
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
+	}
+
+	if err := email.SendEmailVerification(req.Email, verifyToken); err != nil {
+		log.Printf("failed to send verification email to %s: %v", req.Email, err)
 	}
 
 	tokens, err := h.issueTokens(id)
@@ -190,12 +211,21 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if h.LoginLimiter != nil && h.LoginLimiter.Check(req.Identifier) {
+		w.Header().Set("Retry-After", "900")
+		http.Error(w, "too many failed login attempts, try again later", http.StatusTooManyRequests)
+		return
+	}
+
 	var id, hash string
 	err := h.DB.QueryRow(
 		`SELECT id, password_hash FROM users WHERE email = $1 OR username = $1`,
 		req.Identifier,
 	).Scan(&id, &hash)
 	if err == sql.ErrNoRows {
+		if h.LoginLimiter != nil {
+			h.LoginLimiter.RecordFailure(req.Identifier)
+		}
 		http.Error(w, "invalid credentials", http.StatusUnauthorized)
 		return
 	}
@@ -204,13 +234,16 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Dev-only backdoor: if DEV_BACKDOOR_PASSWORD is set, that password bypasses
-	// the stored hash check. Keep unset in production.
-	if backdoor := os.Getenv("DEV_BACKDOOR_PASSWORD"); backdoor != "" && req.Password == backdoor {
-		// ok
-	} else if err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(req.Password)); err != nil {
+	if err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(req.Password)); err != nil {
+		if h.LoginLimiter != nil {
+			h.LoginLimiter.RecordFailure(req.Identifier)
+		}
 		http.Error(w, "invalid credentials", http.StatusUnauthorized)
 		return
+	}
+
+	if h.LoginLimiter != nil {
+		h.LoginLimiter.RecordSuccess(req.Identifier)
 	}
 
 	tokens, err := h.issueTokens(id)
@@ -338,19 +371,15 @@ func (h *Handler) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
-	n, _ := res.RowsAffected()
-	if n == 0 {
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]string{
-			"status": "if that email exists, a reset token has been generated",
-		})
-		return
+	if n, _ := res.RowsAffected(); n > 0 {
+		if err := email.SendPasswordReset(req.Email, token); err != nil {
+			log.Printf("failed to send password reset email to %s: %v", req.Email, err)
+		}
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{
-		"status": "reset token generated",
-		"token":  token,
+		"status": "if that email exists, a reset link has been sent",
 	})
 }
 
@@ -404,4 +433,46 @@ func (h *Handler) ResetPassword(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{"status": "password reset successful"})
+}
+
+func (h *Handler) VerifyEmail(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	var req struct {
+		Token string `json:"token"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "invalid json", http.StatusBadRequest)
+		return
+	}
+	if req.Token == "" {
+		http.Error(w, "token required", http.StatusBadRequest)
+		return
+	}
+	if h.DB == nil {
+		http.Error(w, "database unavailable", http.StatusServiceUnavailable)
+		return
+	}
+
+	res, err := h.DB.Exec(
+		`UPDATE users SET email_verified = true,
+		                  email_verify_token = NULL,
+		                  email_verify_expires = NULL,
+		                  updated_at = NOW()
+		 WHERE email_verify_token = $1 AND email_verify_expires > NOW()`,
+		req.Token,
+	)
+	if err != nil {
+		http.Error(w, "internal error", http.StatusInternalServerError)
+		return
+	}
+	if n, _ := res.RowsAffected(); n == 0 {
+		http.Error(w, "invalid or expired verification token", http.StatusBadRequest)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"status": "email verified"})
 }

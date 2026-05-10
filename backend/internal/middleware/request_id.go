@@ -34,4 +34,3 @@ func newRequestID() string {
 	}
 	return "req_" + hex.EncodeToString(b[:])
 }
-

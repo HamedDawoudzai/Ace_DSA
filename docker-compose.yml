@@ -1,0 +1,39 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: acedsa
+      POSTGRES_PASSWORD: acedsa
+      POSTGRES_DB: acedsa
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U acedsa"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    environment:
+      DB_URL: "postgres://acedsa:acedsa@db:5432/acedsa?sslmode=disable"
+      JWT_SECRET: "local-dev-secret-change-me-in-prod-min-32-chars!!"
+      PORT: "8080"
+      CORS_ORIGINS: "*"
+      LOG_FORMAT: "json"
+
+volumes:
+  pgdata:

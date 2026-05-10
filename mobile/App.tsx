@@ -2,7 +2,9 @@ import React from "react";
 import { NavigationContainer, DefaultTheme, DarkTheme } from "@react-navigation/native";
 import { StatusBar } from "expo-status-bar";
 import { enableScreens } from "react-native-screens";
+import ErrorBoundary from "./src/components/ErrorBoundary";
 import { AuthProvider } from "./src/context/AuthContext";
+import { NetworkProvider } from "./src/context/NetworkContext";
 import { NotificationProvider } from "./src/context/NotificationContext";
 import { ThemeProvider, useTheme } from "./src/context/ThemeContext";
 import RootNavigator from "./src/navigation/RootNavigator";
@@ -46,12 +48,16 @@ function AppInner() {
 
 export default function App() {
   return (
-    <ThemeProvider>
-      <NotificationProvider>
-        <AuthProvider>
-          <AppInner />
-        </AuthProvider>
-      </NotificationProvider>
-    </ThemeProvider>
+    <ErrorBoundary>
+      <ThemeProvider>
+        <NetworkProvider>
+          <NotificationProvider>
+            <AuthProvider>
+              <AppInner />
+            </AuthProvider>
+          </NotificationProvider>
+        </NetworkProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 }

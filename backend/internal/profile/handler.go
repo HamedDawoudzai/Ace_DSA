@@ -216,10 +216,10 @@ func (h *Handler) Progress(w http.ResponseWriter, r *http.Request) {
 	defer rows.Close()
 
 	type ProgressRow struct {
-		DrillID          string     `json:"drill_id"`
-		ApproachCorrect  bool       `json:"approach_correct"`
-		ComplexityCorrect bool      `json:"complexity_correct"`
-		CompletedAt      *time.Time `json:"completed_at"`
+		DrillID           string     `json:"drill_id"`
+		ApproachCorrect   bool       `json:"approach_correct"`
+		ComplexityCorrect bool       `json:"complexity_correct"`
+		CompletedAt       *time.Time `json:"completed_at"`
 	}
 
 	var progress []ProgressRow

@@ -8,9 +8,9 @@ import (
 )
 
 type RateLimitOptions struct {
-	// Requests allowed per IP within Window.
-	Requests int
-	Window   time.Duration
+	Requests    int
+	Window      time.Duration
+	CleanupFreq time.Duration
 }
 
 type ipWindow struct {
@@ -25,11 +25,29 @@ func RateLimit(opts RateLimitOptions) func(http.Handler) http.Handler {
 	if opts.Window <= 0 {
 		opts.Window = time.Minute
 	}
+	if opts.CleanupFreq <= 0 {
+		opts.CleanupFreq = 5 * time.Minute
+	}
 
 	var (
 		mu   sync.Mutex
 		ip2w = map[string]*ipWindow{}
 	)
+
+	go func() {
+		ticker := time.NewTicker(opts.CleanupFreq)
+		defer ticker.Stop()
+		for range ticker.C {
+			now := time.Now()
+			mu.Lock()
+			for ip, win := range ip2w {
+				if now.Sub(win.start) > opts.Window*2 {
+					delete(ip2w, ip)
+				}
+			}
+			mu.Unlock()
+		}
+	}()
 
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -62,12 +80,14 @@ func RateLimit(opts RateLimitOptions) func(http.Handler) http.Handler {
 }
 
 func clientIP(r *http.Request) string {
-	// For now, trust direct connections only; behind a proxy, terminate and set
-	// X-Forwarded-For then update this accordingly.
+	if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
+		if parts := net.ParseIP(xff); parts != nil {
+			return parts.String()
+		}
+	}
 	host, _, err := net.SplitHostPort(r.RemoteAddr)
 	if err == nil && host != "" {
 		return host
 	}
 	return r.RemoteAddr
 }
-
