@@ -38,6 +38,7 @@ export interface Drill {
   explanation: string;
   example_input: string;
   example_output: string;
+  example_explanation: string;
 }
 
 export interface DrillCategory {

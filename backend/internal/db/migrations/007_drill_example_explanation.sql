@@ -1,0 +1,1 @@
+ALTER TABLE drills ADD COLUMN IF NOT EXISTS example_explanation TEXT NOT NULL DEFAULT '';
