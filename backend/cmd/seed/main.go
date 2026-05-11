@@ -30,6 +30,7 @@ type Problem struct {
 	Explanation          string   `json:"explanation"`
 	ExampleInput         string   `json:"example_input"`
 	ExampleOutput        string   `json:"example_output"`
+	ExampleExplanation   string   `json:"example_explanation"`
 }
 
 // jsonStr marshals v to JSON text for JSONB columns. Using string avoids pgx/database/sql
@@ -99,12 +100,14 @@ func main() {
 				(pattern_category, prompt, choices, correct_option, hint,
 				 difficulty, time_complexity, space_complexity,
 				 complexity_choices, correct_complexity_option, complexity_hint,
-				 problem_number, explanation, example_input, example_output)
-			 VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)`,
+				 problem_number, explanation, example_input, example_output,
+				 example_explanation)
+			 VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)`,
 			p.PatternCategory, p.Prompt, choicesS, p.CorrectOption, p.Hint,
 			p.Difficulty, p.TimeComplexity, p.SpaceComplexity,
 			complexS, p.CorrectComplexOption, p.ComplexityHint,
 			p.ProblemNumber, p.Explanation, p.ExampleInput, p.ExampleOutput,
+			p.ExampleExplanation,
 		)
 		if err != nil {
 			log.Printf("insert #%d (%s): %v", p.ProblemNumber, p.Prompt[:min(40, len(p.Prompt))], err)
@@ -141,12 +144,14 @@ func updateAllFields(database *sql.DB, problems []Problem) {
 			     complexity_hint = $10,
 			     explanation = $11,
 			     example_input = $12,
-			     example_output = $13
-			 WHERE pattern_category = $14 AND problem_number = $15`,
+			     example_output = $13,
+			     example_explanation = $14
+			 WHERE pattern_category = $15 AND problem_number = $16`,
 			p.Prompt, choicesS, p.CorrectOption, p.Hint,
 			p.Difficulty, p.TimeComplexity, p.SpaceComplexity,
 			complexS, p.CorrectComplexOption, p.ComplexityHint,
 			p.Explanation, p.ExampleInput, p.ExampleOutput,
+			p.ExampleExplanation,
 			p.PatternCategory, p.ProblemNumber,
 		)
 		if err != nil {
@@ -174,12 +179,14 @@ func clearAndReseed(database *sql.DB, problems []Problem) {
 				(pattern_category, prompt, choices, correct_option, hint,
 				 difficulty, time_complexity, space_complexity,
 				 complexity_choices, correct_complexity_option, complexity_hint,
-				 problem_number, explanation, example_input, example_output)
-			 VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)`,
+				 problem_number, explanation, example_input, example_output,
+				 example_explanation)
+			 VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)`,
 			p.PatternCategory, p.Prompt, choicesS, p.CorrectOption, p.Hint,
 			p.Difficulty, p.TimeComplexity, p.SpaceComplexity,
 			complexS, p.CorrectComplexOption, p.ComplexityHint,
 			p.ProblemNumber, p.Explanation, p.ExampleInput, p.ExampleOutput,
+			p.ExampleExplanation,
 		)
 	}
 }

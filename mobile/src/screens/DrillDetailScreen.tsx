@@ -17,6 +17,7 @@ import api from "../services/api";
 import { AttemptRequest, Drill } from "../types";
 import { MainStackParamList } from "../navigation/MainTabs";
 import { useTheme } from "../context/ThemeContext";
+import { getExampleIO } from "../data/drillExampleIO";
 
 type Step = "approach" | "complexity" | "complete";
 
@@ -52,6 +53,12 @@ export default function DrillDetailScreen() {
   const totalDrills = queue.length;
   const isLastDrill = currentIndex >= totalDrills - 1;
 
+  const ioFallback = getExampleIO(drill.pattern_category, drill.problem_number);
+  const exampleInput = drill.example_input?.trim() || ioFallback.input;
+  const exampleOutput = drill.example_output?.trim() || ioFallback.output;
+  const exampleExplanation = drill.example_explanation?.trim() || ioFallback.explanation;
+  const [showIOExplainModal, setShowIOExplainModal] = useState(false);
+
   // ── Per-drill question state ─────────────────────────────────────────────────
   const [step, setStep] = useState<Step>("approach");
   const [approachSelected, setApproachSelected] = useState<number | null>(null);
@@ -63,8 +70,6 @@ export default function DrillDetailScreen() {
   const [complexityDisabled, setComplexityDisabled] = useState<Set<number>>(new Set());
   const [complexityCorrect, setComplexityCorrect] = useState(false);
   const [showComplexityHint, setShowComplexityHint] = useState(false);
-  const [showExplainModal, setShowExplainModal] = useState(false);
-
   // ── All-complete state ───────────────────────────────────────────────────────
   const [allComplete, setAllComplete] = useState(false);
   const allCompleteAnim = useRef(new Animated.Value(0)).current;
@@ -81,10 +86,6 @@ export default function DrillDetailScreen() {
 
   const hasWrongApproach = approachDisabled.size > 0;
   const hasWrongComplexity = complexityDisabled.size > 0;
-  const showExplainButton =
-    (step === "approach" && hasWrongApproach) ||
-    (step === "complexity" && hasWrongComplexity) ||
-    step === "complete";
 
   // ── Animations ───────────────────────────────────────────────────────────────
   const slideOut = useRef(new Animated.Value(0)).current;
@@ -589,8 +590,10 @@ export default function DrillDetailScreen() {
             </Text>
 
             <ExampleIOBlock
-              exampleInput={drill.example_input ?? ""}
-              exampleOutput={drill.example_output ?? ""}
+              exampleInput={exampleInput}
+              exampleOutput={exampleOutput}
+              hasExplanation={!!exampleExplanation}
+              onExplain={() => setShowIOExplainModal(true)}
               colors={colors}
               isDark={isDark}
             />
@@ -663,16 +666,6 @@ export default function DrillDetailScreen() {
                 <HintCard text={drill.hint} isDark={isDark} />
               </Animated.View>
             )}
-
-            {showExplainButton &&
-              step === "approach" &&
-              drill.explanation !== "" && (
-                <ExplainButton
-                  colors={colors}
-                  isDark={isDark}
-                  onPress={() => setShowExplainModal(true)}
-                />
-              )}
           </View>
         )}
 
@@ -680,8 +673,10 @@ export default function DrillDetailScreen() {
         {step === "complexity" && (
           <View>
             <ExampleIOBlock
-              exampleInput={drill.example_input ?? ""}
-              exampleOutput={drill.example_output ?? ""}
+              exampleInput={exampleInput}
+              exampleOutput={exampleOutput}
+              hasExplanation={!!exampleExplanation}
+              onExplain={() => setShowIOExplainModal(true)}
               colors={colors}
               isDark={isDark}
             />
@@ -790,16 +785,6 @@ export default function DrillDetailScreen() {
                 <HintCard text={drill.complexity_hint} isDark={isDark} />
               </Animated.View>
             )}
-
-            {showExplainButton &&
-              step === "complexity" &&
-              drill.explanation !== "" && (
-                <ExplainButton
-                  colors={colors}
-                  isDark={isDark}
-                  onPress={() => setShowExplainModal(true)}
-                />
-              )}
           </View>
         )}
 
@@ -941,28 +926,28 @@ export default function DrillDetailScreen() {
                 />
               </Pressable>
 
-              {drill.explanation !== "" && (
-                <ExplainButton
-                  colors={colors}
-                  isDark={isDark}
-                  onPress={() => setShowExplainModal(true)}
-                />
-              )}
+              <ExampleIOBlock
+                exampleInput={exampleInput}
+                exampleOutput={exampleOutput}
+                hasExplanation={!!exampleExplanation}
+                onExplain={() => setShowIOExplainModal(true)}
+                colors={colors}
+                isDark={isDark}
+              />
             </View>
           </Animated.View>
         )}
       </Animated.View>
 
-      {drill.explanation !== "" && (
-        <ExplainModal
-          visible={showExplainModal}
-          onClose={() => setShowExplainModal(false)}
-          explanation={drill.explanation}
-          prompt={drill.prompt}
-          colors={colors}
-          isDark={isDark}
-        />
-      )}
+      <IOExplainModal
+        visible={showIOExplainModal}
+        onClose={() => setShowIOExplainModal(false)}
+        input={exampleInput}
+        output={exampleOutput}
+        explanation={exampleExplanation}
+        colors={colors}
+        isDark={isDark}
+      />
     </ScrollView>
   );
 }
@@ -1085,242 +1070,38 @@ function ChoiceCard({
   );
 }
 
-function ExplainButton({
-  colors,
-  isDark,
-  onPress,
-}: {
-  colors: any;
-  isDark: boolean;
-  onPress: () => void;
-}) {
-  const scaleAnim = useRef(new Animated.Value(1)).current;
-  return (
-    <Animated.View
-      style={{
-        transform: [{ scale: scaleAnim }],
-        marginTop: 14,
-        alignSelf: "flex-end",
-      }}
-    >
-      <Pressable
-        style={[
-          explainStyles.btn,
-          {
-            backgroundColor: isDark
-              ? "rgba(251,191,36,0.10)"
-              : "rgba(251,191,36,0.12)",
-            borderColor: isDark
-              ? "rgba(251,191,36,0.3)"
-              : "rgba(251,191,36,0.4)",
-          },
-        ]}
-        onPress={onPress}
-        onPressIn={() =>
-          Animated.spring(scaleAnim, {
-            toValue: 0.95,
-            friction: 8,
-            useNativeDriver: true,
-          }).start()
-        }
-        onPressOut={() =>
-          Animated.spring(scaleAnim, {
-            toValue: 1,
-            friction: 5,
-            useNativeDriver: true,
-          }).start()
-        }
-      >
-        <Ionicons
-          name="bulb"
-          size={16}
-          color={isDark ? "#FBBF24" : "#D97706"}
-        />
-        <Text
-          style={[
-            explainStyles.btnText,
-            { color: isDark ? "#FBBF24" : "#D97706" },
-          ]}
-        >
-          Explain
-        </Text>
-      </Pressable>
-    </Animated.View>
-  );
-}
-
-function ExplainModal({
-  visible,
-  onClose,
-  explanation,
-  prompt,
-  colors,
-  isDark,
-}: {
-  visible: boolean;
-  onClose: () => void;
-  explanation: string;
-  prompt: string;
-  colors: any;
-  isDark: boolean;
-}) {
-  return (
-    <Modal visible={visible} animationType="slide" transparent={false}>
-      <View style={[explainStyles.modal, { backgroundColor: colors.background }]}>
-        <View style={explainStyles.modalHeader}>
-          <Text
-            style={[explainStyles.modalTitle, { color: colors.text }]}
-            numberOfLines={2}
-          >
-            {prompt}
-          </Text>
-          <Pressable
-            style={[explainStyles.closeBtn, { backgroundColor: colors.surface }]}
-            onPress={onClose}
-          >
-            <Ionicons name="close" size={22} color={colors.textSecondary} />
-          </Pressable>
-        </View>
-        <ScrollView
-          style={explainStyles.modalBody}
-          contentContainerStyle={explainStyles.modalContent}
-          showsVerticalScrollIndicator={false}
-        >
-          <ExplanationContent text={explanation} colors={colors} isDark={isDark} />
-        </ScrollView>
-      </View>
-    </Modal>
-  );
-}
-
-function ExplanationContent({
-  text,
-  colors,
-  isDark,
-}: {
-  text: string;
-  colors: any;
-  isDark: boolean;
-}) {
-  const parts = text.split(/(```python\n[\s\S]*?```)/g);
-  return (
-    <View>
-      {parts.map((part, i) => {
-        if (part.startsWith("```python\n") && part.endsWith("```")) {
-          const code = part
-            .replace(/^```python\n/, "")
-            .replace(/```$/, "")
-            .trim();
-          return (
-            <View
-              key={i}
-              style={[
-                explainStyles.codeBlock,
-                {
-                  backgroundColor: isDark
-                    ? "rgba(0,0,0,0.4)"
-                    : "rgba(0,0,0,0.05)",
-                  borderColor: isDark
-                    ? "rgba(255,255,255,0.08)"
-                    : "rgba(0,0,0,0.1)",
-                },
-              ]}
-            >
-              <View style={explainStyles.codeLangTag}>
-                <Text
-                  style={[explainStyles.codeLangText, { color: colors.textMuted }]}
-                >
-                  Python
-                </Text>
-              </View>
-              <Text
-                style={[
-                  explainStyles.codeText,
-                  { color: isDark ? "#E2E8F0" : "#1E293B" },
-                ]}
-              >
-                {code}
-              </Text>
-            </View>
-          );
-        }
-        return <FormattedText key={i} text={part} colors={colors} />;
-      })}
-    </View>
-  );
-}
-
-function FormattedText({ text, colors }: { text: string; colors: any }) {
-  const lines = text.split("\n");
-  const elements: React.ReactNode[] = [];
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    if (line.trim() === "") {
-      elements.push(<View key={`sp-${i}`} style={{ height: 8 }} />);
-      continue;
-    }
-    const boldMatch = line.match(/^\*\*(.+?)\*\*\s*(.*)/);
-    if (boldMatch) {
-      elements.push(
-        <Text
-          key={`b-${i}`}
-          style={[explainStyles.boldLine, { color: colors.text }]}
-        >
-          <Text style={explainStyles.boldText}>{boldMatch[1]}</Text>
-          {boldMatch[2] ? ` ${boldMatch[2]}` : ""}
-        </Text>
-      );
-      continue;
-    }
-    const stepMatch = line.match(/^(\d+)\.\s+(.*)/);
-    if (stepMatch) {
-      elements.push(
-        <View key={`s-${i}`} style={explainStyles.stepRow}>
-          <Text
-            style={[explainStyles.stepNumber, { color: colors.accent }]}
-          >
-            {stepMatch[1]}.
-          </Text>
-          <Text style={[explainStyles.stepText, { color: colors.text }]}>
-            {stepMatch[2]}
-          </Text>
-        </View>
-      );
-      continue;
-    }
-    elements.push(
-      <Text
-        key={`t-${i}`}
-        style={[explainStyles.normalText, { color: colors.text }]}
-      >
-        {line}
-      </Text>
-    );
-  }
-  return <>{elements}</>;
-}
 
 function ExampleIOBlock({
   exampleInput,
   exampleOutput,
+  hasExplanation,
+  onExplain,
   colors,
   isDark,
 }: {
   exampleInput: string;
   exampleOutput: string;
+  hasExplanation: boolean;
+  onExplain: () => void;
   colors: {
     text: string;
     textMuted: string;
     textSecondary: string;
     border: string;
     surface: string;
+    accent: string;
+    accentText: string;
   };
   isDark: boolean;
 }) {
   const inText = exampleInput.trim();
   const outText = exampleOutput.trim();
   if (!inText && !outText) return null;
-  const monoBg = isDark ? "rgba(0,0,0,0.28)" : "rgba(0,0,0,0.045)";
+
+  const labelColor = isDark ? "#0DD9C4" : "#D97706";
+  const monoColor = isDark ? "#E2E8F0" : "#1E293B";
+  const monoBg = isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.04)";
+
   return (
     <View
       style={[
@@ -1328,51 +1109,119 @@ function ExampleIOBlock({
         { borderColor: colors.border, backgroundColor: colors.surface },
       ]}
     >
-      <Text
-        style={[styles.exampleHeading, { color: colors.textSecondary }]}
-      >
-        Example
-      </Text>
       {inText ? (
-        <>
-          <Text
-            style={[styles.exampleSubLabel, { color: colors.textMuted }]}
-          >
-            Input
-          </Text>
-          <Text
-            selectable
-            style={[
-              styles.exampleMono,
-              { color: colors.text, backgroundColor: monoBg },
-            ]}
-          >
-            {inText}
-          </Text>
-        </>
+        <View style={styles.ioRow}>
+          <Text style={[styles.ioLabel, { color: labelColor }]}>Input</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.ioScroll}>
+            <Text selectable style={[styles.ioValue, { color: monoColor, backgroundColor: monoBg }]}>
+              {inText}
+            </Text>
+          </ScrollView>
+        </View>
       ) : null}
       {outText ? (
-        <>
-          <Text
-            style={[
-              styles.exampleSubLabel,
-              { color: colors.textMuted, marginTop: inText ? 10 : 0 },
-            ]}
-          >
-            Output
+        <View style={[styles.ioRow, styles.ioRowBorder, { borderTopColor: colors.border }]}>
+          <Text style={[styles.ioLabel, { color: labelColor }]}>Output</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.ioScroll}>
+            <Text selectable style={[styles.ioValue, { color: monoColor, backgroundColor: monoBg }]}>
+              {outText}
+            </Text>
+          </ScrollView>
+        </View>
+      ) : null}
+      {hasExplanation ? (
+        <Pressable
+          onPress={onExplain}
+          style={({ pressed }) => [
+            styles.ioRow,
+            styles.ioRowBorder,
+            { borderTopColor: colors.border, opacity: pressed ? 0.6 : 1 },
+          ]}
+        >
+          <Ionicons name="bulb-outline" size={16} color={isDark ? "#FBBF24" : "#D97706"} />
+          <Text style={[styles.ioExplainText, { color: isDark ? "#FBBF24" : "#D97706" }]}>
+            Explain Test Case
           </Text>
-          <Text
-            selectable
-            style={[
-              styles.exampleMono,
-              { color: colors.text, backgroundColor: monoBg },
-            ]}
-          >
-            {outText}
-          </Text>
-        </>
+          <Ionicons name="chevron-forward" size={14} color={isDark ? "#FBBF24" : "#D97706"} />
+        </Pressable>
       ) : null}
     </View>
+  );
+}
+
+function IOExplainModal({
+  visible,
+  onClose,
+  input,
+  output,
+  explanation,
+  colors,
+  isDark,
+}: {
+  visible: boolean;
+  onClose: () => void;
+  input: string;
+  output: string;
+  explanation: string;
+  colors: any;
+  isDark: boolean;
+}) {
+  const labelColor = isDark ? "#0DD9C4" : "#D97706";
+  const monoColor = isDark ? "#E2E8F0" : "#1E293B";
+  const monoBg = isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)";
+
+  const paragraphs = explanation
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean);
+
+  return (
+    <Modal visible={visible} animationType="slide" transparent>
+      <View style={[ioModalStyles.overlay, { backgroundColor: isDark ? "rgba(0,0,0,0.6)" : "rgba(0,0,0,0.4)" }]}>
+        <View style={[ioModalStyles.sheet, { backgroundColor: colors.background }]}>
+          <View style={ioModalStyles.header}>
+            <Ionicons name="bulb" size={20} color={isDark ? "#FBBF24" : "#D97706"} />
+            <Text style={[ioModalStyles.title, { color: colors.text }]}>Test Case Walkthrough</Text>
+            <Pressable onPress={onClose} style={[ioModalStyles.closeBtn, { backgroundColor: colors.surface }]}>
+              <Ionicons name="close" size={20} color={colors.textSecondary} />
+            </Pressable>
+          </View>
+
+          <ScrollView style={ioModalStyles.body} showsVerticalScrollIndicator={false}>
+            {input ? (
+              <View style={[ioModalStyles.ioCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                <Text style={[ioModalStyles.ioLabel, { color: labelColor }]}>Input</Text>
+                <Text selectable style={[ioModalStyles.ioMono, { color: monoColor, backgroundColor: monoBg }]}>{input}</Text>
+              </View>
+            ) : null}
+            {output ? (
+              <View style={[ioModalStyles.ioCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                <Text style={[ioModalStyles.ioLabel, { color: labelColor }]}>Output</Text>
+                <Text selectable style={[ioModalStyles.ioMono, { color: monoColor, backgroundColor: monoBg }]}>{output}</Text>
+              </View>
+            ) : null}
+
+            <View style={ioModalStyles.explainSection}>
+              {paragraphs.map((line, idx) => {
+                const isBullet = line.startsWith("•");
+                return (
+                  <Text
+                    key={idx}
+                    style={[
+                      ioModalStyles.explainText,
+                      { color: colors.text },
+                      isBullet && ioModalStyles.bulletText,
+                    ]}
+                  >
+                    {line}
+                  </Text>
+                );
+              })}
+            </View>
+          </ScrollView>
+        </View>
+      </View>
+    </Modal>
   );
 }
 
@@ -1557,29 +1406,35 @@ const styles = StyleSheet.create({
     textTransform: "capitalize",
   },
   prompt: { fontSize: 20, fontWeight: "700", lineHeight: 28, marginBottom: 14 },
-  exampleWrap: { borderRadius: 14, borderWidth: 1, padding: 14, marginBottom: 18 },
-  exampleHeading: {
+  exampleWrap: { borderRadius: 14, borderWidth: 1, marginBottom: 18, overflow: "hidden" },
+  ioRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    paddingHorizontal: 14,
+    paddingVertical: 11,
+    gap: 10,
+  },
+  ioRowBorder: {
+    borderTopWidth: 1,
+  },
+  ioLabel: {
     fontSize: 12,
-    fontWeight: "700",
-    textTransform: "uppercase",
-    letterSpacing: 0.6,
-    marginBottom: 10,
+    fontWeight: "800",
+    fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
+    letterSpacing: 0.3,
+    minWidth: 64,
+    paddingTop: 2,
   },
-  exampleSubLabel: {
-    fontSize: 11,
-    fontWeight: "600",
-    textTransform: "uppercase",
-    letterSpacing: 0.4,
-    marginBottom: 6,
+  ioScroll: {
+    flex: 1,
   },
-  exampleMono: {
+  ioValue: {
     fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
     fontSize: 13,
     lineHeight: 20,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderRadius: 10,
-    overflow: "hidden",
+    paddingVertical: 3,
+    paddingHorizontal: 8,
+    borderRadius: 7,
   },
   sectionLabel: { fontSize: 13, fontWeight: "600", marginBottom: 14 },
   choice: {
@@ -1692,65 +1547,79 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   nextButtonText: { fontSize: 17, fontWeight: "700" },
+  ioExplainText: {
+    fontSize: 13,
+    fontWeight: "700",
+    flex: 1,
+  },
 });
 
-const explainStyles = StyleSheet.create({
-  btn: {
+const ioModalStyles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    justifyContent: "flex-end",
+  },
+  sheet: {
+    maxHeight: "80%",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingTop: 20,
+    paddingBottom: Platform.OS === "ios" ? 40 : 24,
+  },
+  header: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-  },
-  btnText: { fontSize: 14, fontWeight: "700" },
-  modal: { flex: 1, paddingTop: Platform.OS === "ios" ? 56 : 36 },
-  modalHeader: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
     paddingHorizontal: 20,
     paddingBottom: 16,
-    gap: 12,
+    gap: 10,
   },
-  modalTitle: { flex: 1, fontSize: 17, fontWeight: "700", lineHeight: 24 },
+  title: {
+    flex: 1,
+    fontSize: 17,
+    fontWeight: "800",
+  },
   closeBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
     alignItems: "center",
     justifyContent: "center",
   },
-  modalBody: { flex: 1 },
-  modalContent: { paddingHorizontal: 20, paddingBottom: 40 },
-  codeBlock: {
+  body: {
+    paddingHorizontal: 20,
+  },
+  ioCard: {
     borderRadius: 12,
     borderWidth: 1,
-    padding: 14,
-    marginVertical: 12,
+    padding: 12,
+    marginBottom: 10,
   },
-  codeLangTag: { marginBottom: 8 },
-  codeLangText: {
+  ioLabel: {
     fontSize: 11,
-    fontWeight: "600",
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
+    fontWeight: "800",
+    fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
+    letterSpacing: 0.3,
+    marginBottom: 6,
   },
-  codeText: {
+  ioMono: {
     fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
     fontSize: 13,
     lineHeight: 20,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 6,
   },
-  boldLine: { fontSize: 16, lineHeight: 24, marginTop: 4, marginBottom: 2 },
-  boldText: { fontWeight: "800" },
-  stepRow: {
-    flexDirection: "row",
+  explainSection: {
+    marginTop: 8,
+    marginBottom: 20,
+    gap: 6,
+  },
+  explainText: {
+    fontSize: 15,
+    lineHeight: 23,
+  },
+  bulletText: {
     paddingLeft: 4,
-    marginVertical: 3,
-    paddingRight: 16,
   },
-  stepNumber: { fontSize: 15, fontWeight: "700", width: 22, lineHeight: 22 },
-  stepText: { fontSize: 15, lineHeight: 22, flex: 1 },
-  normalText: { fontSize: 15, lineHeight: 22 },
 });
+
