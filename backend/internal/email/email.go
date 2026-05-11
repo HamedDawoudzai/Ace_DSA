@@ -3,74 +3,57 @@ package email
 import (
 	"fmt"
 	"log"
-	"net/smtp"
 	"os"
-	"strings"
+
+	"github.com/sendgrid/sendgrid-go"
+	"github.com/sendgrid/sendgrid-go/helpers/mail"
 )
 
-// Send delivers an email via SMTP. Falls back to logging when SMTP is not configured.
+// Send delivers an email via SendGrid. Falls back to logging when not configured.
 func Send(to, subject, body string) error {
-	host := os.Getenv("SMTP_HOST")
-	port := os.Getenv("SMTP_PORT")
-	user := os.Getenv("SMTP_USER")
-	pass := os.Getenv("SMTP_PASS")
-	from := os.Getenv("SMTP_FROM")
+	apiKey := os.Getenv("SENDGRID_API_KEY")
+	fromAddr := os.Getenv("SENDGRID_FROM")
 
-	if host == "" || from == "" {
-		log.Printf("[email] SMTP not configured — would send to=%s subject=%q", to, subject)
+	if apiKey == "" || fromAddr == "" {
+		log.Printf("[email] SendGrid not configured — would send to=%s subject=%q", to, subject)
 		return nil
 	}
-	if port == "" {
-		port = "587"
+
+	from := mail.NewEmail("Ace DSA", fromAddr)
+	toEmail := mail.NewEmail("", to)
+	content := mail.NewContent("text/html", body)
+	m := mail.NewV3MailInit(from, subject, toEmail, content)
+
+	client := sendgrid.NewSendClient(apiKey)
+	response, err := client.Send(m)
+	if err != nil {
+		return err
+	}
+	if response.StatusCode >= 400 {
+		return fmt.Errorf("sendgrid: %d — %s", response.StatusCode, response.Body)
 	}
 
-	msg := strings.Join([]string{
-		"From: " + from,
-		"To: " + to,
-		"Subject: " + subject,
-		"MIME-Version: 1.0",
-		"Content-Type: text/html; charset=UTF-8",
-		"",
-		body,
-	}, "\r\n")
-
-	addr := fmt.Sprintf("%s:%s", host, port)
-
-	var auth smtp.Auth
-	if user != "" {
-		auth = smtp.PlainAuth("", user, pass, host)
-	}
-
-	return smtp.SendMail(addr, auth, from, []string{to}, []byte(msg))
+	log.Printf("[email] sent to=%s subject=%q status=%d", to, subject, response.StatusCode)
+	return nil
 }
 
-// SendPasswordReset sends a password-reset email containing a link with the token.
+// SendPasswordReset sends a password-reset email containing the reset token.
 func SendPasswordReset(toEmail, token string) error {
-	appURL := os.Getenv("APP_URL")
-	if appURL == "" {
-		appURL = "https://acedsa.app"
-	}
-	link := fmt.Sprintf("%s/reset-password?token=%s", appURL, token)
-
 	body := fmt.Sprintf(`<h2>Ace DSA — Password Reset</h2>
-<p>You requested a password reset. Click the link below (valid for 1 hour):</p>
-<p><a href="%s">Reset my password</a></p>
-<p>If you didn't request this, ignore this email.</p>`, link)
+<p>You requested a password reset. Use the code below in the app (valid for 1 hour):</p>
+<p style="font-size:22px;font-weight:bold;letter-spacing:2px;background:#f4f4f4;padding:12px 20px;border-radius:8px;display:inline-block;">%s</p>
+<p>Open the Ace DSA app, tap "Forgot Password", and paste this code when prompted.</p>
+<p>If you didn't request this, ignore this email.</p>`, token)
 
 	return Send(toEmail, "Reset your Ace DSA password", body)
 }
 
-// SendEmailVerification sends an email-verification link.
+// SendEmailVerification sends an email-verification token.
 func SendEmailVerification(toEmail, token string) error {
-	appURL := os.Getenv("APP_URL")
-	if appURL == "" {
-		appURL = "https://acedsa.app"
-	}
-	link := fmt.Sprintf("%s/verify-email?token=%s", appURL, token)
-
 	body := fmt.Sprintf(`<h2>Welcome to Ace DSA!</h2>
-<p>Please verify your email by clicking the link below:</p>
-<p><a href="%s">Verify my email</a></p>`, link)
+<p>Use the code below to verify your email:</p>
+<p style="font-size:22px;font-weight:bold;letter-spacing:2px;background:#f4f4f4;padding:12px 20px;border-radius:8px;display:inline-block;">%s</p>
+<p>Open the Ace DSA app and enter this code when prompted.</p>`, token)
 
 	return Send(toEmail, "Verify your Ace DSA email", body)
 }

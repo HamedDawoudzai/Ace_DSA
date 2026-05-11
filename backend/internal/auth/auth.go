@@ -383,6 +383,45 @@ func (h *Handler) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func (h *Handler) VerifyResetToken(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	var req struct {
+		Token string `json:"token"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "invalid json", http.StatusBadRequest)
+		return
+	}
+	if req.Token == "" {
+		http.Error(w, "token required", http.StatusBadRequest)
+		return
+	}
+	if h.DB == nil {
+		http.Error(w, "database unavailable", http.StatusServiceUnavailable)
+		return
+	}
+
+	var uid string
+	err := h.DB.QueryRow(
+		`SELECT id FROM users WHERE password_reset_token = $1 AND password_reset_expires > NOW()`,
+		req.Token,
+	).Scan(&uid)
+	if err == sql.ErrNoRows {
+		http.Error(w, "invalid or expired reset code", http.StatusBadRequest)
+		return
+	}
+	if err != nil {
+		http.Error(w, "internal error", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"status": "valid"})
+}
+
 func (h *Handler) ResetPassword(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)

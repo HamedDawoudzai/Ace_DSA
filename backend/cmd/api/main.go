@@ -81,6 +81,7 @@ func main() {
 	mux.Handle("/auth/login", loginLimiter.Middleware(http.HandlerFunc(authHandler.Login)))
 	mux.HandleFunc("/auth/refresh", authHandler.Refresh)
 	mux.HandleFunc("/auth/forgot-password", authHandler.ForgotPassword)
+	mux.HandleFunc("/auth/verify-reset-token", authHandler.VerifyResetToken)
 	mux.HandleFunc("/auth/reset-password", authHandler.ResetPassword)
 	mux.HandleFunc("/auth/verify-email", authHandler.VerifyEmail)
 	mux.HandleFunc("/drills", drillsHandler.List)

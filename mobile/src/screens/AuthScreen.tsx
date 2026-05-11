@@ -17,7 +17,6 @@ import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import { useNotify } from "../context/NotificationContext";
 import SpinningLogo, { SpinningLogoHandle } from "../components/SpinningLogo";
-import ThemeToggle from "../components/ThemeToggle";
 import { getAuthErrorMessage } from "../services/httpError";
 import api from "../services/api";
 
@@ -80,7 +79,7 @@ export default function AuthScreen() {
   const [resetToken, setResetToken] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [showNewPassword, setShowNewPassword] = useState(false);
-  const [forgotStep, setForgotStep] = useState<"email" | "reset">("email");
+  const [forgotStep, setForgotStep] = useState<"email" | "token" | "newpass">("email");
 
   const [loading, setLoading] = useState(false);
 
@@ -263,24 +262,15 @@ export default function AuthScreen() {
       }
       setLoading(true);
       try {
-        const { data } = await api.post("/auth/forgot-password", {
+        await api.post("/auth/forgot-password", {
           email: forgotEmail.trim().toLowerCase(),
         });
-        if (data.token) {
-          setResetToken(data.token);
-          setForgotStep("reset");
-          notify({
-            type: "success",
-            title: "Token generated",
-            message: "Enter the token and your new password.",
-          });
-        } else {
-          notify({
-            type: "info",
-            title: "Check your email",
-            message: data.status || "If that email exists, a reset was sent.",
-          });
-        }
+        setForgotStep("token");
+        notify({
+          type: "success",
+          title: "Code sent!",
+          message: "Check your email for the reset code.",
+        });
       } catch (error: unknown) {
         const message = getAuthErrorMessage(
           error,
@@ -290,12 +280,46 @@ export default function AuthScreen() {
       } finally {
         setLoading(false);
       }
-    } else {
-      if (!resetToken.trim() || !newPassword) {
+    } else if (forgotStep === "token") {
+      if (!resetToken.trim()) {
         notify({
           type: "error",
-          title: "Missing fields",
-          message: "Token and new password are required.",
+          title: "Missing code",
+          message: "Paste the reset code from your email.",
+        });
+        return;
+      }
+      setLoading(true);
+      try {
+        await api.post("/auth/verify-reset-token", {
+          token: resetToken.trim(),
+        });
+        setForgotStep("newpass");
+      } catch (error: unknown) {
+        const message = getAuthErrorMessage(
+          error,
+          "Invalid or expired reset code. Please try again."
+        );
+        notify({ type: "error", title: "Invalid code", message });
+      } finally {
+        setLoading(false);
+      }
+      return;
+    } else {
+      if (!newPassword) {
+        notify({
+          type: "error",
+          title: "Missing password",
+          message: "Enter your new password.",
+        });
+        return;
+      }
+      const checks = checkPassword(newPassword);
+      if (!allPassed(checks)) {
+        notify({
+          type: "error",
+          title: "Weak password",
+          message: "Your password doesn't meet the requirements.",
         });
         return;
       }
@@ -375,8 +399,10 @@ export default function AuthScreen() {
       : mode === "signup"
       ? "SIGN UP"
       : forgotStep === "email"
-      ? "SEND RESET TOKEN"
-      : "RESET PASSWORD";
+      ? "SEND RESET CODE"
+      : forgotStep === "token"
+      ? "VERIFY CODE"
+      : "SET NEW PASSWORD";
 
   // Shimmer tint: white in both modes, just slightly more transparent in light
   const shimmerColor = isDark
@@ -388,9 +414,6 @@ export default function AuthScreen() {
       style={[styles.container, { backgroundColor: colors.background }]}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <View style={styles.themeToggleWrap}>
-        <ThemeToggle />
-      </View>
 
       <ScrollView
         contentContainerStyle={styles.scroll}
@@ -399,7 +422,7 @@ export default function AuthScreen() {
       >
         <View style={styles.body}>
           <View style={styles.logoSection}>
-            <SpinningLogo ref={logoRef} size={260} />
+            <SpinningLogo ref={logoRef} size={mode === "forgot" ? 140 : 260} />
           </View>
 
           {/* Tagline with fade-in */}
@@ -417,62 +440,122 @@ export default function AuthScreen() {
               ? "Log in to practice DSA drills\nand ace your interviews"
               : mode === "signup"
               ? "Create your account to get started"
-              : "Reset your password"}
+              : forgotStep === "email"
+              ? "Forgot your password?\nNo worries, we'll help you reset it."
+              : forgotStep === "token"
+              ? "Check your inbox"
+              : "Almost done!"}
           </Animated.Text>
 
           <View style={styles.form}>
-            {mode === "forgot" && (
+            {mode === "forgot" && forgotStep === "email" && (
               <>
-                {forgotStep === "email" ? (
+                <Text style={[styles.resetStepTitle, { color: colors.text }]}>
+                  Enter your email address
+                </Text>
+                <Text style={[styles.resetStepDesc, { color: colors.textMuted }]}>
+                  We'll send a reset code to your inbox.
+                </Text>
+                <TextInput
+                  style={inputStyle}
+                  placeholder="EMAIL ADDRESS"
+                  placeholderTextColor={colors.placeholderText}
+                  autoCapitalize="none"
+                  keyboardType="email-address"
+                  value={forgotEmail}
+                  onChangeText={setForgotEmail}
+                  returnKeyType="go"
+                  onSubmitEditing={handleForgotPassword}
+                />
+              </>
+            )}
+
+            {mode === "forgot" && forgotStep === "token" && (
+              <>
+                <View style={[styles.resetStepBadge, { backgroundColor: isDark ? "rgba(13,217,196,0.1)" : "rgba(13,217,196,0.08)" }]}>
+                  <Ionicons name="mail-outline" size={20} color={colors.accent} />
+                  <Text style={[styles.resetStepBadgeText, { color: colors.accent }]}>
+                    Code sent to {forgotEmail}
+                  </Text>
+                </View>
+                <Text style={[styles.resetStepTitle, { color: colors.text }]}>
+                  Enter reset code
+                </Text>
+                <Text style={[styles.resetStepDesc, { color: colors.textMuted }]}>
+                  Paste the code from your email below.
+                </Text>
+                <TextInput
+                  style={[inputStyle, { fontSize: 16, letterSpacing: 1, textAlign: "center" }]}
+                  placeholder="PASTE RESET CODE HERE"
+                  placeholderTextColor={colors.placeholderText}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  autoComplete="off"
+                  textContentType="oneTimeCode"
+                  importantForAutofill="no"
+                  value={resetToken}
+                  onChangeText={setResetToken}
+                  returnKeyType="go"
+                  onSubmitEditing={handleForgotPassword}
+                />
+                <Pressable
+                  onPress={() => {
+                    setForgotStep("email");
+                    setResetToken("");
+                  }}
+                >
+                  <Text style={[styles.resendText, { color: colors.textMuted }]}>
+                    Didn't get it? <Text style={{ color: colors.accent }}>Resend code</Text>
+                  </Text>
+                </Pressable>
+              </>
+            )}
+
+            {mode === "forgot" && forgotStep === "newpass" && (
+              <>
+                <View style={[styles.resetStepBadge, { backgroundColor: isDark ? "rgba(13,217,196,0.1)" : "rgba(13,217,196,0.08)" }]}>
+                  <Ionicons name="checkmark-circle-outline" size={20} color={colors.accent} />
+                  <Text style={[styles.resetStepBadgeText, { color: colors.accent }]}>
+                    Code verified
+                  </Text>
+                </View>
+                <Text style={[styles.resetStepTitle, { color: colors.text }]}>
+                  Create new password
+                </Text>
+                <Text style={[styles.resetStepDesc, { color: colors.textMuted }]}>
+                  Choose a strong password for your account.
+                </Text>
+                <View style={styles.passwordFieldWrap}>
                   <TextInput
-                    style={inputStyle}
-                    placeholder="EMAIL ADDRESS"
+                    style={[inputStyle, styles.passwordInputFull]}
+                    placeholder="NEW PASSWORD"
                     placeholderTextColor={colors.placeholderText}
-                    autoCapitalize="none"
-                    keyboardType="email-address"
-                    value={forgotEmail}
-                    onChangeText={setForgotEmail}
+                    secureTextEntry={!showNewPassword}
+                    value={newPassword}
+                    onChangeText={setNewPassword}
                     returnKeyType="go"
                     onSubmitEditing={handleForgotPassword}
                   />
-                ) : (
-                  <>
-                    <TextInput
-                      style={inputStyle}
-                      placeholder="RESET TOKEN"
-                      placeholderTextColor={colors.placeholderText}
-                      autoCapitalize="none"
-                      autoCorrect={false}
-                      value={resetToken}
-                      onChangeText={setResetToken}
-                      returnKeyType="next"
+                  <Pressable
+                    style={styles.passwordIconBtn}
+                    onPress={() => setShowNewPassword((c) => !c)}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  >
+                    <Ionicons
+                      name={showNewPassword ? "eye-off-outline" : "eye-outline"}
+                      size={18}
+                      color={colors.textMuted}
                     />
-                    <View style={styles.passwordFieldWrap}>
-                      <TextInput
-                        style={[inputStyle, styles.passwordInputFull]}
-                        placeholder="NEW PASSWORD"
-                        placeholderTextColor={colors.placeholderText}
-                        secureTextEntry={!showNewPassword}
-                        value={newPassword}
-                        onChangeText={setNewPassword}
-                        returnKeyType="go"
-                        onSubmitEditing={handleForgotPassword}
-                      />
-                      <Pressable
-                        style={styles.passwordIconBtn}
-                        onPress={() => setShowNewPassword((c) => !c)}
-                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                      >
-                        <Ionicons
-                          name={
-                            showNewPassword ? "eye-off-outline" : "eye-outline"
-                          }
-                          size={18}
-                          color={colors.textMuted}
-                        />
-                      </Pressable>
-                    </View>
-                  </>
+                  </Pressable>
+                </View>
+                {newPassword.length > 0 && (
+                  <View style={styles.checksContainer}>
+                    {renderCheck("At least 8 characters", checkPassword(newPassword).length)}
+                    {renderCheck("One uppercase letter", checkPassword(newPassword).upper)}
+                    {renderCheck("One lowercase letter", checkPassword(newPassword).lower)}
+                    {renderCheck("One digit", checkPassword(newPassword).digit)}
+                    {renderCheck("One special character", checkPassword(newPassword).special)}
+                  </View>
                 )}
               </>
             )}
@@ -735,12 +818,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  themeToggleWrap: {
-    position: "absolute",
-    top: Platform.OS === "ios" ? 56 : 40,
-    right: 20,
-    zIndex: 10,
-  },
   scroll: {
     flexGrow: 1,
   },
@@ -886,5 +963,36 @@ const styles = StyleSheet.create({
   bottomLink: {
     fontSize: 14,
     fontWeight: "700",
+  },
+  resetStepTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    textAlign: "center",
+    marginBottom: 4,
+  },
+  resetStepDesc: {
+    fontSize: 13,
+    textAlign: "center",
+    marginBottom: 16,
+    lineHeight: 18,
+  },
+  resetStepBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 10,
+    marginBottom: 12,
+    alignSelf: "center",
+  },
+  resetStepBadgeText: {
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  resendText: {
+    fontSize: 13,
+    textAlign: "center",
+    marginTop: 8,
   },
 });
